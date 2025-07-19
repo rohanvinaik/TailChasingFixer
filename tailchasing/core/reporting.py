@@ -4,6 +4,7 @@ import json
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from datetime import datetime
+from collections import defaultdict
 
 from .issues import Issue, IssueCollection
 from .scoring import RiskScorer
@@ -258,6 +259,3 @@ class Reporter:
 </html>"""
         
         return html
-
-
-from collections import defaultdict

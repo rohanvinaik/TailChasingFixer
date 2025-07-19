@@ -3,7 +3,7 @@
 import re
 import subprocess
 from datetime import datetime, timedelta
-from typing import List, Dict, Set, Tuple, Optional
+from typing import List, Dict, Set, Tuple, Optional, Iterable, Any
 from collections import defaultdict
 from pathlib import Path
 
@@ -66,7 +66,7 @@ class GitChainAnalyzer(BaseAnalyzer):
         except (subprocess.SubprocessError, FileNotFoundError):
             return False
             
-    def _get_recent_commits(self, path: Path, days: int = 30) -> List[Dict[str, any]]:
+    def _get_recent_commits(self, path: Path, days: int = 30) -> List[Dict[str, Any]]:
         """Get recent commits with their metadata."""
         try:
             # Get commit info with file changes

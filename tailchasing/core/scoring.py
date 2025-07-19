@@ -1,6 +1,6 @@
 """Risk scoring system for tail-chasing issues."""
 
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 from collections import defaultdict
 
 from .issues import Issue
@@ -109,7 +109,7 @@ class RiskScorer:
         self, 
         current_issues: List[Issue], 
         previous_issues: List[Issue]
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """Calculate trend between two sets of issues."""
         current_scores, current_global = self.calculate_scores(current_issues)
         previous_scores, previous_global = self.calculate_scores(previous_issues)

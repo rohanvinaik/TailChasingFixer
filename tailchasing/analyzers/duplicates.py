@@ -2,7 +2,7 @@
 
 import ast
 import hashlib
-from typing import Dict, List, Set, Tuple, Optional
+from typing import Dict, List, Set, Tuple, Optional, Iterable
 from collections import defaultdict
 
 from .base import BaseAnalyzer, AnalysisContext

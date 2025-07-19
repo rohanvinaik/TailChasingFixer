@@ -1,8 +1,9 @@
 """Missing symbol analyzer - detects references to non-existent functions/classes."""
 
 import ast
-from typing import Set, Dict, List, Any, Optional
+from typing import Set, Dict, List, Any, Optional, Iterable
 from collections import defaultdict
+from pathlib import Path
 import difflib
 import re
 
@@ -38,7 +39,8 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
         symbols = defaultdict(list)
         
         # Add built-in symbols
-        for builtin in dir(__builtins__):
+        import builtins
+        for builtin in dir(builtins):
             symbols[builtin].append({
                 "file": "<builtin>",
                 "kind": "builtin",
@@ -79,40 +81,38 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
         local_imports = self._get_local_imports(tree)
         
         # Find all name references
-        visitor = ReferenceVisitor(file)
+        visitor = ReferenceVisitor(file, defined_symbols)
         visitor.visit(tree)
         
-        for ref in visitor.references:
+        for ref in visitor.missing_references:
             symbol_name = ref["name"]
             
-            # Skip if it's defined locally or imported
-            if symbol_name in local_imports:
+            # Skip normalized variable names from structural hashing
+            if re.match(r'^(VAR|ARG|NUM|STR|BOOL|CONST)\d*$', symbol_name):
                 continue
                 
-            # Check if the symbol exists anywhere
-            if symbol_name not in defined_symbols:
-                # Try to find similar symbols for suggestions
-                suggestions = self._find_similar_symbols(
-                    symbol_name, defined_symbols.keys()
-                )
-                
-                issue = Issue(
-                    kind="missing_symbol",
-                    message=f"Reference to undefined symbol '{symbol_name}'",
-                    severity=2,
-                    file=file,
-                    line=ref["line"],
-                    column=ref.get("column"),
-                    symbol=symbol_name,
-                    evidence={
-                        "context": ref.get("context", ""),
-                        "node_type": ref["node_type"]
-                    },
-                    suggestions=suggestions,
-                    confidence=self._calculate_confidence(ref, ctx)
-                )
-                
-                issues.append(issue)
+            # Try to find similar symbols for suggestions
+            suggestions = self._find_similar_symbols(
+                symbol_name, defined_symbols.keys()
+            )
+            
+            issue = Issue(
+                kind="missing_symbol",
+                message=f"Reference to undefined symbol '{symbol_name}'",
+                severity=2,
+                file=file,
+                line=ref["line"],
+                column=ref.get("column"),
+                symbol=symbol_name,
+                evidence={
+                    "context": ref.get("context", ""),
+                    "node_type": ref["node_type"]
+                },
+                suggestions=suggestions,
+                confidence=self._calculate_confidence(ref, ctx)
+            )
+            
+            issues.append(issue)
                 
         # Check for hallucinated imports
         issues.extend(self._check_hallucinated_imports(file, tree, ctx))
@@ -148,6 +148,10 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 if node.module:
+                    # Skip relative imports within the same package
+                    if node.module.startswith('.') or node.level > 0:
+                        continue
+                        
                     # Check if the module exists
                     if not self._module_exists(node.module, ctx):
                         issue = Issue(
@@ -286,17 +290,20 @@ class SymbolCollector(ast.NodeVisitor):
 class ReferenceVisitor(ast.NodeVisitor):
     """Collects all symbol references in a file."""
     
-    def __init__(self, file: str):
+    def __init__(self, file: str, defined_symbols: Dict[str, List[Dict[str, Any]]]):
         self.file = file
-        self.references: List[Dict[str, Any]] = []
+        self.defined_symbols = defined_symbols
+        self.missing_references: List[Dict[str, Any]] = []
         self.current_function = None
         self.imported_names: Set[str] = set()
+        self.local_scopes: List[Set[str]] = [set()]  # Stack of local scopes
         
     def visit_Import(self, node: ast.Import):
         """Track imported names."""
         for alias in node.names:
             name = alias.asname or alias.name.split('.')[0]
             self.imported_names.add(name)
+            self.local_scopes[-1].add(name)
         self.generic_visit(node)
         
     def visit_ImportFrom(self, node: ast.ImportFrom):
@@ -305,14 +312,58 @@ class ReferenceVisitor(ast.NodeVisitor):
             if alias.name != "*":
                 name = alias.asname or alias.name
                 self.imported_names.add(name)
+                self.local_scopes[-1].add(name)
+        self.generic_visit(node)
+        
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        """Track current function context and parameters."""
+        old_function = self.current_function
+        self.current_function = node.name
+        
+        # Create new scope with parameters
+        new_scope = set()
+        for arg in node.args.args:
+            new_scope.add(arg.arg)
+        # Add special parameters
+        if node.args.vararg:
+            new_scope.add(node.args.vararg.arg)
+        if node.args.kwarg:
+            new_scope.add(node.args.kwarg.arg)
+            
+        self.local_scopes.append(new_scope)
+        self.generic_visit(node)
+        self.local_scopes.pop()
+        
+        self.current_function = old_function
+        
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        """Track current async function context."""
+        self.visit_FunctionDef(node)
+        
+    def visit_ClassDef(self, node: ast.ClassDef):
+        """Track class definitions."""
+        self.local_scopes[-1].add(node.name)
         self.generic_visit(node)
         
     def visit_Name(self, node: ast.Name):
         """Record name references."""
         if isinstance(node.ctx, ast.Load):
-            # Skip if it's an imported name
-            if node.id not in self.imported_names:
-                self.references.append({
+            # Check if name is defined locally
+            name_defined = False
+            
+            # Check local scopes
+            for scope in self.local_scopes:
+                if node.id in scope:
+                    name_defined = True
+                    break
+                    
+            # Check global definitions
+            if not name_defined and node.id in self.defined_symbols:
+                name_defined = True
+                
+            # If not defined, record as missing
+            if not name_defined:
+                self.missing_references.append({
                     "name": node.id,
                     "line": node.lineno,
                     "column": node.col_offset,
@@ -320,14 +371,31 @@ class ReferenceVisitor(ast.NodeVisitor):
                     "context": self.current_function or "<module>",
                     "file": self.file
                 })
+        elif isinstance(node.ctx, ast.Store):
+            # Add to current scope
+            self.local_scopes[-1].add(node.id)
                 
         self.generic_visit(node)
         
     def visit_Call(self, node: ast.Call):
         """Record function calls."""
         if isinstance(node.func, ast.Name):
-            if node.func.id not in self.imported_names:
-                self.references.append({
+            # Check if function is defined
+            func_defined = False
+            
+            # Check local scopes
+            for scope in self.local_scopes:
+                if node.func.id in scope:
+                    func_defined = True
+                    break
+                    
+            # Check global definitions
+            if not func_defined and node.func.id in self.defined_symbols:
+                func_defined = True
+                
+            # If not defined, record as missing
+            if not func_defined:
+                self.missing_references.append({
                     "name": node.func.id,
                     "line": node.lineno,
                     "column": node.col_offset,
@@ -335,20 +403,61 @@ class ReferenceVisitor(ast.NodeVisitor):
                     "context": self.current_function or "<module>",
                     "file": self.file
                 })
-        elif isinstance(node.func, ast.Attribute):
-            # For method calls, we might want to check the attribute name
-            # This is more complex as we need type information
-            pass
+                
+        self.generic_visit(node)
+        
+    def visit_For(self, node: ast.For):
+        """Handle for loop variables."""
+        # Visit the iterator first
+        self.visit(node.iter)
+        
+        # Then add the target to scope before visiting body
+        if isinstance(node.target, ast.Name):
+            self.local_scopes[-1].add(node.target.id)
+        
+        # Visit the target and body
+        self.visit(node.target)
+        for stmt in node.body:
+            self.visit(stmt)
+        for stmt in node.orelse:
+            self.visit(stmt)
             
-        self.generic_visit(node)
+    def visit_ListComp(self, node: ast.ListComp):
+        """Handle list comprehension scope."""
+        self._visit_comprehension(node)
         
-    def visit_FunctionDef(self, node: ast.FunctionDef):
-        """Track current function context."""
-        old_function = self.current_function
-        self.current_function = node.name
-        self.generic_visit(node)
-        self.current_function = old_function
+    def visit_SetComp(self, node: ast.SetComp):
+        """Handle set comprehension scope."""
+        self._visit_comprehension(node)
         
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
-        """Track current async function context."""
-        self.visit_FunctionDef(node)
+    def visit_DictComp(self, node: ast.DictComp):
+        """Handle dict comprehension scope."""
+        self._visit_comprehension(node)
+        
+    def visit_GeneratorExp(self, node: ast.GeneratorExp):
+        """Handle generator expression scope."""
+        self._visit_comprehension(node)
+        
+    def _visit_comprehension(self, node):
+        """Handle comprehension scopes."""
+        # Create new scope for comprehension
+        new_scope = set()
+        self.local_scopes.append(new_scope)
+        
+        # Visit generators and add variables to scope
+        for generator in node.generators:
+            self.visit(generator.iter)
+            if isinstance(generator.target, ast.Name):
+                new_scope.add(generator.target.id)
+            self.visit(generator.target)
+            for if_clause in generator.ifs:
+                self.visit(if_clause)
+                
+        # Visit the element(s)
+        if hasattr(node, 'elt'):
+            self.visit(node.elt)
+        elif hasattr(node, 'key'):
+            self.visit(node.key)
+            self.visit(node.value)
+            
+        self.local_scopes.pop()

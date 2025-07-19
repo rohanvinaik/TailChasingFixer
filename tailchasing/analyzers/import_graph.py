@@ -2,7 +2,7 @@
 
 import ast
 from collections import defaultdict, deque
-from typing import Dict, Set, List, Tuple, Optional
+from typing import Dict, Set, List, Tuple, Optional, Iterable
 from pathlib import Path
 
 from .base import BaseAnalyzer, AnalysisContext
