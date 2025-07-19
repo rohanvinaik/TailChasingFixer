@@ -8,13 +8,18 @@ with open("README_PYPI.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 # Read version from package
-version = {}
-with open("tailchasing/__init__.py") as fp:
-    exec(fp.read(), version)
+version_file = os.path.join(os.path.dirname(__file__), "tailchasing", "__init__.py")
+with open(version_file) as f:
+    for line in f:
+        if line.startswith("__version__"):
+            version = line.split("=")[1].strip().strip('"').strip("'")
+            break
+    else:
+        version = "0.1.0"
 
 setup(
     name="tail-chasing-detector",
-    version=version.get("__version__", "0.1.0"),
+    version=version,
     author="Rohan Vinaik",
     author_email="rohanpvinaik@gmail.com",
     description="Detect LLM-assisted tail-chasing anti-patterns in Python code",
