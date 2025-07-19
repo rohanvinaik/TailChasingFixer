@@ -1,6 +1,36 @@
-# Tail Chasing Detector
+# Tail-Chasing Detector
+
+[![PyPI version](https://badge.fury.io/py/tail-chasing-detector.svg)](https://badge.fury.io/py/tail-chasing-detector)
+[![Python versions](https://img.shields.io/pypi/pyversions/tail-chasing-detector.svg)](https://pypi.org/project/tail-chasing-detector/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/rohanvinaik/TailChasingFixer/actions/workflows/tail-chasing.yml/badge.svg)](https://github.com/rohanvinaik/TailChasingFixer/actions/workflows/tail-chasing.yml)
 
 Detects LLM-assisted *tail-chasing* anti-patterns - a software development anti-pattern where LLMs repeatedly make superficial or circular fixes in response to immediate errors, without addressing underlying causes.
+
+## 🚀 Quick Start
+
+### Command Line
+
+```bash
+# Install from PyPI
+pip install tail-chasing-detector
+
+# Install with all features
+pip install "tail-chasing-detector[all]"
+
+# Run analysis
+tailchasing .
+
+# With semantic analysis
+tailchasing . --semantic
+```
+
+### VS Code Extension
+
+1. Open VS Code
+2. Search for "Tail-Chasing Detector" in Extensions (Cmd+Shift+X)
+3. Click Install
+4. The extension will automatically analyze Python files as you edit them
 
 ## What is a Tail-Chasing Bug?
 
@@ -24,20 +54,36 @@ This pattern emerges because LLMs operate with limited context windows, causing 
 - **Multiple output formats** (text, JSON, SARIF coming soon)
 - **🆕 Semantic Hypervector Analysis** - Detects deep semantic duplicates and patterns using high-dimensional computing
 
-## Quick Start
+## Installation
+
+### From PyPI (Recommended)
 
 ```bash
-# Install
+pip install tail-chasing-detector
+```
+
+### With Optional Features
+
+```bash
+# Visualization support
+pip install "tail-chasing-detector[visualization]"
+
+# Machine learning enhancements
+pip install "tail-chasing-detector[ml]"
+
+# Performance optimizations
+pip install "tail-chasing-detector[performance]"
+
+# All features
+pip install "tail-chasing-detector[all]"
+```
+
+### From Source
+
+```bash
+git clone https://github.com/rohanvinaik/TailChasingFixer.git
+cd TailChasingFixer
 pip install -e .
-
-# Run analysis
-tailchasing .
-
-# JSON output
-tailchasing . --json
-
-# Set failure threshold
-tailchasing . --fail-on 30
 ```
 
 ## Configuration
@@ -67,17 +113,15 @@ ignore_issue_types:
 scoring_weights:
   missing_symbol: 2
   phantom_function: 2
-  duplicate_cluster: 2
+  duplicate_function: 2
   wrapper_abstraction: 1
-  cycle_participation: 3
-  drift_entropy: 1
+  semantic_duplicate_function: 3
+  prototype_fragmentation: 3
 
-git:
+semantic:
   enable: true
-
-report:
-  formats: ["text", "json"]
-  output_dir: ./
+  hv_dim: 8192
+  min_functions: 30
 ```
 
 ## Issue Types Detected
@@ -199,6 +243,29 @@ tailchasing . --ingest-json ruff.json
 # Combine with pylint
 pylint src --output-format=json > pylint.json
 tailchasing . --ingest-json pylint.json
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+- name: Tail-Chasing Check
+  uses: tail-chasing/detector-action@v1
+  with:
+    fail-on: 30
+    config: .tailchasing.yml
+```
+
+### Pre-commit Hook
+
+```yaml
+repos:
+  - repo: https://github.com/rohanvinaik/TailChasingFixer
+    rev: v0.1.0
+    hooks:
+      - id: tail-chasing
+        args: ['--fail-on', '20']
 ```
 
 ## Contributing

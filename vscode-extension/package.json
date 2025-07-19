@@ -1,0 +1,110 @@
+{
+  "name": "tail-chasing-detector",
+  "displayName": "Tail-Chasing Detector",
+  "description": "Detect LLM-assisted tail-chasing anti-patterns in real-time",
+  "version": "0.1.0",
+  "publisher": "rohanvinaik",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "python",
+    "linting",
+    "code-quality",
+    "llm",
+    "ai",
+    "semantic-analysis"
+  ],
+  "activationEvents": [
+    "onLanguage:python"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tailchasing.analyze",
+        "title": "Analyze for Tail-Chasing Patterns"
+      },
+      {
+        "command": "tailchasing.showSemanticDuplicates",
+        "title": "Show Semantic Duplicates"
+      },
+      {
+        "command": "tailchasing.toggleRealTime",
+        "title": "Toggle Real-Time Analysis"
+      }
+    ],
+    "configuration": {
+      "title": "Tail-Chasing Detector",
+      "properties": {
+        "tailchasing.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable tail-chasing detection"
+        },
+        "tailchasing.semantic.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable semantic hypervector analysis"
+        },
+        "tailchasing.semantic.hvDim": {
+          "type": "number",
+          "default": 8192,
+          "description": "Hypervector dimension for semantic analysis"
+        },
+        "tailchasing.realTime": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable real-time analysis as you type"
+        },
+        "tailchasing.severity": {
+          "type": "string",
+          "enum": ["Error", "Warning", "Information", "Hint"],
+          "default": "Warning",
+          "description": "Severity level for tail-chasing issues"
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "python",
+        "extensions": [".py"]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.3",
+    "@vscode/test-electron": "^2.2.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rohanvinaik/TailChasingFixer"
+  },
+  "bugs": {
+    "url": "https://github.com/rohanvinaik/TailChasingFixer/issues"
+  },
+  "homepage": "https://github.com/rohanvinaik/TailChasingFixer#readme",
+  "license": "MIT"
+}
