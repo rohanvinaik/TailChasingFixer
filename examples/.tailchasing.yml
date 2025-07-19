@@ -1,0 +1,55 @@
+paths:
+  include:
+    - src
+    - lib
+  exclude:
+    - tests
+    - test
+    - build
+    - dist
+    - venv
+    - .venv
+    - __pycache__
+    - .git
+
+risk_thresholds:
+  warn: 15
+  fail: 30
+
+# Placeholders that are intentionally allowed
+placeholders:
+  allow:
+    - BasePlugin.initialize
+    - AbstractHandler.process
+
+# Issue types to ignore
+ignore_issue_types: []
+  # - wrapper_abstraction  # Uncomment to ignore wrapper issues
+
+# Scoring weights for different issue types
+scoring_weights:
+  missing_symbol: 2
+  phantom_function: 2
+  duplicate_function: 2
+  circular_import: 3
+  hallucinated_import: 3
+  wrapper_abstraction: 1
+  tail_chasing_chain: 4
+
+# Git integration settings
+git:
+  enable: true
+  days_to_analyze: 30
+
+# Report generation settings
+report:
+  formats:
+    - text
+    - json
+  output_dir: ./
+
+# Auto-fix settings (future feature)
+fix:
+  enable: false
+  auto_rename_single_suggestion: true
+  backup: true

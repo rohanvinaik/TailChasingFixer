@@ -1,0 +1,25 @@
+[project]
+name = "tail-chasing-detector"
+version = "0.1.0"
+description = "Detects LLM-assisted tail-chasing anti-patterns in Python codebases."
+authors = [{name="Rohan Vinaik"}]
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+dependencies = [
+    "typing-extensions>=4.5",
+    "tomli; python_version<'3.11'",
+    "pyyaml>=6.0",
+    "click>=8.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "coverage", "ruff", "mypy", "black", "isort"]
+
+[project.scripts]
+tailchasing = "tailchasing.cli:main"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
