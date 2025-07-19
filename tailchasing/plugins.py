@@ -10,6 +10,7 @@ from .analyzers.duplicates import DuplicateFunctionAnalyzer
 from .analyzers.placeholders import PlaceholderAnalyzer
 from .analyzers.missing_symbols import MissingSymbolAnalyzer
 from .analyzers.git_chains import GitChainAnalyzer
+from .analyzers.semantic_hv import SemanticHVAnalyzer
 
 
 # Default analyzers that are always available
@@ -19,6 +20,7 @@ DEFAULT_ANALYZERS = [
     PlaceholderAnalyzer(),
     MissingSymbolAnalyzer(),
     GitChainAnalyzer(),
+    SemanticHVAnalyzer(),
 ]
 
 

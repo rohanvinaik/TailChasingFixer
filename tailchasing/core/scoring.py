@@ -15,6 +15,11 @@ DEFAULT_WEIGHTS = {
     "wrapper_abstraction": 1,
     "drift_entropy": 1,
     "tail_chasing_chain": 4,
+    # Semantic hypervector issues
+    "semantic_duplicate_function": 3,
+    "prototype_fragmentation": 3,
+    "semantic_stagnant_placeholder": 2,
+    "rename_cascade_chain": 4,
 }
 
 

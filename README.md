@@ -22,6 +22,7 @@ This pattern emerges because LLMs operate with limited context windows, causing 
 - **Git history integration** to detect fix patterns
 - **Risk scoring system** with configurable thresholds
 - **Multiple output formats** (text, JSON, SARIF coming soon)
+- **🆕 Semantic Hypervector Analysis** - Detects deep semantic duplicates and patterns using high-dimensional computing
 
 ## Quick Start
 
@@ -90,6 +91,71 @@ report:
 | `wrapper_abstraction` | Trivial wrappers that add no value | 1 |
 | `hallucinated_import` | Imports of non-existent modules | 3 |
 | `tail_chasing_chain` | Temporal pattern of superficial fixes | 4 |
+| **`semantic_duplicate_function`** | Functions with different structure but same semantics | 3 |
+| **`prototype_fragmentation`** | Multiple implementations of the same concept | 3 |
+| **`semantic_stagnant_placeholder`** | Stubs that never evolve semantically | 2 |
+| **`rename_cascade_chain`** | Functions renamed without semantic changes | 4 |
+
+## 🆕 Semantic Hypervector Analysis
+
+The Tail Chasing Detector now includes advanced semantic analysis using hypervector computing (HDC). This feature can detect semantic patterns that traditional AST-based analysis would miss.
+
+### What It Detects
+
+1. **Semantic Duplicates**: Functions that behave the same but have different implementations
+2. **Prototype Fragmentation**: Multiple scattered implementations of the same concept
+3. **Semantic Stagnation**: Placeholder functions that never evolve meaningfully
+4. **Rename Cascades**: Functions that are renamed without changing behavior
+
+### How It Works
+
+The analyzer uses high-dimensional vectors (8192 dimensions by default) to encode the semantic "fingerprint" of each function based on:
+- Function and parameter names (tokenized)
+- Docstring content
+- Called functions
+- Control flow patterns
+- Literal types used
+- Exception handling
+- Import dependencies
+
+Functions with similar semantic fingerprints are identified using statistical analysis with false discovery rate control.
+
+### Configuration
+
+Add this to your `.tailchasing.yml`:
+
+```yaml
+semantic:
+  enable: true
+  hv_dim: 8192  # Hypervector dimension
+  min_functions: 30  # Minimum functions needed
+  z_threshold: 2.5  # Statistical significance threshold
+  
+  # Adjust channel weights to emphasize different aspects
+  channel_weights:
+    NAME_TOKENS: 1.0
+    CALLS: 1.2  # Emphasize function calls
+    DOC_TOKENS: 0.8
+```
+
+### Example: Semantic Duplicate Detection
+
+```python
+# These would be detected as semantic duplicates despite different implementations:
+
+def calculate_average(numbers):
+    """Calculate the mean of a list of numbers."""
+    total = sum(numbers)
+    count = len(numbers)
+    return total / count
+
+def compute_mean(data_list):
+    """Compute arithmetic mean of values."""
+    accumulator = 0
+    for value in data_list:
+        accumulator += value
+    return accumulator / len(data_list)
+```
 
 ## Examples
 

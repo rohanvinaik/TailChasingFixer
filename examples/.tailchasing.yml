@@ -53,3 +53,45 @@ fix:
   enable: false
   auto_rename_single_suggestion: true
   backup: true
+
+# Semantic hypervector analysis settings
+semantic:
+  enable: true
+  hv_dim: 8192  # Hypervector dimension (higher = better separation)
+  bipolar: true  # Use +1/-1 encoding (vs 0/1)
+  random_seed: 42  # For reproducible encodings
+  
+  # Minimum functions needed to run semantic analysis
+  min_functions: 30
+  
+  # Statistical thresholds
+  z_threshold: 2.5  # Z-score threshold for similarity
+  fdr_q: 0.05  # False discovery rate for multiple testing
+  
+  # Background distribution sampling
+  max_pairs_sample: 10000
+  
+  # Channel weights for encoding
+  channel_weights:
+    NAME_TOKENS: 1.0
+    DOC_TOKENS: 0.8
+    CALLS: 1.2
+    CONTROL: 0.7
+    ARG_SIG: 0.9
+    LITERALS: 0.6
+    DECORATORS: 0.8
+    IMPORTS: 0.9
+    EXCEPTIONS: 0.7
+    COMPLEXITY: 0.5
+  
+  # Prototype detection
+  prototype_threshold: 0.8
+  min_prototype_size: 3
+  
+  # Drift analysis
+  drift_window: 10
+  stagnation_threshold: 0.95
+  cascade_threshold: 0.85
+  
+  # Cache settings
+  incremental_cache: .tailchasing_cache/
