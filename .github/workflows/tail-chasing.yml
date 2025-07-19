@@ -28,18 +28,29 @@ jobs:
           .tailchasing_cache
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
     
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install numpy scipy  # Install required dependencies first
+    
     - name: Install Tail-Chasing Detector
       run: |
         pip install -e .
     
+    - name: Verify Installation
+      run: |
+        which tailchasing || echo "tailchasing not in PATH"
+        python -m tailchasing --version || echo "Cannot run as module"
+        pip show tail-chasing-detector || echo "Package not installed"
+    
     - name: Run Tail-Chasing Analysis
       run: |
-        tailchasing . --config .tailchasing.yml --json > analysis.json
+        tailchasing . --config .tailchasing.yml --json > analysis.json || true
     
     - name: Generate Report
       if: always()
       run: |
-        tailchasing . --config .tailchasing.yml > analysis.md
+        tailchasing . --config .tailchasing.yml > analysis.md || true
     
     - name: Comment PR
       if: github.event_name == 'pull_request'
@@ -47,26 +58,36 @@ jobs:
       with:
         script: |
           const fs = require('fs');
-          const analysis = JSON.parse(fs.readFileSync('analysis.json', 'utf8'));
           
           let comment = '## 🎯 Tail-Chasing Analysis Results\n\n';
           
-          if (analysis.total_score > 30) {
-            comment += '❌ **Critical tail-chasing patterns detected!**\n\n';
-          } else if (analysis.total_score > 15) {
-            comment += '⚠️ **Warning: Some tail-chasing patterns found**\n\n';
-          } else {
-            comment += '✅ **No significant tail-chasing patterns detected**\n\n';
-          }
-          
-          comment += `**Risk Score:** ${analysis.total_score}\n\n`;
-          
-          // Add top issues
-          if (analysis.issues.length > 0) {
-            comment += '### Top Issues:\n';
-            analysis.issues.slice(0, 5).forEach(issue => {
-              comment += `- **${issue.kind}**: ${issue.message}\n`;
-            });
+          try {
+            const analysisJson = fs.readFileSync('analysis.json', 'utf8');
+            const analysis = JSON.parse(analysisJson);
+            
+            if (analysis.total_score > 30) {
+              comment += '❌ **Critical tail-chasing patterns detected!**\n\n';
+            } else if (analysis.total_score > 15) {
+              comment += '⚠️ **Warning: Some tail-chasing patterns found**\n\n';
+            } else {
+              comment += '✅ **No significant tail-chasing patterns detected**\n\n';
+            }
+            
+            comment += `**Risk Score:** ${analysis.total_score || 0}\n\n`;
+            
+            // Add top issues
+            if (analysis.issues && analysis.issues.length > 0) {
+              comment += '### Top Issues:\n';
+              analysis.issues.slice(0, 5).forEach(issue => {
+                comment += `- **${issue.kind}**: ${issue.message}\n`;
+              });
+            } else {
+              comment += '### No issues found! 🎉\n';
+            }
+          } catch (error) {
+            comment += '⚠️ **Analysis did not complete successfully**\n\n';
+            comment += 'This might be due to configuration or installation issues.\n';
+            comment += `Error: ${error.message}\n`;
           }
           
           github.rest.issues.createComment({

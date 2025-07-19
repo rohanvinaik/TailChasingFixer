@@ -1,0 +1,69 @@
+# Tail-Chasing Detector Configuration
+
+paths:
+  include:
+    - tailchasing
+  exclude:
+    - tests
+    - vscode-extension
+    - examples
+    - scripts
+    - __pycache__
+    - .git
+    - build
+    - dist
+    - *.egg-info
+
+risk_thresholds:
+  warn: 15
+  fail: 30
+
+# Issue types to ignore for self-analysis
+ignore_issue_types:
+  - missing_symbol  # Some analyzers import from base but aren't used directly
+
+# Scoring weights
+scoring_weights:
+  circular_import: 3
+  duplicate_function: 2
+  phantom_function: 2
+  missing_symbol: 2
+  hallucinated_import: 3
+  wrapper_abstraction: 1
+  semantic_duplicate_function: 3
+  prototype_fragmentation: 3
+  semantic_stagnant_placeholder: 2
+  rename_cascade_chain: 4
+
+# Semantic analysis settings
+semantic:
+  enable: true
+  hv_dim: 8192
+  bipolar: true
+  random_seed: 42
+  min_functions: 30  # Lower threshold for our own codebase
+  z_threshold: 2.5
+  fdr_q: 0.05
+  
+  channel_weights:
+    NAME_TOKENS: 1.0
+    DOC_TOKENS: 0.8
+    CALLS: 1.2
+    CONTROL: 0.7
+    ARG_SIG: 0.9
+    LITERALS: 0.6
+    DECORATORS: 0.8
+    IMPORTS: 0.9
+    EXCEPTIONS: 0.7
+    COMPLEXITY: 0.5
+
+# Git integration
+git:
+  enable: false  # Disable for now to avoid complexity
+
+# Report settings
+report:
+  formats:
+    - text
+    - json
+  output_dir: ./
