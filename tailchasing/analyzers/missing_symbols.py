@@ -403,8 +403,12 @@ class ReferenceVisitor(ast.NodeVisitor):
                     "context": self.current_function or "<module>",
                     "file": self.file
                 })
-                
-        self.generic_visit(node)
+        
+        # Visit arguments but not the func name again
+        for arg in node.args:
+            self.visit(arg)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
         
     def visit_For(self, node: ast.For):
         """Handle for loop variables."""
