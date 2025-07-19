@@ -1,0 +1,86 @@
+name: Tail-Chasing Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: [main, develop]
+
+jobs:
+  tail-chasing-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Full history for git analysis
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pip
+          .tailchasing_cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+    
+    - name: Install Tail-Chasing Detector
+      run: |
+        pip install -e .
+    
+    - name: Run Tail-Chasing Analysis
+      run: |
+        tailchasing . --config .tailchasing.yml --json > analysis.json
+    
+    - name: Generate Report
+      if: always()
+      run: |
+        tailchasing . --config .tailchasing.yml > analysis.md
+    
+    - name: Comment PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const analysis = JSON.parse(fs.readFileSync('analysis.json', 'utf8'));
+          
+          let comment = '## 🎯 Tail-Chasing Analysis Results\n\n';
+          
+          if (analysis.total_score > 30) {
+            comment += '❌ **Critical tail-chasing patterns detected!**\n\n';
+          } else if (analysis.total_score > 15) {
+            comment += '⚠️ **Warning: Some tail-chasing patterns found**\n\n';
+          } else {
+            comment += '✅ **No significant tail-chasing patterns detected**\n\n';
+          }
+          
+          comment += `**Risk Score:** ${analysis.total_score}\n\n`;
+          
+          // Add top issues
+          if (analysis.issues.length > 0) {
+            comment += '### Top Issues:\n';
+            analysis.issues.slice(0, 5).forEach(issue => {
+              comment += `- **${issue.kind}**: ${issue.message}\n`;
+            });
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+    
+    - name: Upload Analysis Artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: tail-chasing-analysis
+        path: |
+          analysis.json
+          analysis.md
