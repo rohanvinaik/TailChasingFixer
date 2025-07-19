@@ -13,11 +13,11 @@ import numpy as np
 
 from ..core.issues import Issue
 from ..analyzers.base import Analyzer, AnalysisContext
-from .encoder import encode_function
-from .index import SemanticIndex
-from .similarity import SimilarityAnalyzer
-from .prototypes import PrototypeDetector
-from .drift import SemanticDriftAnalyzer
+from ..semantic.encoder import encode_function
+from ..semantic.index import SemanticIndex
+from ..semantic.similarity import SimilarityAnalyzer
+from ..semantic.prototypes import PrototypeDetector
+from ..semantic.drift import SemanticDriftAnalyzer
 
 
 class SemanticHVAnalyzer(Analyzer):
@@ -119,7 +119,7 @@ class SemanticHVAnalyzer(Analyzer):
                     hv = encode_function(node, file, self.index.space, config)
                     
                     # Extract features for later analysis
-                    from .encoder import FunctionFeatureExtractor
+                    from ..semantic.encoder import FunctionFeatureExtractor
                     extractor = FunctionFeatureExtractor()
                     features = extractor.extract(node)
                     self._feature_cache[func_id] = features

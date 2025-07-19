@@ -8,13 +8,16 @@ Implements:
 - Memory-efficient hypervector operations
 """
 
+import os
 import numpy as np
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Any
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from functools import lru_cache
 import mmap
 import pickle
 from pathlib import Path
+
+from .core.issues import Issue
 
 
 class OptimizedHVSpace:
@@ -25,6 +28,7 @@ class OptimizedHVSpace:
     def __init__(self, dim: int = 8192, use_gpu: bool = False):
         self.dim = dim
         self.use_gpu = use_gpu and self._check_gpu_available()
+        self.bipolar = True  # Add missing attribute
         
         # Use bit-packed representation for binary vectors
         self.bits_per_chunk = 64
@@ -33,6 +37,13 @@ class OptimizedHVSpace:
         # Memory-mapped token cache for large vocabularies
         self.token_cache_file = Path(".tailchasing_cache/tokens.mmap")
         self._init_mmap_cache()
+    
+    def _rand_vec(self) -> np.ndarray:
+        """Generate random vector."""
+        if self.bipolar:
+            return np.random.choice([-1, 1], size=self.dim).astype(np.int8)
+        else:
+            return np.random.randint(0, 2, size=self.dim, dtype=np.uint8)
     
     def _check_gpu_available(self) -> bool:
         """Check if GPU acceleration is available."""
