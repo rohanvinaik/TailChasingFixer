@@ -12,6 +12,18 @@ from .analyzers.missing_symbols import MissingSymbolAnalyzer
 from .analyzers.git_chains import GitChainAnalyzer
 from .analyzers.semantic_hv import SemanticHVAnalyzer
 
+# Import advanced analyzers
+try:
+    from .analyzers.advanced import (
+        HallucinationCascadeAnalyzer,
+        ContextWindowThrashingAnalyzer,
+        ImportAnxietyAnalyzer,
+        EnhancedSemanticAnalyzer
+    )
+    ADVANCED_ANALYZERS_AVAILABLE = True
+except ImportError:
+    ADVANCED_ANALYZERS_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -22,6 +34,16 @@ DEFAULT_ANALYZERS = [
     GitChainAnalyzer(),
     SemanticHVAnalyzer(),
 ]
+
+# Advanced analyzers (optional)
+ADVANCED_ANALYZERS = []
+if ADVANCED_ANALYZERS_AVAILABLE:
+    ADVANCED_ANALYZERS = [
+        HallucinationCascadeAnalyzer(),
+        ContextWindowThrashingAnalyzer(),
+        ImportAnxietyAnalyzer(),
+        EnhancedSemanticAnalyzer(),
+    ]
 
 
 def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
@@ -35,6 +57,10 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     """
     # Start with default analyzers
     analyzers = DEFAULT_ANALYZERS.copy()
+    
+    # Add advanced analyzers if enabled
+    if config.get("enable_advanced_analyzers", False) and ADVANCED_ANALYZERS_AVAILABLE:
+        analyzers.extend(ADVANCED_ANALYZERS)
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])

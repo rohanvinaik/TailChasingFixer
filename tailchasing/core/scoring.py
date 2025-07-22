@@ -20,6 +20,11 @@ DEFAULT_WEIGHTS = {
     "prototype_fragmentation": 3,
     "semantic_stagnant_placeholder": 2,
     "rename_cascade_chain": 4,
+    # Advanced analyzer issues
+    "hallucination_cascade": 4,
+    "context_window_thrashing": 3,
+    "import_anxiety": 1,
+    "enhanced_semantic_duplicate": 3,
 }
 
 

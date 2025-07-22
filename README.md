@@ -38,11 +38,15 @@ A Tail-Chasing Bug occurs when an LLM:
 1. **Creates circular dependencies or redundant implementations** (e.g., defining `ComparisonAnalyzer` when `QualityAnalyzer.compare_quality` already exists)
 2. **Renames or restructures code solely to match error messages** without resolving core issues
 3. **Generates phantom implementations** - inventing classes or methods to satisfy mistaken imports
+4. **🆕 Creates hallucination cascades** - entire fictional subsystems to satisfy import errors
+5. **🆕 Shows context window thrashing** - reimplements existing functionality after forgetting earlier code
+6. **🆕 Exhibits import anxiety** - defensively imports many items "just in case"
 
 This pattern emerges because LLMs operate with limited context windows, causing them to fixate on immediate errors rather than global architectural intent.
 
 ## Features
 
+### Core Detection
 - **Phantom/placeholder implementation detection**
 - **Structural duplicate function detection** 
 - **Circular import analysis with runtime-risk weighting**
@@ -50,9 +54,20 @@ This pattern emerges because LLMs operate with limited context windows, causing 
 - **Wrapper/trivial abstraction detection**
 - **Temporal chain analysis** of superficial fixes
 - **Git history integration** to detect fix patterns
+
+### 🆕 Advanced Features
+- **Semantic Hypervector Analysis** - Detects deep semantic duplicates using high-dimensional computing
+- **Hallucination Cascade Detection** - Identifies entire fictional subsystems created by LLMs
+- **Context Window Thrashing Detection** - Finds reimplementations due to forgotten context
+- **Import Anxiety Pattern Detection** - Catches defensive over-importing
+- **Enhanced Multi-Modal Semantic Analysis** - Uses data flow, return patterns, and complexity
+- **Intelligent Auto-Fix System** - Generates fixes with confidence scores and impact analysis
+
+### Output & Integration
 - **Risk scoring system** with configurable thresholds
 - **Multiple output formats** (text, JSON, SARIF coming soon)
-- **🆕 Semantic Hypervector Analysis** - Detects deep semantic duplicates and patterns using high-dimensional computing
+- **VS Code Extension** for real-time detection
+- **CI/CD Integration** ready
 
 ## Installation
 
@@ -126,6 +141,8 @@ semantic:
 
 ## Issue Types Detected
 
+### Core Issue Types
+
 | Issue Type | Description | Default Weight |
 |------------|-------------|----------------|
 | `circular_import` | Import cycles that can cause runtime failures | 3 |
@@ -135,12 +152,45 @@ semantic:
 | `wrapper_abstraction` | Trivial wrappers that add no value | 1 |
 | `hallucinated_import` | Imports of non-existent modules | 3 |
 | `tail_chasing_chain` | Temporal pattern of superficial fixes | 4 |
-| **`semantic_duplicate_function`** | Functions with different structure but same semantics | 3 |
-| **`prototype_fragmentation`** | Multiple implementations of the same concept | 3 |
-| **`semantic_stagnant_placeholder`** | Stubs that never evolve semantically | 2 |
-| **`rename_cascade_chain`** | Functions renamed without semantic changes | 4 |
 
-## 🆕 Semantic Hypervector Analysis
+### Semantic Analysis Issues
+
+| Issue Type | Description | Default Weight |
+|------------|-------------|----------------|
+| `semantic_duplicate_function` | Functions with different structure but same semantics | 3 |
+| `prototype_fragmentation` | Multiple implementations of the same concept | 3 |
+| `semantic_stagnant_placeholder` | Stubs that never evolve semantically | 2 |
+| `rename_cascade_chain` | Functions renamed without semantic changes | 4 |
+
+### 🆕 Advanced Pattern Issues
+
+| Issue Type | Description | Default Weight |
+|------------|-------------|----------------|
+| `hallucination_cascade` | Entire fictional subsystems created to satisfy errors | 4 |
+| `context_window_thrashing` | Reimplementation due to forgotten context | 3 |
+| `import_anxiety` | Defensive over-importing patterns | 1 |
+| `enhanced_semantic_duplicate` | Multi-modal semantic duplicate detection | 3 |
+
+## 🆕 Advanced Features
+
+For detailed documentation on advanced features, see [docs/ADVANCED_FEATURES.md](docs/ADVANCED_FEATURES.md).
+
+### Quick Overview
+
+1. **Hallucination Cascade Detection**: Identifies when LLMs create entire fictional subsystems
+2. **Context Window Thrashing**: Detects reimplementations due to lost context
+3. **Import Anxiety Patterns**: Finds defensive over-importing
+4. **Enhanced Semantic Analysis**: Multi-modal duplicate detection
+5. **Intelligent Auto-Fix System**: Generates fixes with confidence scores
+
+### Enabling Advanced Features
+
+```yaml
+# .tailchasing.yml
+enable_advanced_analyzers: true
+```
+
+## 🧬 Semantic Hypervector Analysis
 
 The Tail Chasing Detector now includes advanced semantic analysis using hypervector computing (HDC). This feature can detect semantic patterns that traditional AST-based analysis would miss.
 
@@ -180,6 +230,15 @@ semantic:
     NAME_TOKENS: 1.0
     CALLS: 1.2  # Emphasize function calls
     DOC_TOKENS: 0.8
+
+# Enable advanced analyzers
+enable_advanced_analyzers: true
+
+# Configure advanced features
+advanced_thresholds:
+  hallucination_min_cluster: 3
+  context_window_min_distance: 500
+  import_anxiety_unused_ratio: 0.66
 ```
 
 ### Example: Semantic Duplicate Detection
