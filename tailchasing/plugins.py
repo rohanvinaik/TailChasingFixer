@@ -12,6 +12,17 @@ from .analyzers.missing_symbols import MissingSymbolAnalyzer
 from .analyzers.git_chains import GitChainAnalyzer
 from .analyzers.semantic_hv import SemanticHVAnalyzer
 
+# Import new analyzers
+try:
+    from .analyzers.tdd_antipatterns import TDDAntipatternAnalyzer
+    from .analyzers.cross_file_duplication import CrossFileDuplicationAnalyzer
+    from .analyzers.cargo_cult import CargoCultDetector
+    from .analyzers.root_cause_tracer import RootCauseTracer
+    from .analyzers.explainer import TailChasingExplainer
+    NEW_ANALYZERS_AVAILABLE = True
+except ImportError:
+    NEW_ANALYZERS_AVAILABLE = False
+
 # Import advanced analyzers
 try:
     from .analyzers.advanced import (
@@ -34,6 +45,14 @@ DEFAULT_ANALYZERS = [
     GitChainAnalyzer(),
     SemanticHVAnalyzer(),
 ]
+
+# Add new analyzers if available
+if NEW_ANALYZERS_AVAILABLE:
+    DEFAULT_ANALYZERS.extend([
+        TDDAntipatternAnalyzer(),
+        CrossFileDuplicationAnalyzer(),
+        CargoCultDetector(),
+    ])
 
 # Advanced analyzers (optional)
 ADVANCED_ANALYZERS = []

@@ -18,11 +18,17 @@ pip install tail-chasing-detector
 # Install with all features
 pip install "tail-chasing-detector[all]"
 
-# Run analysis
+# Run basic analysis
 tailchasing .
 
-# With semantic analysis
-tailchasing . --semantic
+# With natural language explanations
+tailchasing analyze . --explain
+
+# With interactive visualization
+tailchasing analyze . --visualize --open-browser
+
+# Combined analysis with all features
+tailchasing analyze . --explain --visualize --output report.html
 ```
 
 ### VS Code Extension
@@ -56,6 +62,11 @@ This pattern emerges because LLMs operate with limited context windows, causing 
 - **Git history integration** to detect fix patterns
 
 ### 🆕 Advanced Features
+- **Test-Driven Development Anti-patterns** - Detects mirror tests, brittle assertions, and redundant test coverage
+- **Cross-File Semantic Duplication** - Finds duplicates across modules with architectural awareness
+- **Cargo Cult Programming Detection** - Identifies boilerplate copied without understanding
+- **Interactive Root Cause Visualization** - Traces and visualizes tail-chasing chains
+- **Natural Language Explanations** - Human-readable explanations of why patterns are problematic
 - **Semantic Hypervector Analysis** - Detects deep semantic duplicates using high-dimensional computing
 - **Hallucination Cascade Detection** - Identifies entire fictional subsystems created by LLMs
 - **Context Window Thrashing Detection** - Finds reimplementations due to forgotten context
@@ -170,6 +181,11 @@ semantic:
 | `context_window_thrashing` | Reimplementation due to forgotten context | 3 |
 | `import_anxiety` | Defensive over-importing patterns | 1 |
 | `enhanced_semantic_duplicate` | Multi-modal semantic duplicate detection | 3 |
+| `mirror_test` | Tests that duplicate implementation logic | 2 |
+| `brittle_test_assertions` | Tests with overly specific assertions | 2 |
+| `incomplete_test_coverage` | Tests missing edge cases and error conditions | 2 |
+| `cross_file_duplication` | Semantic duplicates across different files | 3 |
+| `cargo_cult_*` | Various patterns of copying without understanding | 1-3 |
 
 ## 🆕 Advanced Features
 
@@ -182,6 +198,39 @@ For detailed documentation on advanced features, see [docs/ADVANCED_FEATURES.md]
 3. **Import Anxiety Patterns**: Finds defensive over-importing
 4. **Enhanced Semantic Analysis**: Multi-modal duplicate detection
 5. **Intelligent Auto-Fix System**: Generates fixes with confidence scores
+
+### 📊 Interactive Visualizations
+
+Generate interactive HTML reports that visualize tail-chasing chains:
+
+```bash
+# Generate and open visualization
+tailchasing analyze . --visualize --open-browser
+```
+
+The visualization includes:
+- Mermaid diagrams showing how errors propagate
+- Timeline of tail-chasing events
+- Risk scores and severity indicators
+- Actionable resolution suggestions
+
+### 💬 Natural Language Explanations
+
+Get human-readable explanations of detected patterns:
+
+```bash
+# Get explanations for all issues
+tailchasing analyze . --explain
+
+# Explain a specific pattern type
+tailchasing explain-pattern phantom_function
+```
+
+Explanations include:
+- What happened and why it's problematic
+- Root cause analysis
+- Specific fix recommendations
+- Prevention strategies
 
 ### Enabling Advanced Features
 
@@ -288,6 +337,36 @@ from utils.advanced_processor import DataTransformer
 
 # Reference to non-existent function
 result = calculate_advanced_metrics(data)  # Never defined!
+```
+
+### 🆕 Test Anti-Patterns
+```python
+# Detected as mirror_test - test duplicates implementation
+def test_calculate_average():
+    numbers = [1, 2, 3, 4, 5]
+    total = sum(numbers)  # Same logic as implementation!
+    count = len(numbers)
+    expected = total / count
+    assert calculate_average(numbers) == expected
+
+# Detected as brittle_test_assertions
+def test_user_creation():
+    user = create_user("John", "Doe")
+    # Too specific - will break with any formatting change
+    assert str(user) == "User(id=12345, name='John Doe', created_at='2024-01-15 10:30:45.123456')"
+```
+
+### 🆕 Cargo Cult Patterns
+```python
+# Detected as cargo_cult_unnecessary_super
+class MyClass:  # No parent class!
+    def __init__(self):
+        super().__init__()  # Unnecessary!
+        self.value = 42
+
+# Detected as cargo_cult_trivial_wrapper
+def get_user_name(user):
+    return user.name  # Just use user.name directly!
 ```
 
 ## Integration with Existing Tools
