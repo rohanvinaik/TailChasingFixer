@@ -85,7 +85,7 @@ class EnhancedSemanticAnalyzer:
         
         # Find similar pairs
         issues = []
-        similar_pairs = index.top_similar_pairs(limit=20)
+        similar_pairs = index.find_all_similar_pairs(limit=20)
         
         for (meta_a, meta_b, dist, z, contrib) in similar_pairs:
             if z >= self.z_threshold:
