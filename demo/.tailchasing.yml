@@ -1,0 +1,30 @@
+# Demo configuration for tail-chasing detection
+
+paths:
+  include:
+    - .
+  exclude:
+    - __pycache__
+
+semantic:
+  enable: true
+  hv_dim: 4096  # Smaller for demo
+  min_functions: 5  # Lower threshold for demo
+  z_threshold: 2.0  # Slightly lower for demo
+  
+  channel_weights:
+    NAME_TOKENS: 1.0
+    DOC_TOKENS: 0.8
+    CALLS: 1.2
+    CONTROL: 0.9
+
+risk_thresholds:
+  warn: 10
+  fail: 25
+
+scoring_weights:
+  semantic_duplicate_function: 3
+  circular_import: 4
+  phantom_function: 3
+  missing_symbol: 3
+  hallucinated_import: 4

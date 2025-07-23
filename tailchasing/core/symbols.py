@@ -38,6 +38,43 @@ class SymbolTable:
         self.modules: Dict[str, Set[str]] = {}  # module -> exported names
         self.file_symbols: Dict[str, List[Symbol]] = {}  # file -> symbols defined
         
+    @property
+    def functions(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Get all function symbols grouped by name."""
+        result = {}
+        for name, symbols in self.symbols.items():
+            func_symbols = []
+            for sym in symbols:
+                if sym.kind == "function":
+                    func_symbols.append({
+                        "file": sym.file,
+                        "lineno": sym.line,
+                        "node": sym.node,
+                        "args": sym.args,
+                        "name": sym.name
+                    })
+            if func_symbols:
+                result[name] = func_symbols
+        return result
+    
+    @property
+    def classes(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Get all class symbols grouped by name."""
+        result = {}
+        for name, symbols in self.symbols.items():
+            class_symbols = []
+            for sym in symbols:
+                if sym.kind == "class":
+                    class_symbols.append({
+                        "file": sym.file,
+                        "lineno": sym.line,
+                        "node": sym.node,
+                        "name": sym.name
+                    })
+            if class_symbols:
+                result[name] = class_symbols
+        return result
+        
     def add_symbol(self, symbol: Symbol):
         """Add a symbol to the table."""
         self.symbols.setdefault(symbol.name, []).append(symbol)

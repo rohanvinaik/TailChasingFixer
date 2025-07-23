@@ -65,7 +65,8 @@ class HallucinationCascadeAnalyzer:
                     if isinstance(node, ast.FunctionDef) and not any(
                         isinstance(parent, ast.ClassDef) 
                         for parent in ast.walk(tree)
-                        if parent != node and hasattr(parent, 'body') and node in parent.body
+                        if parent != node and hasattr(parent, 'body') and 
+                        isinstance(parent.body, list) and node in parent.body
                     ):
                         graph.add_node(
                             node.name,

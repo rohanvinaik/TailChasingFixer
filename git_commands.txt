@@ -1,0 +1,51 @@
+# Git commands to push the new tail-chasing detector features
+# Copy and paste these commands into your terminal
+
+# First, make sure you're in the right directory
+cd /Users/rohanvinaik/github/TailChasingFixer
+
+# Check current status
+git status
+
+# Add all the new analyzer files
+git add tailchasing/analyzers/tdd_antipatterns.py
+git add tailchasing/analyzers/cross_file_duplication.py
+git add tailchasing/analyzers/cargo_cult.py
+git add tailchasing/analyzers/root_cause_tracer.py
+git add tailchasing/analyzers/explainer.py
+
+# Add the enhanced CLI
+git add tailchasing/cli_enhanced.py
+
+# Add updated plugins.py
+git add tailchasing/plugins.py
+
+# Add documentation
+git add docs/IMPLEMENTED_IMPROVEMENTS.md
+
+# Add updated README
+git add README.md
+
+# Check what will be committed
+git status
+
+# Commit with a descriptive message
+git commit -m "feat: Add advanced tail-chasing detection features
+
+- Add TDD anti-pattern detector for mirror tests and brittle assertions
+- Add cross-file semantic duplication analysis
+- Add cargo cult programming pattern detection
+- Add interactive root cause visualization with HTML reports
+- Add natural language explanations for all patterns
+- Add enhanced CLI with analyze and explain-pattern commands
+- Update README with new features and examples
+
+These enhancements significantly improve the tool's ability to detect
+and explain LLM-induced anti-patterns, making it more valuable for
+teams using AI-assisted development."
+
+# Push to GitHub
+git push origin main
+
+# Verify the push
+git log --oneline -1

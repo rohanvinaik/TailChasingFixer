@@ -134,8 +134,12 @@ class PlaceholderVisitor(ast.NodeVisitor):
             return True
         if isinstance(value, ast.Constant):
             return True
-        if isinstance(value, (ast.List, ast.Dict, ast.Tuple)) and not value.elts:
-            return True  # Empty collection
+        if isinstance(value, ast.List) and not value.elts:
+            return True  # Empty list
+        if isinstance(value, ast.Dict) and not value.keys:
+            return True  # Empty dict
+        if isinstance(value, ast.Tuple) and not value.elts:
+            return True  # Empty tuple
             
         return False
         
