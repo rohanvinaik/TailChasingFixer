@@ -192,7 +192,8 @@ def main():
         file_paths=files,
         ast_index=ast_index,
         symbol_table=symbol_table,
-        source_cache=source_cache
+        source_cache=source_cache,
+        cache={}  # Initialize empty cache for analyzers
     )
     
     # Load and run analyzers

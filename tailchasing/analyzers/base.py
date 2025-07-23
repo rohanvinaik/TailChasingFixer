@@ -29,6 +29,7 @@ class AnalysisContext:
     ast_index: Dict[str, ast.AST]
     symbol_table: Any  # Avoid circular import
     source_cache: Dict[str, List[str]]
+    cache: Dict[str, Any]  # General purpose cache for analyzers
     
     def is_excluded(self, path: str) -> bool:
         """Check if a path should be excluded based on config."""

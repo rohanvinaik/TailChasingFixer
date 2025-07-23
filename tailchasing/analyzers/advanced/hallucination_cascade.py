@@ -158,9 +158,11 @@ class HallucinationCascadeAnalyzer:
             locations = []
             
             for node in component:
-                node_data = graph.nodes[node]
-                files.add(node_data['file'])
-                locations.append((node_data['file'], node_data['line']))
+                if node in graph:
+                    node_data = graph.nodes[node]
+                    if 'file' in node_data:
+                        files.add(node_data['file'])
+                        locations.append((node_data['file'], node_data['line']))
             
             return Issue(
                 kind="hallucination_cascade",
