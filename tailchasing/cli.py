@@ -5,6 +5,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import List, Optional
+from datetime import datetime
 
 from . import __version__
 from .config import Config
@@ -102,6 +103,18 @@ def main():
         "--disable",
         action="append",
         help="Disable specific analyzers (can be specified multiple times)"
+    )
+    
+    parser.add_argument(
+        "--show-suggestions",
+        action="store_true",
+        help="Show fix suggestions in terminal output"
+    )
+    
+    parser.add_argument(
+        "--generate-fixes",
+        action="store_true",
+        help="Generate an interactive fix script"
     )
     
     args = parser.parse_args()
@@ -238,6 +251,16 @@ def main():
                 location = f"{issue.file}:{issue.line}" if issue.file else "global"
                 print(f"  [{issue.kind}] {location} - {issue.message}")
                 
+                # Show suggestions if requested
+                if args.show_suggestions and issue.suggestions:
+                    print("    Suggestions:")
+                    for suggestion in issue.suggestions[:2]:
+                        # Indent multi-line suggestions
+                        for line in suggestion.split('\n'):
+                            print(f"      {line}")
+                    if len(issue.suggestions) > 2:
+                        print(f"      ... and {len(issue.suggestions) - 2} more suggestions")
+                
     # Generate full reports
     output_dir = Path(config.get("report.output_dir", "."))
     results = reporter.generate_reports(issue_collection.issues, output_dir)
@@ -250,6 +273,65 @@ def main():
     for fmt, path in results.items():
         if path.endswith("_file"):
             print(f"\n{fmt.replace('_file', '').upper()} report saved to: {path}")
+            
+    # Generate fix script if requested
+    if args.generate_fixes and issue_collection.issues:
+        try:
+            from .core.suggestions import InteractiveFixGenerator
+            fix_generator = InteractiveFixGenerator()
+            
+            # Generate fix script
+            fix_path = output_dir / "tailchasing_fixes.py"
+            fix_script = fix_generator.generate_fix_script(issue_collection.issues, fix_path)
+            fix_path.write_text(fix_script)
+            fix_path.chmod(0o755)  # Make executable
+            
+            print(f"\nFix script generated: {fix_path}")
+            print(f"Run it with: python {fix_path}")
+            print("\nThe fix script will:")
+            print("  - Show each issue interactively")
+            print("  - Let you review and apply fixes")
+            print("  - Track which fixes were applied")
+            
+            # Also generate a detailed suggestions file
+            from .core.suggestions import FixSuggestionGenerator
+            suggestion_gen = FixSuggestionGenerator()
+            
+            suggestions_path = output_dir / "tailchasing_suggestions.md"
+            with open(suggestions_path, 'w') as f:
+                f.write("# Tail-Chasing Fix Suggestions\n\n")
+                f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                
+                # Group by issue type
+                from collections import defaultdict
+                by_type = defaultdict(list)
+                for issue in issue_collection.issues:
+                    by_type[issue.kind].append(issue)
+                
+                for issue_type, issues in sorted(by_type.items()):
+                    f.write(f"\n## {issue_type.replace('_', ' ').title()} ({len(issues)} issues)\n\n")
+                    
+                    # Show first few examples
+                    for issue in issues[:3]:
+                        location = f"{issue.file}:{issue.line}" if issue.file else "global"
+                        f.write(f"### {location}\n")
+                        f.write(f"{issue.message}\n\n")
+                        
+                        # Get enhanced suggestions
+                        enhanced_suggestions = suggestion_gen.generate_suggestions(issue)
+                        for suggestion in enhanced_suggestions:
+                            f.write(f"{suggestion}\n\n")
+                        f.write("---\n\n")
+                    
+                    if len(issues) > 3:
+                        f.write(f"*... and {len(issues) - 3} more {issue_type} issues*\n\n")
+            
+            print(f"\nDetailed suggestions saved to: {suggestions_path}")
+            
+        except ImportError:
+            print("\nNote: Fix generation requires the enhanced suggestions module.")
+        except Exception as e:
+            logging.error(f"Failed to generate fix script: {e}")
             
     # Check fail threshold
     if args.fail_on is not None:
