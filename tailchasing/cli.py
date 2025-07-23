@@ -269,11 +269,53 @@ def main():
     if args.json and "json" in results:
         print(results["json"])
         
-    # Print file locations for saved reports
-    for fmt, path in results.items():
-        if path.endswith("_file"):
-            print(f"\n{fmt.replace('_file', '').upper()} report saved to: {path}")
+    # Always show paths to generated reports in terminal (unless pure JSON mode)
+    if not (args.json and len(config.get("report.formats", [])) == 1):
+        print("\nGenerated Reports:")
+        print("-" * 40)
+        
+        # Show all generated report files
+        report_files = []
+        for fmt, content_or_path in results.items():
+            if fmt.endswith("_file"):
+                report_type = fmt.replace("_file", "").upper()
+                report_files.append((report_type, content_or_path))
+                print(f"{report_type} report: {content_or_path}")
+        
+        # If no files were saved, show inline report info
+        if not report_files:
+            if "text" in results:
+                print("Text report: (displayed above)")
+            if "json" in results and not args.json:
+                print("JSON report: (use --json flag to output)")
+            if "html" in results:
+                print("HTML report: (use --output to save to file)")
             
+    # Always check if fix generation would be helpful (unless pure JSON mode)
+    if not (args.json and len(config.get("report.formats", [])) == 1) and issue_collection.issues:
+        # Calculate how many issues have fixable patterns
+        fixable_types = {
+            'semantic_duplicate_function', 'duplicate_function', 'phantom_function',
+            'missing_symbol', 'circular_import', 'prototype_fragmentation',
+            'hallucination_cascade', 'import_anxiety', 'wrapper_abstraction',
+            'context_window_thrashing'
+        }
+        fixable_issues = [i for i in issue_collection.issues if i.kind in fixable_types]
+        
+        if fixable_issues:
+            print("\nFix Suggestions:")
+            print("-" * 40)
+            
+            if args.generate_fixes:
+                # Fix generation code (already exists below)
+                pass
+            else:
+                print(f"Found {len(fixable_issues)} fixable issues out of {len(issue_collection.issues)} total")
+                print("Run with --generate-fixes to create:")
+                print("  • Interactive fix script (tailchasing_fixes.py)")
+                print("  • Detailed suggestions file (tailchasing_suggestions.md)")
+                print("\nExample: tailchasing . --generate-fixes")
+    
     # Generate fix script if requested
     if args.generate_fixes and issue_collection.issues:
         try:
@@ -286,12 +328,13 @@ def main():
             fix_path.write_text(fix_script)
             fix_path.chmod(0o755)  # Make executable
             
-            print(f"\nFix script generated: {fix_path}")
-            print(f"Run it with: python {fix_path}")
-            print("\nThe fix script will:")
-            print("  - Show each issue interactively")
-            print("  - Let you review and apply fixes")
-            print("  - Track which fixes were applied")
+            # Show in the standard location for generated files
+            if not args.generate_fixes:
+                # This case is handled above in "Fix Suggestions" section
+                pass
+            else:
+                print(f"Interactive fix script: {fix_path}")
+                print(f"  Run with: python {fix_path}")
             
             # Also generate a detailed suggestions file
             from .core.suggestions import FixSuggestionGenerator
@@ -326,7 +369,7 @@ def main():
                     if len(issues) > 3:
                         f.write(f"*... and {len(issues) - 3} more {issue_type} issues*\n\n")
             
-            print(f"\nDetailed suggestions saved to: {suggestions_path}")
+            print(f"Detailed suggestions: {suggestions_path}")
             
         except ImportError:
             print("\nNote: Fix generation requires the enhanced suggestions module.")

@@ -30,6 +30,10 @@ class Reporter:
         output_dir = output_dir or Path(self.config.get("report", {}).get("output_dir", "."))
         formats = self.config.get("report", {}).get("formats", ["text"])
         
+        # Always save text report to file if there are many issues
+        if len(issues) > 50 and "text" not in formats:
+            formats.append("text")
+        
         results = {}
         
         for fmt in formats:
