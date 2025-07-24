@@ -261,6 +261,8 @@ Example: tailchasing . --generate-fixes
 | `prototype_fragmentation` | Multiple implementations of same concept | 3 |
 | `semantic_stagnant_placeholder` | Stubs that never evolve | 2 |
 
+**Note**: Semantic analysis includes **smart filtering** to avoid false positives. The system automatically ignores legitimate patterns like `__init__.py` files, test boilerplate, property accessors, and protocol implementations.
+
 ### Advanced Pattern Issues
 
 | Issue Type | Description | Default Weight |

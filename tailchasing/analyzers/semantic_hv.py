@@ -18,6 +18,7 @@ from ..semantic.index import SemanticIndex
 from ..semantic.similarity import SimilarityAnalyzer
 from ..semantic.prototypes import PrototypeDetector
 from ..semantic.drift import SemanticDriftAnalyzer
+from ..semantic.smart_filter import SemanticDuplicateFilter
 
 
 class SemanticHVAnalyzer(Analyzer):
@@ -38,6 +39,7 @@ class SemanticHVAnalyzer(Analyzer):
         self.similarity_analyzer: Optional[SimilarityAnalyzer] = None
         self.prototype_detector: Optional[PrototypeDetector] = None
         self.drift_analyzer: Optional[SemanticDriftAnalyzer] = None
+        self.smart_filter: Optional[SemanticDuplicateFilter] = None
         self._feature_cache: Dict[str, Dict] = {}
     
     def run(self, ctx: AnalysisContext) -> List[Issue]:
@@ -96,10 +98,14 @@ class SemanticHVAnalyzer(Analyzer):
         self.similarity_analyzer = SimilarityAnalyzer(config)
         self.prototype_detector = PrototypeDetector(self.index.space, config)
         self.drift_analyzer = SemanticDriftAnalyzer(self.index.space, config)
+        self.smart_filter = SemanticDuplicateFilter()
     
     def _encode_functions(self, ctx: AnalysisContext) -> None:
         """Encode all functions as hypervectors."""
         config = ctx.config.get('semantic', {})
+        
+        # Store AST index for smart filtering
+        self._ast_index = ctx.ast_index
         
         for func_name, entries in ctx.symbol_table.functions.items():
             for entry in entries:
@@ -143,6 +149,36 @@ class SemanticHVAnalyzer(Analyzer):
         
         # Apply FDR correction
         significant_pairs = self.similarity_analyzer.filter_significant_pairs(pairs)
+        
+        # Apply smart filtering to remove false positives (like __init__.py patterns)
+        if self.smart_filter and significant_pairs:
+            # Convert to format expected by smart filter
+            filter_pairs = []
+            for id1, id2, distance, z_score, analysis in significant_pairs:
+                func1 = self._parse_func_id(id1)
+                func2 = self._parse_func_id(id2)
+                filter_pairs.append((
+                    (func1['name'], func1['file'], func1['line']),
+                    (func2['name'], func2['file'], func2['line']),
+                    distance, z_score, {}
+                ))
+            
+            # Filter out legitimate patterns
+            filtered_pairs = self.smart_filter.filter_semantic_duplicates(
+                filter_pairs, 
+                # We need the AST index - get it from context
+                getattr(self, '_ast_index', {})
+            )
+            
+            # Convert back to original format
+            filtered_indices = set()
+            for i, (func1_info, func2_info, _, _, _) in enumerate(filter_pairs):
+                for filtered_func1, filtered_func2, _, _, _ in filtered_pairs:
+                    if (func1_info == filtered_func1 and func2_info == filtered_func2):
+                        filtered_indices.add(i)
+                        break
+            
+            significant_pairs = [pair for i, pair in enumerate(significant_pairs) if i in filtered_indices]
         
         # Create issues for significant pairs
         for id1, id2, distance, z_score, analysis in significant_pairs:
