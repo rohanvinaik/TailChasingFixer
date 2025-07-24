@@ -5,26 +5,33 @@
 
 Detects LLM-assisted *tail-chasing* anti-patterns - a software development anti-pattern where LLMs repeatedly make superficial or circular fixes in response to immediate errors, without addressing underlying causes.
 
+## ✨ New in v0.1.0: Advanced Features
+
+🧠 **Enhanced Pattern Detection**: Hallucination cascades, context window thrashing, import anxiety  
+🔬 **Multimodal Semantic Analysis**: Deep semantic duplicate detection across multiple dimensions  
+🔧 **Intelligent Auto-Fixing**: Generate and apply fixes with comprehensive impact analysis  
+📊 **Interactive Visualizations**: HTML reports with dependency graphs, heatmaps, and similarity matrices  
+🗣️ **Natural Language Explanations**: Detailed explanations of why patterns occur and how to fix them
+
+[📖 See Advanced Features Documentation](docs/ADVANCED_FEATURES.md)
+
 ## 🚀 Quick Start
 
 ```bash
 # Install
 pip install tail-chasing-detector
 
-# Run basic analysis
+# Basic analysis
 tailchasing .
 
-# Generate HTML report
-tailchasing . --html
+# Enhanced analysis with all new features
+tailchasing-enhanced . --enhanced --semantic-multimodal --html report.html
 
-# Show fix suggestions in terminal
-tailchasing . --show-suggestions
+# Auto-fix with detailed explanations
+tailchasing-enhanced . --auto-fix --explain --fix-plan fixes.json
 
-# Generate interactive fix script and detailed suggestions
-tailchasing . --generate-fixes
-
-# Full analysis with all outputs
-tailchasing . --html --json --show-suggestions --generate-fixes --output ./report
+# Generate comprehensive HTML report
+tailchasing-enhanced . --html full_report.html --enhanced
 ```
 
 ## What is a Tail-Chasing Bug?

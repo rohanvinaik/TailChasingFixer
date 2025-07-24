@@ -1,43 +1,71 @@
 """
-Import Anxiety Pattern Detection
-
-Detects when LLM adds excessive "defensive" imports.
-Pattern: Error → Add import → Add related imports "just in case"
+Import anxiety analyzer for detecting defensive over-importing patterns.
 """
 
 import ast
-from typing import Dict, List, Set, Tuple
 from collections import defaultdict
-
-from ..base import AnalysisContext
+from typing import List, Dict, Set
+from ..base import Analyzer
 from ...core.issues import Issue
 
 
-class ImportAnxietyAnalyzer:
-    """Detects defensive over-importing patterns."""
+class ImportAnxietyAnalyzer(Analyzer):
+    """Detect defensive over-importing patterns."""
     
     name = "import_anxiety"
     
     def __init__(self):
-        self.min_imports_threshold = 5
-        self.unused_ratio_threshold = 0.66  # More than 2/3 unused
+        self.min_imports = 5  # Minimum imports to consider anxiety
+        self.unused_ratio_threshold = 2  # Unused:used ratio threshold
     
-    def run(self, ctx: AnalysisContext) -> List[Issue]:
-        """Analyze imports for anxiety patterns."""
+    def run(self, ctx) -> List[Issue]:
+        """Run import anxiety analysis."""
         issues = []
         
         for filepath, tree in ctx.ast_index.items():
-            # Extract imports and usage
-            imports = self._extract_imports(tree)
-            usage = self._extract_usage(tree)
-            
-            # Analyze each module's imports
-            for module, imported_items in imports.items():
-                file_issue = self._analyze_module_imports(
-                    module, imported_items, usage, filepath
-                )
-                if file_issue:
-                    issues.append(file_issue)
+            file_issues = self._analyze_file_imports(filepath, tree)
+            issues.extend(file_issues)
+        
+        return issues
+    
+    def _analyze_file_imports(self, filepath: str, tree: ast.AST) -> List[Issue]:
+        """Analyze imports in a single file."""
+        issues = []
+        
+        # Extract imports and usage
+        imports = self._extract_imports(tree)
+        usage = self._extract_usage(tree)
+        
+        # Analyze each module's import pattern
+        for module, imported_items in imports.items():
+            if len(imported_items) >= self.min_imports:
+                used_items = usage.get(module, set())
+                unused_items = imported_items - used_items
+                
+                if len(unused_items) > len(used_items) * self.unused_ratio_threshold:
+                    import_pattern = self._detect_import_pattern(imported_items)
+                    
+                    issues.append(Issue(
+                        kind="import_anxiety",
+                        message=f"Importing {len(imported_items)} items from {module} but only using {len(used_items)}",
+                        severity=1,
+                        file=filepath,
+                        line=0,  # Would need more sophisticated line tracking
+                        evidence={
+                            "module": module,
+                            "imported_count": len(imported_items),
+                            "used_count": len(used_items),
+                            "unused_items": list(unused_items)[:10],  # Limit for readability
+                            "pattern": import_pattern,
+                            "unused_ratio": len(unused_items) / max(len(used_items), 1)
+                        },
+                        suggestions=[
+                            f"Remove unused imports: {', '.join(list(unused_items)[:5])}{'...' if len(unused_items) > 5 else ''}",
+                            "Import only what you need",
+                            "Use qualified imports where appropriate",
+                            "Consider using 'from module import specific_item' instead of wildcard imports"
+                        ]
+                    ))
         
         return issues
     
@@ -48,154 +76,84 @@ class ImportAnxietyAnalyzer:
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    module_name = alias.name
-                    imports[module_name].add(alias.asname or module_name)
-            
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    for alias in node.names:
-                        if alias.name != '*':
-                            imports[node.module].add(alias.name)
+                    # For "import module", we consider the module name as imported
+                    imports[alias.name].add(alias.asname or alias.name)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                for alias in node.names:
+                    if alias.name == '*':
+                        # Wildcard import - flag as potential anxiety
+                        imports[node.module].add('*')
+                    else:
+                        imports[node.module].add(alias.name)
         
         return dict(imports)
     
     def _extract_usage(self, tree: ast.AST) -> Dict[str, Set[str]]:
-        """Extract all symbol usage from the AST."""
+        """Extract usage of imported items."""
         usage = defaultdict(set)
         
-        # Skip import statements themselves
-        import_nodes = set()
+        # This is simplified - a full implementation would need to track
+        # qualified names and handle aliased imports properly
         for node in ast.walk(tree):
-            if isinstance(node, (ast.Import, ast.ImportFrom)):
-                import_nodes.add(node)
-        
-        # Find all name usage
-        for node in ast.walk(tree):
-            # Skip if this is part of an import statement
-            skip = False
-            for import_node in import_nodes:
-                if node in ast.walk(import_node):
-                    skip = True
-                    break
-            
-            if skip:
-                continue
-            
             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
-                usage['direct'].add(node.id)
-            
+                # Simple heuristic: if we see a name being used, mark it as used
+                # This would need to be more sophisticated in a real implementation
+                for module in usage.keys():
+                    if node.id in usage[module]:
+                        usage[module].add(node.id)
             elif isinstance(node, ast.Attribute):
-                # Track attribute access
-                base = node
-                parts = []
-                while isinstance(base, ast.Attribute):
-                    parts.append(base.attr)
-                    base = base.value
-                
-                if isinstance(base, ast.Name):
-                    module = base.id
-                    if parts:
-                        # Record that we used something from this module
-                        usage[module].update(parts)
+                # Handle qualified access like "module.function"
+                if isinstance(node.value, ast.Name):
+                    module_name = node.value.id
+                    usage[module_name].add(node.attr)
         
         return dict(usage)
     
-    def _analyze_module_imports(self,
-                              module: str,
-                              imported_items: Set[str],
-                              usage: Dict[str, Set[str]],
-                              filepath: str) -> Issue:
-        """Analyze imports from a specific module."""
-        
-        # Skip if too few imports to be suspicious
-        if len(imported_items) < self.min_imports_threshold:
-            return None
-        
-        # Find which imports are actually used
-        used_items = usage.get(module, set())
-        unused_items = imported_items - used_items
-        
-        # Also check direct usage (for 'import module' style)
-        for item in imported_items:
-            if item in usage.get('direct', set()):
-                used_items.add(item)
-                unused_items.discard(item)
-        
-        # Calculate unused ratio
-        unused_ratio = len(unused_items) / len(imported_items) if imported_items else 0
-        
-        if unused_ratio > self.unused_ratio_threshold:
-            # Detect import pattern
-            pattern = self._detect_import_pattern(imported_items)
-            
-            # Find import line numbers
-            import_lines = self._find_import_lines(filepath, module)
-            
-            return Issue(
-                kind="import_anxiety",
-                message=f"Importing {len(imported_items)} items from {module} but only using "
-                       f"{len(used_items)} ({unused_ratio:.0%} unused). Pattern: {pattern}",
-                severity=1,
-                file=filepath,
-                line=import_lines[0] if import_lines else None,
-                evidence={
-                    'module': module,
-                    'imported_count': len(imported_items),
-                    'used_count': len(used_items),
-                    'unused_ratio': unused_ratio,
-                    'pattern': pattern,
-                    'unused_items': sorted(list(unused_items))[:10],  # Limit for readability
-                    'used_items': sorted(list(used_items))
-                },
-                suggestions=[
-                    f"Remove unused imports: {', '.join(sorted(list(unused_items))[:5])}"
-                    f"{'...' if len(unused_items) > 5 else ''}",
-                    "Only import what you actually use",
-                    "Consider using more specific imports instead of importing many related items"
-                ]
-            )
-        
-        return None
-    
     def _detect_import_pattern(self, items: Set[str]) -> str:
         """Detect patterns in import names."""
-        if not items:
-            return "empty"
+        items_list = list(items)
         
-        # Check for error/exception pattern
-        error_related = sum(1 for item in items 
-                          if 'error' in item.lower() or 'exception' in item.lower())
-        if error_related > len(items) * 0.7:
+        # Check for wildcard imports
+        if '*' in items:
+            return "wildcard_import"
+        
+        # Check for error/exception anxiety
+        error_items = [item for item in items_list 
+                      if 'error' in item.lower() or 'exception' in item.lower()]
+        if len(error_items) > len(items_list) * 0.5:
             return "error_handling_anxiety"
         
-        # Check for class import spree (all title case)
-        title_case = sum(1 for item in items if item[0].isupper())
-        if title_case == len(items):
+        # Check for class import spree
+        if all(item.istitle() for item in items_list if item != '*'):
             return "class_import_spree"
         
-        # Check for utility function spree (all lowercase)
-        lower_case = sum(1 for item in items if item[0].islower())
-        if lower_case == len(items) and len(items) > 10:
-            return "utility_function_spree"
-        
-        # Check for "everything" pattern
-        if len(items) > 20:
+        # Check for "import everything" pattern
+        if len(items) > 15:
             return "import_everything"
         
-        # Check for similar prefixes (importing all variants)
-        prefixes = defaultdict(int)
-        for item in items:
-            if '_' in item:
-                prefix = item.split('_')[0]
-                prefixes[prefix] += 1
-        
-        max_prefix_count = max(prefixes.values()) if prefixes else 0
-        if max_prefix_count > len(items) * 0.5:
-            return "variant_import_pattern"
+        # Check for related functionality grouping
+        common_prefixes = self._find_common_prefixes(items_list)
+        if len(common_prefixes) == 1 and len(common_prefixes[0]) > 3:
+            return f"grouped_functionality_{common_prefixes[0]}"
         
         return "mixed_imports"
     
-    def _find_import_lines(self, filepath: str, module: str) -> List[int]:
-        """Find line numbers where a module is imported."""
-        # This is a simplified version - in real implementation would use the AST
-        return [1]  # Placeholder
+    def _find_common_prefixes(self, items: List[str]) -> List[str]:
+        """Find common prefixes in import names."""
+        if not items:
+            return []
+        
+        prefixes = []
+        for length in range(3, 8):  # Check prefixes of length 3-7
+            prefix_groups = defaultdict(list)
+            for item in items:
+                if len(item) >= length:
+                    prefix = item[:length].lower()
+                    prefix_groups[prefix].append(item)
+            
+            # If more than half the items share a prefix, it's significant
+            for prefix, group in prefix_groups.items():
+                if len(group) > len(items) * 0.5:
+                    prefixes.append(prefix)
+        
+        return prefixes

@@ -18,19 +18,16 @@ try:
     from .analyzers.cross_file_duplication import CrossFileDuplicationAnalyzer
     from .analyzers.cargo_cult import CargoCultDetector
     from .analyzers.root_cause_tracer import RootCauseTracer
-    from .analyzers.explainer import TailChasingExplainer
     NEW_ANALYZERS_AVAILABLE = True
 except ImportError:
     NEW_ANALYZERS_AVAILABLE = False
 
 # Import advanced analyzers
 try:
-    from .analyzers.advanced import (
-        HallucinationCascadeAnalyzer,
-        ContextWindowThrashingAnalyzer,
-        ImportAnxietyAnalyzer,
-        EnhancedSemanticAnalyzer
-    )
+    from .analyzers.advanced.context_thrashing import ContextThrashingAnalyzer
+    from .analyzers.advanced.hallucination_cascade import HallucinationCascadeAnalyzer
+    from .analyzers.advanced.import_anxiety import ImportAnxietyAnalyzer
+    from .analyzers.advanced.enhanced_semantic import EnhancedSemanticAnalyzer
     ADVANCED_ANALYZERS_AVAILABLE = True
 except ImportError:
     ADVANCED_ANALYZERS_AVAILABLE = False
@@ -59,7 +56,7 @@ ADVANCED_ANALYZERS = []
 if ADVANCED_ANALYZERS_AVAILABLE:
     ADVANCED_ANALYZERS = [
         HallucinationCascadeAnalyzer(),
-        ContextWindowThrashingAnalyzer(),
+        ContextThrashingAnalyzer(),
         ImportAnxietyAnalyzer(),
         EnhancedSemanticAnalyzer(),
     ]

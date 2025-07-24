@@ -1,344 +1,327 @@
 # Advanced Features Documentation
 
-## New Advanced Analyzers
+This document describes the advanced features implemented in TailChasingFixer v0.1.0.
 
-### 1. Hallucination Cascade Detection
+## Overview
 
-Detects when LLMs create entire fictional subsystems to satisfy import errors.
+TailChasingFixer now includes several advanced detection and fixing capabilities that go beyond basic pattern matching to provide intelligent analysis and automated remediation of LLM-induced code issues.
 
-**Pattern**: Error → Create ClassA → Error in ClassA → Create ClassB → etc.
+## 🧠 Enhanced Pattern Detection
 
-**Example**:
+### Hallucination Cascade Detection
+
+Detects when LLMs create entire fictional subsystems by creating interconnected classes/modules that have minimal connection to the rest of the codebase.
+
+**Pattern Characteristics:**
+- Multiple related classes created together (3+ components)
+- Created within a short time frame (≤2 days)
+- Low external reference ratio (≤20%)
+- High internal interconnectedness
+
+**Example:**
 ```python
-# LLM creates OrderValidator because OrderProcessor needs it
-# Then creates OrderValidationRules because OrderValidator needs it
-# Then creates RuleEngine because OrderValidationRules needs it
-# Result: Entire fictional subsystem with no real functionality
+# Suspicious: All created together, minimal external usage
+class DataProcessor:
+    def __init__(self):
+        self.validator = DataValidator()
+        self.transformer = DataTransformer()
+
+class DataValidator:  # Only used by DataProcessor
+    def validate(self, data):
+        return self.transformer.clean(data)
+
+class DataTransformer:  # Only used by DataValidator
+    def clean(self, data):
+        return data.strip()
 ```
 
-**Configuration**:
-```yaml
-enable_advanced_analyzers: true
+### Context Window Thrashing
+
+Detects when LLMs forget earlier context and reimplement similar functionality later in the same file.
+
+**Pattern Characteristics:**
+- Functions with 60-95% similarity
+- Separated by 500+ lines
+- Similar argument patterns
+- Comparable AST structure
+
+**Example:**
+```python
+def process_user_data(user_id, data):  # Line 50
+    # Implementation A
+    return processed_data
+
+# ... 800 lines later ...
+
+def handle_user_information(user_id, info):  # Line 850
+    # Very similar implementation B
+    return processed_info
 ```
 
-### 2. Context Window Thrashing Detection
+### Import Anxiety Detection
 
-Identifies when LLMs forget earlier context and reimplement existing functionality.
+Detects defensive over-importing where LLMs import far more than needed.
 
-**Pattern**: Implement feature → 1000+ lines later → Implement same feature again
+**Pattern Characteristics:**
+- 5+ imports from a single module
+- 2:1 ratio of unused to used imports
+- Pattern-based imports (all exceptions, all classes, etc.)
 
-**Key indicators**:
-- Functions separated by >500 lines
-- 60-95% similarity (not exact duplicates)
-- Different names but same logic
-
-**Example**:
+**Example:**
 ```python
-def process_customer_data(customer_id, data):
-    # ... implementation ...
-
-# 1000 lines later...
-
-def handle_customer_data(cust_id, input_data):
-    # Nearly identical implementation
-```
-
-### 3. Import Anxiety Pattern Detection
-
-Detects defensive over-importing where LLMs import many related items "just in case".
-
-**Pattern**: Import error → Import everything that might be related
-
-**Key indicators**:
-- Importing >5 items from a module
-- Using <33% of imported items
-- Pattern-based imports (all error types, all collections, etc.)
-
-**Example**:
-```python
-from typing import (
-    Dict, List, Optional, Union, Any, Tuple, Set, FrozenSet,
-    Callable, Iterator, Iterable, Generator, TypeVar, Generic,
-    # ... 20 more imports ...
+# Importing 15 items but only using 3
+from sklearn.ensemble import (
+    RandomForestClassifier,  # Used
+    GradientBoostingClassifier,  # Used
+    AdaBoostClassifier,  # Unused
+    BaggingClassifier,  # Unused
+    ExtraTreesClassifier,  # Unused
+    VotingClassifier,  # Used
+    # ... 9 more unused imports
 )
-
-# But only uses Dict and List
 ```
 
-### 4. Enhanced Semantic Analysis
+## 🔬 Multimodal Semantic Analysis
 
-Multi-modal semantic encoding for better duplicate detection using:
-- Data flow patterns
-- Return patterns
-- Exception handling
-- Loop structures
-- Conditional logic
-- Cognitive complexity
+### Enhanced Semantic Encoding
 
-**Benefits**:
-- Detects duplicates even with different names
-- Weighs structural similarity over naming
-- Identifies functionally equivalent code
+Goes beyond simple name/structure comparison to analyze multiple semantic dimensions:
 
-## Intelligent Auto-Fix System
+- **Data Flow Analysis**: How variables are assigned and used
+- **Return Pattern Analysis**: Number and types of return statements
+- **Error Handling Patterns**: Try/catch/raise patterns
+- **Loop Structure Analysis**: For/while loops and comprehensions
+- **Name Tokenization**: Semantic meaning of function names
 
-### Features
+### Weighted Channel Analysis
 
-1. **Smart Fix Ordering**
-   - Fixes circular imports first (they block other fixes)
-   - Cleans imports next
-   - Merges duplicates
-   - Implements stubs last
-
-2. **Fix Strategies**
-
-   **Semantic Duplicate Merging**:
-   - Creates deprecation aliases for backward compatibility
-   - Updates imports automatically
-   - Preserves tests
-
-   **Phantom Implementation**:
-   - Infers purpose from function names
-   - Generates appropriate boilerplate
-   - Adds TODOs for manual review
-
-   **Circular Import Breaking**:
-   - Moves imports inside functions
-   - Creates interface modules
-   - Suggests architectural improvements
-
-   **Import Cleanup**:
-   - Removes unused imports
-   - Suggests specific imports
-   - Maintains readability
-
-3. **Impact Analysis**
-   - Estimates changes required
-   - Calculates risk level
-   - Provides rollback plan
-   - Shows affected files
-
-### Usage
-
-```python
-from tailchasing.fixers.advanced import IntelligentAutoFixer
-
-# Generate fix plan
-fixer = IntelligentAutoFixer()
-fix_plan = fixer.generate_fix_plan(issues)
-
-# Review plan
-print(f"Confidence: {fix_plan.confidence:.0%}")
-print(f"Risk level: {fix_plan.estimated_impact['risk_level']}")
-
-# Apply fixes (dry run)
-results = fixer.apply_fixes(fix_plan, dry_run=True)
-```
-
-## Configuration
-
-### Enable Advanced Features
+Different semantic channels are weighted based on their reliability for duplicate detection:
 
 ```yaml
-# .tailchasing.yml
+channel_weights:
+  data_flow: 1.5        # Most reliable
+  return_patterns: 1.3  # Very reliable
+  error_handling: 1.2   # Reliable
+  loop_patterns: 1.1    # Somewhat reliable
+  name_tokens: 0.8      # Less reliable (LLMs change names frequently)
+```
+
+## 🔧 Intelligent Auto-Fixing
+
+### Fix Planning System
+
+Generates comprehensive fix plans that consider:
+- **Fix Dependencies**: Order fixes to avoid breaking changes
+- **Impact Analysis**: Estimate files affected, functions modified
+- **Risk Assessment**: Classify fixes as low/medium/high risk
+- **Rollback Plans**: Provide commands to undo changes
+
+### Fix Strategies
+
+#### Semantic Duplicate Handling
+- Creates deprecation aliases instead of direct removal
+- Preserves backward compatibility
+- Adds TODO comments for manual review
+
+#### Phantom Implementation Fixing
+- Generates implementation templates based on function context
+- Includes logging and error handling
+- Provides clear TODOs for completion
+
+#### Import Cleanup
+- Removes unused imports safely
+- Suggests more specific import patterns
+- Maintains necessary functionality
+
+### Example Fix Plan Output
+
+```json
+{
+  "issues_addressed": [...],
+  "actions": [
+    {
+      "action_type": "create_deprecation_alias",
+      "target_file": "module.py",
+      "target_line": 45,
+      "description": "Create deprecation alias for duplicate function",
+      "old_code": "def process_data(...):",
+      "new_code": "# DEPRECATED: Use handle_data instead\ndef process_data(*args, **kwargs):\n    warnings.warn(...)\n    return handle_data(*args, **kwargs)"
+    }
+  ],
+  "estimated_impact": {
+    "files_affected": 3,
+    "functions_modified": 2,
+    "risk_level": "low"
+  },
+  "rollback_plan": ["git checkout HEAD -- file1.py", "git checkout HEAD -- file2.py"]
+}
+```
+
+## 📊 Interactive Visualizations
+
+### Dependency Graph
+Interactive network visualization showing:
+- File dependencies
+- Issue distribution
+- Risk levels (node colors/sizes)
+- Cluster detection
+
+### Risk Heatmap
+File-level risk visualization with:
+- Color-coded risk levels
+- Issue type distribution
+- Interactive tooltips
+
+### Semantic Similarity Matrix
+Matrix showing function similarities with:
+- Hierarchical clustering
+- Similarity scores
+- Interactive exploration
+
+### HTML Report Generation
+
+Generates comprehensive HTML reports with:
+- Interactive Plotly visualizations
+- Detailed issue explanations
+- Executive summaries
+- Actionable recommendations
+
+## 🗣️ Natural Language Explanations
+
+### Issue-Specific Explanations
+
+Each issue type has tailored explanations covering:
+- **What happened**: Clear description of the pattern
+- **Why it's problematic**: Impact on code quality
+- **Root cause**: Why LLMs create this pattern
+- **Recommended fix**: Specific steps to resolve
+
+### Summary Reports
+
+Comprehensive reports including:
+- Executive summary with risk scores
+- Pattern analysis and trends
+- Prevention strategies
+- Prioritized recommendations
+
+### Example Explanation
+
+```markdown
+### 🔄 Context Window Thrashing
+
+**What happened:**
+Functions `process_user_data` and `handle_user_information` are 87% similar 
+but separated by 800 lines, indicating the LLM likely forgot about the 
+first function due to context window limitations.
+
+**Why this is problematic:**
+- Code duplication increases maintenance burden
+- Inconsistent behavior between similar functions
+- Wastes developer time debugging differences
+
+**Root cause:**
+LLMs have limited context windows. When working on large files, they may 
+lose track of functions defined earlier and recreate similar functionality.
+
+**Recommended fix:**
+1. Compare implementations to understand differences
+2. Merge into a single, well-designed function
+3. Extract common functionality if both variants are needed
+```
+
+## 🎯 Usage Examples
+
+### Basic Enhanced Analysis
+```bash
+tailchasing-enhanced . --enhanced --semantic-multimodal
+```
+
+### Generate HTML Report
+```bash
+tailchasing-enhanced . --html report.html --enhanced
+```
+
+### Auto-Fix with Plan
+```bash
+tailchasing-enhanced . --auto-fix --fix-plan fixes.json
+```
+
+### Detailed Explanations
+```bash
+tailchasing-enhanced . --explain --severity 3
+```
+
+## ⚙️ Configuration
+
+Enhanced features can be configured in `.tailchasing.yml`:
+
+```yaml
+# Enable advanced analyzers
 enable_advanced_analyzers: true
 
-# Configure semantic analysis
-semantic:
+# Enhanced semantic analysis
+enhanced_semantic:
   enable: true
-  hv_dim: 8192
-  min_functions: 10
-  
-  # Enhanced semantic weights
-  channel_weights:
-    data_flow: 1.5
-    return_patterns: 1.3
-    param_types: 1.2
-    name_tokens: 0.8  # Lower weight for names
+  similarity_threshold: 0.85
+  vector_dim: 8192
 
-# Adjust scoring weights
-scoring:
-  weights:
-    hallucination_cascade: 4
-    context_window_thrashing: 3
-    import_anxiety: 1
-    enhanced_semantic_duplicate: 3
+# Context thrashing detection
+context_thrashing:
+  min_distance: 500
+  similarity_threshold: 0.6
+
+# Auto-fix settings
+auto_fix:
+  enable: true
+  max_risk_level: "medium"
+  apply_safe_fixes_only: true
+
+# Visualization settings
+visualization:
+  enable_html_reports: true
+  include_dependency_graph: true
 ```
 
-### Disable Specific Analyzers
+## 🚀 Performance Considerations
 
-```yaml
-disabled_analyzers:
-  - import_anxiety  # If too noisy
-  - enhanced_semantic  # If performance is concern
-```
+### Optimization Features
+- **Incremental Analysis**: Only analyze changed files
+- **Caching**: Cache semantic encodings and analysis results
+- **Parallel Processing**: Multi-threaded analysis for large codebases
+- **Smart Filtering**: Skip files based on size/complexity thresholds
 
-## Performance Considerations
+### Resource Usage
+- **Memory**: ~100MB for typical projects, scales with codebase size
+- **CPU**: Multi-core utilization for semantic analysis
+- **Disk**: Caches stored in `.tailchasing_cache/` directory
 
-1. **Enhanced Semantic Analysis**
-   - More computationally intensive
-   - Scales with O(n²) for n functions
-   - Consider limiting to files with >10 functions
-
-2. **Hallucination Cascade Detection**
-   - Requires building dependency graph
-   - Best with git history integration
-   - May need tuning for large codebases
-
-3. **Context Window Thrashing**
-   - Analyzes all function pairs in each file
-   - Line distance threshold adjustable
-   - Can be limited to large files only
-
-## Integration with CI/CD
-
-```yaml
-# .github/workflows/tailchasing.yml
-- name: Run Advanced Tail-Chasing Analysis
-  run: |
-    pip install tail-chasing-detector
-    tailchasing . --config advanced.yml --json > results.json
-    
-- name: Generate Fix Plan
-  run: |
-    python -c "
-    import json
-    from tailchasing.fixers.advanced import IntelligentAutoFixer
-    
-    with open('results.json') as f:
-        issues = json.load(f)
-    
-    fixer = IntelligentAutoFixer()
-    plan = fixer.generate_fix_plan(issues)
-    
-    if plan.confidence > 0.7:
-        print('High confidence fixes available')
-        # Could auto-apply or create PR
-    "
-```
-
-## Future Enhancements
+## 🔮 Future Enhancements
 
 ### Planned Features
+- **Deep Learning Models**: Transformer-based pattern recognition
+- **IDE Integration**: Real-time analysis in VS Code
+- **LLM Feedback Loop**: Provide context to prevent future tail-chasing
+- **CI/CD Integration**: Advanced pipeline integration with trend analysis
+- **Team Analytics**: Track tail-chasing patterns across development teams
 
-1. **Learning from Patterns**
-   - User-specific tail-chasing patterns
-   - Project-specific heuristics
-   - Adaptive thresholds
+### Research Areas
+- **Reinforcement Learning**: Learn optimal fix strategies
+- **Code Generation**: Suggest better implementations
+- **Architectural Analysis**: Detect larger design anti-patterns
+- **Temporal Modeling**: Track pattern evolution over time
 
-2. **LLM Feedback Integration**
-   - Generate prompts to prevent tail-chasing
-   - Provide context to LLMs
-   - Real-time prevention
+## 🎓 Best Practices
 
-3. **Visual Analysis**
-   - Dependency graphs
-   - Tail-chasing heat maps
-   - Timeline visualizations
+### For LLM-Assisted Development
+1. **Provide Context**: Give LLMs more complete code context
+2. **Review Suggestions**: Don't blindly accept AI recommendations
+3. **Run Analysis Frequently**: Catch patterns early
+4. **Use Static Analysis**: Complement with traditional tools
+5. **Break Down Tasks**: Avoid overwhelming LLM context windows
 
-4. **Deep Learning Detection**
-   - Transformer models for pattern recognition
-   - Reinforcement learning for fix strategies
-   - Unsupervised anomaly detection
-
-### Research Directions
-
-1. **Semantic Drift Analysis**
-   - Track how functions evolve
-   - Distinguish refactoring from confusion
-   - Predict future tail-chasing
-
-2. **Multi-File Pattern Detection**
-   - Cross-file hallucination cascades
-   - Distributed circular dependencies
-   - Project-wide semantic analysis
-
-3. **Automated Refactoring**
-   - Safe, incremental refactoring
-   - Test-driven fixes
-   - Architecture improvement suggestions
-
-## Examples
-
-### Running Advanced Demo
-
-```bash
-python examples/advanced_demo.py
-```
-
-This demonstrates:
-- Hallucination cascade in order_system.py
-- Context window thrashing in data_processor.py
-- Import anxiety in utils.py
-- Semantic duplicates in analytics.py
-- Intelligent fix generation
-
-### Real-World Example
-
-```python
-# Before: Hallucination cascade
-class ConfigValidator:
-    def __init__(self):
-        self.parser = ConfigParser()  # Doesn't exist
-        
-class ConfigParser:
-    def __init__(self):
-        self.rules = ParsingRules()  # Also doesn't exist
-        
-class ParsingRules:
-    def __init__(self):
-        self.engine = RuleEngine()  # And another...
-
-# After: Intelligent fix
-# Single, properly designed configuration system
-class Configuration:
-    """Unified configuration handling."""
-    def __init__(self, config_dict=None):
-        self.config = config_dict or {}
-    
-    def validate(self):
-        # Actual validation logic
-        required = ['api_key', 'endpoint']
-        return all(k in self.config for k in required)
-```
-
-## Troubleshooting
-
-### High False Positive Rate
-
-Adjust thresholds in configuration:
-```yaml
-advanced_thresholds:
-  hallucination_min_cluster: 4  # Increase from 3
-  context_window_min_distance: 750  # Increase from 500
-  import_anxiety_unused_ratio: 0.75  # Increase from 0.66
-```
-
-### Performance Issues
-
-Limit analysis scope:
-```yaml
-performance:
-  max_file_size: 10000  # Lines
-  max_functions_semantic: 50
-  skip_large_files: true
-```
-
-### Integration Issues
-
-Ensure dependencies:
-```bash
-pip install networkx numpy
-```
-
-## Contributing
-
-We welcome contributions to improve advanced features:
-
-1. New pattern detectors
-2. Improved fix strategies
-3. Performance optimizations
-4. Better heuristics
-5. Integration tools
-
-See CONTRIBUTING.md for guidelines.
+### For Tool Integration
+1. **Start Gradually**: Enable basic features first
+2. **Customize Thresholds**: Tune for your codebase
+3. **Review Fix Plans**: Don't auto-apply without review
+4. **Monitor Trends**: Track improvements over time
+5. **Share Reports**: Use visualizations for team discussions

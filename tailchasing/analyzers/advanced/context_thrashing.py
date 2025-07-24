@@ -1,46 +1,28 @@
 """
-Context Window Thrashing Detection
-
-Detects when LLM forgets earlier context and reimplements functionality.
-Pattern: Implement X → 1000 lines later → Implement X again slightly differently
+Context thrashing analyzer for detecting when LLMs exceed context windows.
 """
 
 import ast
 import difflib
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
-
-from ..base import AnalysisContext
+from typing import List, Dict, Tuple
+from ..base import Analyzer
 from ...core.issues import Issue
 
 
-@dataclass
-class FunctionSignature:
-    """Represents a function's semantic signature."""
-    name: str
-    args: List[str]
-    line: int
-    file: str
-    body_dump: str
-    calls: List[str]
-    returns: int
-
-
-class ContextWindowThrashingAnalyzer:
-    """Detects reimplementation due to context window limitations."""
+class ContextThrashingAnalyzer(Analyzer):
+    """Detect when LLM forgets context and reimplements functionality."""
     
-    name = "context_window_thrashing"
+    name = "context_thrashing"
     
     def __init__(self):
-        self.min_line_distance = 500
-        self.similarity_threshold_min = 0.6
-        self.similarity_threshold_max = 0.95
+        self.min_distance = 500  # Minimum line distance to consider thrashing
+        self.similarity_threshold = 0.6  # Minimum similarity to flag
+        self.max_similarity = 0.95  # Maximum similarity (avoid exact duplicates)
     
-    def run(self, ctx: AnalysisContext) -> List[Issue]:
-        """Analyze files for context window thrashing patterns."""
+    def run(self, ctx) -> List[Issue]:
+        """Run context thrashing analysis."""
         issues = []
         
-        # Analyze each file separately
         for filepath, tree in ctx.ast_index.items():
             file_issues = self._analyze_file(filepath, tree)
             issues.extend(file_issues)
@@ -48,130 +30,74 @@ class ContextWindowThrashingAnalyzer:
         return issues
     
     def _analyze_file(self, filepath: str, tree: ast.AST) -> List[Issue]:
-        """Analyze a single file for thrashing patterns."""
+        """Analyze a single file for context thrashing patterns."""
         issues = []
-        functions = self._extract_functions(filepath, tree)
+        functions = []
         
-        # Compare all function pairs
+        # Collect all functions with their metadata
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                functions.append({
+                    'name': node.name,
+                    'line': node.lineno,
+                    'args': [arg.arg for arg in node.args.args],
+                    'body_dump': ast.dump(node),
+                    'node': node
+                })
+        
+        # Compare functions that are far apart
         for i, func1 in enumerate(functions):
             for func2 in functions[i+1:]:
-                issue = self._compare_functions(func1, func2, filepath)
-                if issue:
-                    issues.append(issue)
+                line_distance = abs(func2['line'] - func1['line'])
+                
+                if line_distance >= self.min_distance:
+                    similarity = self._calculate_similarity(func1, func2)
+                    
+                    if self.similarity_threshold < similarity < self.max_similarity:
+                        issues.append(Issue(
+                            kind="context_window_thrashing",
+                            message=f"Functions '{func1['name']}' and '{func2['name']}' are {similarity:.0%} similar but {line_distance} lines apart",
+                            severity=3,
+                            file=filepath,
+                            line=func1['line'],
+                            symbol=func1['name'],
+                            evidence={
+                                "function1": func1['name'],
+                                "function2": func2['name'],
+                                "line1": func1['line'],
+                                "line2": func2['line'],
+                                "similarity": similarity,
+                                "distance": line_distance,
+                                "likely_cause": "context_window_exceeded"
+                            },
+                            suggestions=[
+                                f"Consider merging '{func1['name']}' and '{func2['name']}'",
+                                "Extract common functionality into a shared helper",
+                                "Review if both functions are actually needed",
+                                "Break large files into smaller, focused modules"
+                            ]
+                        ))
         
         return issues
     
-    def _extract_functions(self, filepath: str, tree: ast.AST) -> List[FunctionSignature]:
-        """Extract all functions with their signatures."""
-        functions = []
-        
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                sig = FunctionSignature(
-                    name=node.name,
-                    args=[arg.arg for arg in node.args.args],
-                    line=node.lineno,
-                    file=filepath,
-                    body_dump=ast.dump(node),
-                    calls=self._extract_calls(node),
-                    returns=self._count_returns(node)
-                )
-                functions.append(sig)
-        
-        return functions
-    
-    def _extract_calls(self, node: ast.FunctionDef) -> List[str]:
-        """Extract all function calls from a function."""
-        calls = []
-        
-        for subnode in ast.walk(node):
-            if isinstance(subnode, ast.Call):
-                if isinstance(subnode.func, ast.Name):
-                    calls.append(subnode.func.id)
-                elif isinstance(subnode.func, ast.Attribute):
-                    calls.append(subnode.func.attr)
-        
-        return calls
-    
-    def _count_returns(self, node: ast.FunctionDef) -> int:
-        """Count return statements in a function."""
-        return sum(1 for n in ast.walk(node) if isinstance(n, ast.Return))
-    
-    def _compare_functions(self,
-                          func1: FunctionSignature,
-                          func2: FunctionSignature,
-                          filepath: str) -> Optional[Issue]:
-        """Compare two functions for thrashing patterns."""
-        
-        # Check line distance
-        line_distance = abs(func2.line - func1.line)
-        if line_distance < self.min_line_distance:
-            return None
-        
-        # Calculate various similarity metrics
+    def _calculate_similarity(self, func1: Dict, func2: Dict) -> float:
+        """Calculate overall similarity between two functions."""
+        # Name similarity
         name_similarity = difflib.SequenceMatcher(
-            None, func1.name, func2.name
+            None, func1['name'], func2['name']
         ).ratio()
         
         # Argument similarity
         args_similarity = 0.0
-        if func1.args or func2.args:
-            common_args = set(func1.args) & set(func2.args)
-            total_args = set(func1.args) | set(func2.args)
+        if func1['args'] or func2['args']:
+            common_args = set(func1['args']) & set(func2['args'])
+            total_args = set(func1['args']) | set(func2['args'])
             args_similarity = len(common_args) / len(total_args) if total_args else 0
         
-        # Call pattern similarity
-        calls_similarity = 0.0
-        if func1.calls or func2.calls:
-            common_calls = set(func1.calls) & set(func2.calls)
-            total_calls = set(func1.calls) | set(func2.calls)
-            calls_similarity = len(common_calls) / len(total_calls) if total_calls else 0
-        
-        # AST structure similarity (simplified)
+        # AST structure similarity
         ast_similarity = difflib.SequenceMatcher(
-            None, func1.body_dump, func2.body_dump
+            None, func1['body_dump'], func2['body_dump']
         ).ratio()
         
-        # Return pattern similarity
-        return_similarity = 1.0 if func1.returns == func2.returns else 0.5
-        
-        # Weighted overall similarity
-        overall_similarity = (
-            name_similarity * 0.2 +
-            args_similarity * 0.25 +
-            calls_similarity * 0.25 +
-            ast_similarity * 0.2 +
-            return_similarity * 0.1
-        )
-        
-        # Check if within thrashing range
-        if self.similarity_threshold_min < overall_similarity < self.similarity_threshold_max:
-            return Issue(
-                kind="context_window_thrashing",
-                message=f"Functions '{func1.name}' and '{func2.name}' are {overall_similarity:.0%} similar "
-                       f"but {line_distance} lines apart. Likely context window exceeded.",
-                severity=3,
-                file=filepath,
-                line=func2.line,  # Point to the later occurrence
-                symbol=func2.name,
-                evidence={
-                    'functions': [func1.name, func2.name],
-                    'lines': [func1.line, func2.line],
-                    'line_distance': line_distance,
-                    'similarity_scores': {
-                        'overall': overall_similarity,
-                        'name': name_similarity,
-                        'args': args_similarity,
-                        'calls': calls_similarity,
-                        'structure': ast_similarity
-                    }
-                },
-                suggestions=[
-                    f"Consider merging '{func1.name}' (line {func1.line}) and "
-                    f"'{func2.name}' (line {func2.line})",
-                    "Extract common functionality to avoid duplication",
-                    "Use more descriptive names to avoid confusion"
-                ]
-            )
-        
-        return None
+        # Weighted average
+        return (name_similarity * 0.3 + args_similarity * 0.3 + ast_similarity * 0.4)
