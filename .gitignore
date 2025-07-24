@@ -72,3 +72,21 @@ Thumbs.db
 # Project specific
 .tailchasing_cache/
 tailchasing_report.*
+
+# Additional cleanup patterns
+*.pyc
+*.pyo
+__pycache__/
+.DS_Store
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+
+# Temporary files
+*_backup_*/
+demo_report*.json
+push_*.sh
+git_commands.txt
