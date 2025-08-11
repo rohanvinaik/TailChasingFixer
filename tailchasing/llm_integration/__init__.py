@@ -121,6 +121,10 @@ class AutoFixGenerator:
     Generates automated fixes for common tail-chasing patterns.
     """
     
+    def __init__(self):
+        from ..utils.logging_setup import get_logger
+        self.logger = get_logger(__name__)
+    
     def generate_fix_script(self, issues: List[Issue]) -> Dict[str, str]:
         """
         Generate a Python script that fixes common issues.
@@ -136,11 +140,26 @@ class AutoFixGenerator:
                 issues_by_file.setdefault(issue.file, []).append(issue)
         
         for file, file_issues in issues_by_file.items():
-            # TODO: Implement AST-based fixes
-            # - Remove phantom functions
-            # - Replace duplicate calls with canonical function
-            # - Remove circular imports
-            pass
+            # Use the new LLM abstraction layer for automatic fixes
+            from ..llm.manager import create_llm_manager
+            
+            try:
+                llm_manager = create_llm_manager(budget_usd=2.0)  # Small budget for auto-fixes
+                
+                for issue in file_issues:
+                    # Generate fix using LLM
+                    response = llm_manager.generate_fix(
+                        issue,
+                        complexity=llm_manager._infer_complexity(issue)
+                    )
+                    
+                    if response.is_valid_fix() and response.confidence > 0.7:
+                        fixes[file] = response.content
+                    
+            except Exception as e:
+                # Fallback to manual fix templates if LLM fails
+                self.logger.warning(f"LLM fix generation failed: {e}")
+                continue
         
         return fixes
     
