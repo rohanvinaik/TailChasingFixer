@@ -70,3 +70,21 @@
 {"timestamp": "2025-08-11T17:03:47.975049Z", "level": "ERROR", "module": "cli_typer", "function": "analyze", "line": 560, "message": "Analysis failed: AnalysisContext.__init__() missing 2 required positional arguments: 'source_cache' and 'cache'", "exception": "Traceback (most recent call last):\n  File \"/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py\", line 498, in analyze\n    issues, ctx = cli.analyze_codebase(root, config, show_progress=not quiet)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py\", line 237, in analyze_codebase\n    ctx = AnalysisContext(config, files, ast_index, symbol_table, cache)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: AnalysisContext.__init__() missing 2 required positional arguments: 'source_cache' and 'cache'"}
 {"timestamp": "2025-08-11T17:04:04.724469Z", "level": "INFO", "module": "cli_typer", "function": "load_config", "line": 152, "message": "Loaded configuration from .tailchasing.yml"}
 {"timestamp": "2025-08-11T17:04:05.562432Z", "level": "ERROR", "module": "cli_typer", "function": "analyze_codebase", "line": 270, "message": "Analyzer semantic_hv failed: name 'logging' is not defined"}
+{"timestamp": "2025-08-11T18:22:43.082292Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-11T18:22:48.846572Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-11T18:22:48.863578Z", "level": "INFO", "module": "cli", "function": "main", "line": 171, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-11T18:22:48.872447Z", "level": "INFO", "module": "cli", "function": "main", "line": 183, "message": "Found 71 Python files"}
+{"timestamp": "2025-08-11T18:22:48.872556Z", "level": "INFO", "module": "cli", "function": "main", "line": 186, "message": "Parsing Python files"}
+{"timestamp": "2025-08-11T18:22:49.029095Z", "level": "INFO", "module": "cli", "function": "main", "line": 194, "message": "Successfully parsed 71 files"}
+{"timestamp": "2025-08-11T18:22:49.029200Z", "level": "INFO", "module": "cli", "function": "main", "line": 197, "message": "Building symbol table"}
+{"timestamp": "2025-08-11T18:22:49.120599Z", "level": "INFO", "module": "cli", "function": "main", "line": 221, "message": "Running analyzers"}
+{"timestamp": "2025-08-11T18:23:13.764593Z", "level": "INFO", "module": "cli", "function": "main", "line": 248, "message": "Analysis complete: 733 issues, risk score 256.72"}
+{"timestamp": "2025-08-11T18:23:13.782883Z", "level": "INFO", "module": "cli", "function": "main", "line": 323, "message": "Found 130 fixable issues"}
+{"timestamp": "2025-08-11T18:23:13.783019Z", "level": "ERROR", "module": "cli", "function": "main", "line": 403, "message": "Risk score 256.72 exceeds configured fail threshold 30"}
+{"timestamp": "2025-08-11T18:28:33.075853Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-11T18:28:33.081433Z", "level": "INFO", "module": "cli", "function": "main", "line": 171, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-11T18:28:33.085378Z", "level": "INFO", "module": "cli", "function": "main", "line": 183, "message": "Found 71 Python files"}
+{"timestamp": "2025-08-11T18:28:33.085455Z", "level": "INFO", "module": "cli", "function": "main", "line": 186, "message": "Parsing Python files"}
+{"timestamp": "2025-08-11T18:28:33.222241Z", "level": "INFO", "module": "cli", "function": "main", "line": 194, "message": "Successfully parsed 71 files"}
+{"timestamp": "2025-08-11T18:28:33.222358Z", "level": "INFO", "module": "cli", "function": "main", "line": 197, "message": "Building symbol table"}
+{"timestamp": "2025-08-11T18:28:33.311759Z", "level": "INFO", "module": "cli", "function": "main", "line": 221, "message": "Running analyzers"}

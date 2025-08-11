@@ -59,7 +59,8 @@ class HVSpace:
         """Generate a random hypervector."""
         if self.bipolar:
             # +1/-1 encoding for cosine similarity
-            return np.random.choice([-1, 1], size=self.dim).astype(np.int8)
+            # Use int16 to avoid overflow issues with large dimensions
+            return np.random.choice([-1, 1], size=self.dim).astype(np.int16)
         else:
             # 0/1 encoding for Hamming distance
             return np.random.randint(0, 2, size=self.dim, dtype=np.uint8)
@@ -110,7 +111,7 @@ class HVSpace:
         if self.bipolar:
             # Sum and take sign (majority vote)
             sums = np.sum(stack, axis=0)
-            return np.sign(sums).astype(np.int8)
+            return np.sign(sums).astype(np.int16)
         else:
             # Binary majority vote
             sums = np.sum(stack, axis=0)
@@ -190,6 +191,7 @@ class HVSpace:
     
     def _estimate_memory(self) -> int:
         """Estimate memory usage in bytes."""
-        vec_size = self.dim  # 1 byte per element for int8/uint8
+        # 2 bytes per element for int16, 1 byte for uint8
+        vec_size = self.dim * 2 if self.bipolar else self.dim
         total_vecs = len(self._token_cache) + len(self._role_cache)
         return total_vecs * vec_size

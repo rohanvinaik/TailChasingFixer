@@ -41,7 +41,8 @@ class OptimizedHVSpace:
     def _rand_vec(self) -> np.ndarray:
         """Generate random vector."""
         if self.bipolar:
-            return np.random.choice([-1, 1], size=self.dim).astype(np.int8)
+            # Use int16 to avoid overflow issues with large dimensions
+            return np.random.choice([-1, 1], size=self.dim).astype(np.int16)
         else:
             return np.random.randint(0, 2, size=self.dim, dtype=np.uint8)
     
@@ -95,9 +96,9 @@ class OptimizedHVSpace:
         
         # For bipolar, use sign of sum
         else:
-            stacked = np.array(vectors, dtype=np.int8)
+            stacked = np.array(vectors, dtype=np.int16)
             sums = np.sum(stacked, axis=0)
-            return np.sign(sums).astype(np.int8)
+            return np.sign(sums).astype(np.int16)
 
 
 class ParallelSemanticAnalyzer:
