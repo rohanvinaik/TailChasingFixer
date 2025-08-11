@@ -1,0 +1,9 @@
+{"timestamp": "2025-08-11T15:25:26.154086Z", "level": "DEBUG", "module": "test_logging", "function": "test_logging", "line": 22, "message": "Debug message - should show in console and file"}
+{"timestamp": "2025-08-11T15:25:26.154232Z", "level": "INFO", "module": "test_logging", "function": "test_logging", "line": 23, "message": "Info message - visible at INFO level"}
+{"timestamp": "2025-08-11T15:25:26.154306Z", "level": "WARNING", "module": "test_logging", "function": "test_logging", "line": 24, "message": "Warning message - always visible"}
+{"timestamp": "2025-08-11T15:25:26.154368Z", "level": "ERROR", "module": "test_logging", "function": "test_logging", "line": 25, "message": "Error message - high priority"}
+{"timestamp": "2025-08-11T15:25:26.154609Z", "level": "INFO", "module": "test_logging", "function": "test_logging", "line": 29, "message": "Testing API key redaction: api_key=***REDACTED***"}
+{"timestamp": "2025-08-11T15:25:26.154693Z", "level": "INFO", "module": "test_logging", "function": "test_logging", "line": 30, "message": "Testing path redaction: /Users/***REDACTED***"}
+{"timestamp": "2025-08-11T15:25:26.154768Z", "level": "INFO", "module": "test_logging", "function": "test_logging", "line": 31, "message": "Testing project path (should not be redacted): /Users/***REDACTED***"}
+{"timestamp": "2025-08-11T15:25:26.154978Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: test_operation", "user": "test_user", "session_id": "abc123", "operation": "test_operation"}
+{"timestamp": "2025-08-11T15:25:26.155305Z", "level": "WARNING", "module": "logging_setup", "function": "log_retry", "line": 280, "message": "Retrying database_connection (attempt 1/3): Connection timeout", "operation": "database_connection", "attempt": 1, "max_attempts": 3}

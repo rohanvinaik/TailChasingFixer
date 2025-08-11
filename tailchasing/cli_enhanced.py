@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from typing import List, Optional
 
+from .utils.logging_setup import get_logger, log_operation, log_retry
 from .core.loader import collect_files, parse_files
 from .core.symbols import SymbolTable
 from .core.issues import Issue
@@ -26,6 +27,7 @@ class EnhancedCLI:
     """Enhanced command-line interface with advanced features."""
     
     def __init__(self):
+        self.logger = get_logger(__name__)
         self.explainer = TailChasingExplainer()
         self.enhanced_detector = EnhancedPatternDetector()
         self.semantic_enhancer = SemanticDuplicateEnhancer()
@@ -106,10 +108,12 @@ class EnhancedCLI:
                                 config.get('paths', {}).get('exclude'))
             
             if not files:
-                print("No Python files found to analyze.", file=sys.stderr)
+                self.logger.error("No Python files found to analyze.")
+                sys.stderr.write("No Python files found to analyze.\n")
                 return 1
             
-            print(f"🔍 Analyzing {len(files)} files...")
+            self.logger.info(f"Analyzing {len(files)} files")
+            sys.stdout.write(f"🔍 Analyzing {len(files)} files...\n")
             
             ast_index = parse_files(files)
             symbol_table = SymbolTable()
@@ -118,7 +122,8 @@ class EnhancedCLI:
                 try:
                     symbol_table.ingest(filepath, tree, "")
                 except Exception as e:
-                    print(f"Warning: Failed to process {filepath}: {e}", file=sys.stderr)
+                    self.logger.warning(f"Failed to process {filepath}: {e}")
+                    sys.stderr.write(f"Warning: Failed to process {filepath}: {e}\n")
             
             # Set up analysis context
             cache = {}
@@ -138,40 +143,48 @@ class EnhancedCLI:
                 try:
                     analyzer_issues = list(analyzer.run(ctx))
                     issues.extend(analyzer_issues)
-                    print(f"  ✓ {analyzer.name}: {len(analyzer_issues)} issues")
+                    self.logger.info(f"{analyzer.name} found {len(analyzer_issues)} issues")
+                    sys.stdout.write(f"  ✓ {analyzer.name}: {len(analyzer_issues)} issues\n")
                 except Exception as e:
-                    print(f"  ✗ {analyzer.name}: Failed ({e})", file=sys.stderr)
+                    self.logger.error(f"{analyzer.name} failed: {e}")
+                    sys.stderr.write(f"  ✗ {analyzer.name}: Failed ({e})\n")
             
             # Run enhanced detection if requested
             if parsed_args.enhanced:
-                print("🧠 Running enhanced pattern detection...")
+                self.logger.info("Running enhanced pattern detection")
+                sys.stdout.write("🧠 Running enhanced pattern detection...\n")
                 enhanced_issues = self._run_enhanced_detection(ctx, ast_index)
                 issues.extend(enhanced_issues)
-                print(f"  ✓ Enhanced detection: {len(enhanced_issues)} additional issues")
+                self.logger.info(f"Enhanced detection found {len(enhanced_issues)} additional issues")
+                sys.stdout.write(f"  ✓ Enhanced detection: {len(enhanced_issues)} additional issues\n")
             
             # Run multimodal semantic analysis if requested
             if parsed_args.semantic_multimodal:
-                print("🔬 Running multimodal semantic analysis...")
+                self.logger.info("Running multimodal semantic analysis")
+                sys.stdout.write("🔬 Running multimodal semantic analysis...\n")
                 semantic_issues = self._run_semantic_analysis(ctx, symbol_table)
                 issues.extend(semantic_issues)
-                print(f"  ✓ Semantic analysis: {len(semantic_issues)} additional issues")
+                self.logger.info(f"Semantic analysis found {len(semantic_issues)} additional issues")
+                sys.stdout.write(f"  ✓ Semantic analysis: {len(semantic_issues)} additional issues\n")
             
             # Filter by severity
             if parsed_args.severity:
                 issues = [issue for issue in issues if issue.severity >= parsed_args.severity]
             
-            print(f"\n📊 Analysis complete: {len(issues)} total issues found")
+            self.logger.info(f"Analysis complete: {len(issues)} total issues found")
+            sys.stdout.write(f"\n📊 Analysis complete: {len(issues)} total issues found\n")
             
             # Generate outputs
             if parsed_args.json:
-                print(render_json(issues))
+                sys.stdout.write(render_json(issues))
             elif parsed_args.html:
                 self._generate_html_report(issues, files, parsed_args.html)
-                print(f"📄 HTML report generated: {parsed_args.html}")
+                self.logger.info(f"HTML report generated: {parsed_args.html}")
+                sys.stdout.write(f"📄 HTML report generated: {parsed_args.html}\n")
             elif parsed_args.explain:
                 self._generate_explanations(issues)
             else:
-                print(render_text(issues, config))
+                sys.stdout.write(render_text(issues, config))
             
             # Handle auto-fix options
             if parsed_args.auto_fix or parsed_args.fix_plan:
@@ -184,11 +197,13 @@ class EnhancedCLI:
             return 0
             
         except KeyboardInterrupt:
-            print("\n⚠️  Analysis interrupted by user", file=sys.stderr)
+            self.logger.warning("Analysis interrupted by user")
+            sys.stderr.write("\n⚠️  Analysis interrupted by user\n")
             return 130
         except Exception as e:
-            print(f"❌ Error during analysis: {e}", file=sys.stderr)
-            if parsed_args.debug:
+            self.logger.error(f"Error during analysis: {e}", exc_info=True)
+            sys.stderr.write(f"❌ Error during analysis: {e}\n")
+            if hasattr(parsed_args, 'debug') and parsed_args.debug:
                 import traceback
                 traceback.print_exc()
             return 1
@@ -230,36 +245,41 @@ class EnhancedCLI:
     def _generate_explanations(self, issues: List[Issue]):
         """Generate detailed natural language explanations."""
         if not issues:
-            print("🎉 No issues found! Your code appears to be free of tail-chasing patterns.")
+            self.logger.info("No issues found")
+            sys.stdout.write("🎉 No issues found! Your code appears to be free of tail-chasing patterns.\n")
             return
         
         # Generate summary report
         summary = self.explainer.generate_summary_report(issues)
-        print(summary)
+        sys.stdout.write(summary + "\n")
         
         # Generate detailed explanations for high-severity issues
         high_severity_issues = [issue for issue in issues if issue.severity >= 4]
         if high_severity_issues:
-            print("\n" + "="*80)
-            print("🚨 DETAILED EXPLANATIONS FOR HIGH-SEVERITY ISSUES")
-            print("="*80)
+            self.logger.info(f"Generating detailed explanations for {len(high_severity_issues)} high-severity issues")
+            sys.stdout.write("\n" + "="*80 + "\n")
+            sys.stdout.write("🚨 DETAILED EXPLANATIONS FOR HIGH-SEVERITY ISSUES\n")
+            sys.stdout.write("="*80 + "\n")
             
             for i, issue in enumerate(high_severity_issues, 1):
-                print(f"\n## Issue {i}: {issue.kind}")
+                sys.stdout.write(f"\n## Issue {i}: {issue.kind}\n")
                 explanation = self.explainer.explain_issue(issue)
-                print(explanation)
+                sys.stdout.write(explanation + "\n")
     
     def _handle_auto_fix(self, issues: List[Issue], args):
         """Handle automatic fix generation and application."""
         if not issues:
-            print("No issues to fix.")
+            self.logger.info("No issues to fix")
+            sys.stdout.write("No issues to fix.\n")
             return
         
-        print("\n🔧 Generating fix plan...")
+        self.logger.info("Generating fix plan")
+        sys.stdout.write("\n🔧 Generating fix plan...\n")
         fix_plan = self.auto_fixer.generate_fix_plan(issues)
         
-        print(f"Generated {len(fix_plan.actions)} fix actions for {len(fix_plan.issues_addressed)} issues")
-        print(f"Estimated impact: {fix_plan.estimated_impact}")
+        self.logger.info(f"Generated {len(fix_plan.actions)} fix actions for {len(fix_plan.issues_addressed)} issues")
+        sys.stdout.write(f"Generated {len(fix_plan.actions)} fix actions for {len(fix_plan.issues_addressed)} issues\n")
+        sys.stdout.write(f"Estimated impact: {fix_plan.estimated_impact}\n")
         
         # Save fix plan if requested
         if args.fix_plan:
@@ -283,24 +303,28 @@ class EnhancedCLI:
             with open(args.fix_plan, 'w') as f:
                 json.dump(fix_plan_data, f, indent=2)
             
-            print(f"📋 Fix plan saved to: {args.fix_plan}")
+            self.logger.info(f"Fix plan saved to: {args.fix_plan}")
+            sys.stdout.write(f"📋 Fix plan saved to: {args.fix_plan}\n")
         
         # Apply fixes if requested
         if args.apply_fixes:
-            print("\n⚠️  APPLYING FIXES AUTOMATICALLY")
-            print("This will modify your code. Make sure you have backups!")
+            self.logger.warning("Applying fixes automatically")
+            sys.stdout.write("\n⚠️  APPLYING FIXES AUTOMATICALLY\n")
+            sys.stdout.write("This will modify your code. Make sure you have backups!\n")
             
             try:
                 input("\nPress Enter to continue or Ctrl+C to cancel...")
             except KeyboardInterrupt:
-                print("\nFix application cancelled.")
+                self.logger.info("Fix application cancelled by user")
+                sys.stdout.write("\nFix application cancelled.\n")
                 return
             
             self._apply_fixes(fix_plan)
     
     def _apply_fixes(self, fix_plan):
         """Apply the generated fixes to the codebase."""
-        print("🔧 Applying fixes...")
+        self.logger.info("Applying fixes to codebase")
+        sys.stdout.write("🔧 Applying fixes...\n")
         
         # Group actions by file for efficient processing
         actions_by_file = {}
@@ -325,14 +349,17 @@ class EnhancedCLI:
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(modified_content)
                 
-                print(f"  ✓ {filepath}: {len(actions)} fixes applied")
+                self.logger.info(f"Applied {len(actions)} fixes to {filepath}")
+                sys.stdout.write(f"  ✓ {filepath}: {len(actions)} fixes applied\n")
                 
             except Exception as e:
-                print(f"  ✗ {filepath}: Failed to apply fixes ({e})")
+                self.logger.error(f"Failed to apply fixes to {filepath}: {e}")
+                sys.stderr.write(f"  ✗ {filepath}: Failed to apply fixes ({e})\n")
         
-        print(f"\n✅ Applied {applied_count} fixes successfully")
-        print("💡 Run your tests to ensure everything still works correctly")
-        print(f"🔄 To rollback changes, run: {' && '.join(fix_plan.rollback_plan)}")
+        self.logger.info(f"Applied {applied_count} fixes successfully")
+        sys.stdout.write(f"\n✅ Applied {applied_count} fixes successfully\n")
+        sys.stdout.write("💡 Run your tests to ensure everything still works correctly\n")
+        sys.stdout.write(f"🔄 To rollback changes, run: {' && '.join(fix_plan.rollback_plan)}\n")
 
 
 def main():

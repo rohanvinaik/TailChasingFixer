@@ -9,6 +9,7 @@ from datetime import datetime
 
 from . import __version__
 from .config import Config
+from .utils.logging_setup import get_logger, log_operation
 from .core.loader import collect_files, parse_files
 from .core.symbols import SymbolTable
 from .core.issues import IssueCollection
@@ -17,6 +18,9 @@ from .core.scoring import RiskScorer
 from .analyzers.base import AnalysisContext
 from .plugins import load_analyzers
 
+
+# Setup module logger
+logger = get_logger(__name__)
 
 def setup_logging(verbose: bool = False):
     """Configure logging."""
@@ -29,6 +33,7 @@ def setup_logging(verbose: bool = False):
 
 def main():
     """Main CLI entry point."""
+    log_operation(logger, "cli_main")
     parser = argparse.ArgumentParser(
         prog="tailchasing",
         description="Detect LLM-assisted tail-chasing anti-patterns in Python code"
@@ -125,7 +130,8 @@ def main():
     # Find project root
     root_path = Path(args.path).resolve()
     if not root_path.exists():
-        print(f"Error: Path does not exist: {root_path}", file=sys.stderr)
+        logger.error(f"Path does not exist: {root_path}")
+        sys.stderr.write(f"Error: Path does not exist: {root_path}\n")
         sys.exit(1)
         
     # Load configuration
@@ -162,7 +168,7 @@ def main():
         config.set("report.output_dir", str(args.output))
         
     # Collect files
-    logging.info(f"Collecting Python files from {root_path}")
+    logger.info(f"Collecting Python files from {root_path}")
     files = collect_files(
         root_path,
         include=config.get("paths.include"),
@@ -170,23 +176,25 @@ def main():
     )
     
     if not files:
-        print("No Python files found to analyze", file=sys.stderr)
+        logger.warning("No Python files found to analyze")
+        sys.stderr.write("No Python files found to analyze\n")
         sys.exit(0)
         
-    logging.info(f"Found {len(files)} Python files")
+    logger.info(f"Found {len(files)} Python files")
     
     # Parse files
-    logging.info("Parsing Python files")
+    logger.info("Parsing Python files")
     ast_index = parse_files(files)
     
     if not ast_index:
-        print("No valid Python files could be parsed", file=sys.stderr)
+        logger.error("No valid Python files could be parsed")
+        sys.stderr.write("No valid Python files could be parsed\n")
         sys.exit(1)
         
-    logging.info(f"Successfully parsed {len(ast_index)} files")
+    logger.info(f"Successfully parsed {len(ast_index)} files")
     
     # Build symbol table
-    logging.info("Building symbol table")
+    logger.info("Building symbol table")
     symbol_table = SymbolTable()
     source_cache = {}
     
@@ -196,7 +204,7 @@ def main():
             source_cache[file_path] = source.splitlines()
             symbol_table.ingest_file(file_path, tree, source)
         except Exception as e:
-            logging.warning(f"Failed to process {file_path}: {e}")
+            logger.warning(f"Failed to process {file_path}: {e}")
             
     # Create analysis context
     ctx = AnalysisContext(
@@ -210,19 +218,19 @@ def main():
     )
     
     # Load and run analyzers
-    logging.info("Running analyzers")
+    logger.info("Running analyzers")
     analyzers = load_analyzers(config.to_dict())
     
     issue_collection = IssueCollection()
     
     for analyzer in analyzers:
-        logging.debug(f"Running {analyzer.name} analyzer")
+        logger.debug(f"Running {analyzer.name} analyzer")
         try:
             for issue in analyzer.run(ctx):
                 if not ctx.should_ignore_issue(issue.kind):
                     issue_collection.add(issue)
         except Exception as e:
-            logging.error(f"Analyzer {analyzer.name} failed: {e}")
+            logger.error(f"Analyzer {analyzer.name} failed: {e}")
             
     # Deduplicate issues
     issue_collection.deduplicate()
@@ -237,29 +245,30 @@ def main():
     
     # Print summary to console
     if not args.json or len(config.get("report.formats", [])) > 1:
-        print(f"\nTail-Chasing Analysis Complete")
-        print(f"{'=' * 40}")
-        print(f"Total Issues: {len(issue_collection)}")
-        print(f"Global Risk Score: {global_score} ({risk_level})")
-        print(f"Affected Modules: {len(module_scores)}")
+        logger.info(f"Analysis complete: {len(issue_collection)} issues, risk score {global_score}")
+        sys.stdout.write(f"\nTail-Chasing Analysis Complete\n")
+        sys.stdout.write(f"{'=' * 40}\n")
+        sys.stdout.write(f"Total Issues: {len(issue_collection)}\n")
+        sys.stdout.write(f"Global Risk Score: {global_score} ({risk_level})\n")
+        sys.stdout.write(f"Affected Modules: {len(module_scores)}\n")
         
         # Show top issues
         if issue_collection.issues:
-            print(f"\nTop Issues:")
+            sys.stdout.write(f"\nTop Issues:\n")
             top_issues = sorted(issue_collection.issues, key=lambda i: i.severity, reverse=True)[:5]
             for issue in top_issues:
                 location = f"{issue.file}:{issue.line}" if issue.file else "global"
-                print(f"  [{issue.kind}] {location} - {issue.message}")
+                sys.stdout.write(f"  [{issue.kind}] {location} - {issue.message}\n")
                 
                 # Show suggestions if requested
                 if args.show_suggestions and issue.suggestions:
-                    print("    Suggestions:")
+                    sys.stdout.write("    Suggestions:\n")
                     for suggestion in issue.suggestions[:2]:
                         # Indent multi-line suggestions
                         for line in suggestion.split('\n'):
-                            print(f"      {line}")
+                            sys.stdout.write(f"      {line}\n")
                     if len(issue.suggestions) > 2:
-                        print(f"      ... and {len(issue.suggestions) - 2} more suggestions")
+                        sys.stdout.write(f"      ... and {len(issue.suggestions) - 2} more suggestions\n")
                 
     # Generate full reports
     output_dir = Path(config.get("report.output_dir", "."))
@@ -267,12 +276,12 @@ def main():
     
     # Handle JSON output to stdout
     if args.json and "json" in results:
-        print(results["json"])
+        sys.stdout.write(results["json"] + "\n")
         
     # Always show paths to generated reports in terminal (unless pure JSON mode)
     if not (args.json and len(config.get("report.formats", [])) == 1):
-        print("\nGenerated Reports:")
-        print("-" * 40)
+        sys.stdout.write("\nGenerated Reports:\n")
+        sys.stdout.write("-" * 40 + "\n")
         
         # Show all generated report files
         report_files = []
@@ -280,16 +289,17 @@ def main():
             if fmt.endswith("_file"):
                 report_type = fmt.replace("_file", "").upper()
                 report_files.append((report_type, content_or_path))
-                print(f"{report_type} report: {content_or_path}")
+                logger.info(f"Generated {report_type} report: {content_or_path}")
+                sys.stdout.write(f"{report_type} report: {content_or_path}\n")
         
         # If no files were saved, show inline report info
         if not report_files:
             if "text" in results:
-                print("Text report: (displayed above)")
+                sys.stdout.write("Text report: (displayed above)\n")
             if "json" in results and not args.json:
-                print("JSON report: (use --json flag to output)")
+                sys.stdout.write("JSON report: (use --json flag to output)\n")
             if "html" in results:
-                print("HTML report: (use --output to save to file)")
+                sys.stdout.write("HTML report: (use --output to save to file)\n")
             
     # Always check if fix generation would be helpful (unless pure JSON mode)
     if not (args.json and len(config.get("report.formats", [])) == 1) and issue_collection.issues:
@@ -303,18 +313,19 @@ def main():
         fixable_issues = [i for i in issue_collection.issues if i.kind in fixable_types]
         
         if fixable_issues:
-            print("\nFix Suggestions:")
-            print("-" * 40)
+            sys.stdout.write("\nFix Suggestions:\n")
+            sys.stdout.write("-" * 40 + "\n")
             
             if args.generate_fixes:
                 # Fix generation code (already exists below)
                 pass
             else:
-                print(f"Found {len(fixable_issues)} fixable issues out of {len(issue_collection.issues)} total")
-                print("Run with --generate-fixes to create:")
-                print("  • Interactive fix script (tailchasing_fixes.py)")
-                print("  • Detailed suggestions file (tailchasing_suggestions.md)")
-                print("\nExample: tailchasing . --generate-fixes")
+                logger.info(f"Found {len(fixable_issues)} fixable issues")
+                sys.stdout.write(f"Found {len(fixable_issues)} fixable issues out of {len(issue_collection.issues)} total\n")
+                sys.stdout.write("Run with --generate-fixes to create:\n")
+                sys.stdout.write("  • Interactive fix script (tailchasing_fixes.py)\n")
+                sys.stdout.write("  • Detailed suggestions file (tailchasing_suggestions.md)\n")
+                sys.stdout.write("\nExample: tailchasing . --generate-fixes\n")
     
     # Generate fix script if requested
     if args.generate_fixes and issue_collection.issues:
@@ -333,8 +344,9 @@ def main():
                 # This case is handled above in "Fix Suggestions" section
                 pass
             else:
-                print(f"Interactive fix script: {fix_path}")
-                print(f"  Run with: python {fix_path}")
+                logger.info(f"Generated interactive fix script: {fix_path}")
+                sys.stdout.write(f"Interactive fix script: {fix_path}\n")
+                sys.stdout.write(f"  Run with: python {fix_path}\n")
             
             # Also generate a detailed suggestions file
             from .core.suggestions import FixSuggestionGenerator
@@ -369,23 +381,27 @@ def main():
                     if len(issues) > 3:
                         f.write(f"*... and {len(issues) - 3} more {issue_type} issues*\n\n")
             
-            print(f"Detailed suggestions: {suggestions_path}")
+            logger.info(f"Generated detailed suggestions: {suggestions_path}")
+            sys.stdout.write(f"Detailed suggestions: {suggestions_path}\n")
             
         except ImportError:
-            print("\nNote: Fix generation requires the enhanced suggestions module.")
+            logger.warning("Fix generation requires the enhanced suggestions module")
+            sys.stdout.write("\nNote: Fix generation requires the enhanced suggestions module.\n")
         except Exception as e:
-            logging.error(f"Failed to generate fix script: {e}")
+            logger.error(f"Failed to generate fix script: {e}")
             
     # Check fail threshold
     if args.fail_on is not None:
         if global_score >= args.fail_on:
-            print(f"\nERROR: Risk score {global_score} exceeds threshold {args.fail_on}", file=sys.stderr)
+            logger.error(f"Risk score {global_score} exceeds threshold {args.fail_on}")
+            sys.stderr.write(f"\nERROR: Risk score {global_score} exceeds threshold {args.fail_on}\n")
             sys.exit(2)
     else:
         # Use config thresholds
         fail_threshold = config.get("risk_thresholds.fail")
         if fail_threshold and global_score >= fail_threshold:
-            print(f"\nERROR: Risk score {global_score} exceeds configured fail threshold {fail_threshold}", file=sys.stderr)
+            logger.error(f"Risk score {global_score} exceeds configured fail threshold {fail_threshold}")
+            sys.stderr.write(f"\nERROR: Risk score {global_score} exceeds configured fail threshold {fail_threshold}\n")
             sys.exit(2)
             
     sys.exit(0)

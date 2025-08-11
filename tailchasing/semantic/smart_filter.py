@@ -301,7 +301,8 @@ class SemanticDuplicateFilter:
     
     def _log_filtered_patterns(self, filtered_out: List[Tuple]) -> None:
         """Log what patterns were filtered out for transparency."""
-        print("\n🧹 Filtered out legitimate patterns:")
+        import sys
+        sys.stdout.write("\n🧹 Filtered out legitimate patterns:\n")
         
         pattern_counts = {}
         for (pair, reason) in filtered_out:
@@ -309,4 +310,4 @@ class SemanticDuplicateFilter:
             pattern_counts[reason] = pattern_counts.get(reason, 0) + 1
         
         for pattern, count in pattern_counts.items():
-            print(f"  - {pattern}: {count} pairs")
+            sys.stdout.write(f"  - {pattern}: {count} pairs\n")

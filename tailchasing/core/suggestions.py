@@ -478,11 +478,12 @@ class TailChasingFixer:
         script += '''
         ]
         
+        import sys
         for i, fix in enumerate(fixes):
-            print(f"\\n[Fix {i+1}/{len(fixes)}]")
-            print(f"Issue: {fix['issue']}")
-            print(f"File: {fix['file']}")
-            print(f"Suggestion: {fix['suggestion']}")
+            sys.stdout.write(f"\\n[Fix {i+1}/{len(fixes)}]\\n")
+            sys.stdout.write(f"Issue: {fix['issue']}\\n")
+            sys.stdout.write(f"File: {fix['file']}\\n")
+            sys.stdout.write(f"Suggestion: {fix['suggestion']}\\n")
             
             response = input("\\nApply this fix? [y/N/q]: ").lower()
             if response == 'q':
@@ -493,7 +494,7 @@ class TailChasingFixer:
             else:
                 self.fixes_skipped += 1
         
-        print(f"\\nCompleted: {self.fixes_applied} fixes applied, {self.fixes_skipped} skipped")
+        sys.stdout.write(f"\\nCompleted: {self.fixes_applied} fixes applied, {self.fixes_skipped} skipped\\n")
 
 if __name__ == "__main__":
     fixer = TailChasingFixer()
