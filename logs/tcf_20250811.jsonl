@@ -288,3 +288,13 @@
 {"timestamp": "2025-08-11T19:56:21.391935Z", "level": "INFO", "module": "cluster_engine", "function": "analyze_without_sorting", "line": 116, "message": "Identified 0 influential patterns"}
 {"timestamp": "2025-08-11T19:56:21.392004Z", "level": "INFO", "module": "cluster_engine", "function": "analyze_without_sorting", "line": 120, "message": "Found 0 priority issues"}
 {"timestamp": "2025-08-11T19:56:21.392093Z", "level": "INFO", "module": "cluster_engine", "function": "analyze_without_sorting", "line": 127, "message": "Found 0 additional issues"}
+{"timestamp": "2025-08-11T20:02:09.807960Z", "level": "INFO", "module": "influence_detector", "function": "find_influential_patterns", "line": 91, "message": "Finding influential patterns in 4 files"}
+{"timestamp": "2025-08-11T20:02:09.810156Z", "level": "INFO", "module": "influence_detector", "function": "find_influential_patterns", "line": 123, "message": "Identified 1 influential patterns"}
+{"timestamp": "2025-08-11T20:02:17.395652Z", "level": "INFO", "module": "influence_detector", "function": "detect_issues_in_layers", "line": 421, "message": "Starting layered analysis of 4 files"}
+{"timestamp": "2025-08-11T20:02:17.396156Z", "level": "INFO", "module": "influence_detector", "function": "detect_issues_in_layers", "line": 425, "message": "Created 5 conceptual layers"}
+{"timestamp": "2025-08-11T20:02:17.396620Z", "level": "INFO", "module": "influence_detector", "function": "detect_issues_in_layers", "line": 453, "message": "Detected 5 total issues across layers"}
+{"timestamp": "2025-08-11T20:02:35.094749Z", "level": "INFO", "module": "influence_detector", "function": "find_influential_patterns", "line": 91, "message": "Finding influential patterns in 4 files"}
+{"timestamp": "2025-08-11T20:02:35.096308Z", "level": "INFO", "module": "influence_detector", "function": "find_influential_patterns", "line": 123, "message": "Identified 1 influential patterns"}
+{"timestamp": "2025-08-11T20:02:35.100718Z", "level": "INFO", "module": "influence_detector", "function": "detect_issues_in_layers", "line": 421, "message": "Starting layered analysis of 4 files"}
+{"timestamp": "2025-08-11T20:02:35.101209Z", "level": "INFO", "module": "influence_detector", "function": "detect_issues_in_layers", "line": 425, "message": "Created 5 conceptual layers"}
+{"timestamp": "2025-08-11T20:02:35.101687Z", "level": "INFO", "module": "influence_detector", "function": "detect_issues_in_layers", "line": 453, "message": "Detected 5 total issues across layers"}
