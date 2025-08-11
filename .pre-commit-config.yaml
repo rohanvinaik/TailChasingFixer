@@ -1,28 +1,216 @@
-# .pre-commit-config.yaml
-# Add tail-chasing detection to your pre-commit hooks
+# Pre-commit hooks configuration for TailChasing Fixer
+# Install with: pip install pre-commit && pre-commit install
 
 repos:
+  # Ruff for fast linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      # Linter with automatic fixes
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        name: Ruff linter (with fixes)
+        description: Run Ruff linter and apply automatic fixes
+        
+      # Formatter (replaces Black for speed)
+      - id: ruff-format
+        name: Ruff formatter
+        description: Run Ruff formatter (faster Black alternative)
+
+  # Mypy for static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+      - id: mypy
+        name: Type checking with MyPy
+        description: Static type checking to catch type errors
+        additional_dependencies: 
+          - types-PyYAML
+          - types-requests
+          - types-setuptools
+          - numpy
+          - rich
+          - typer
+        args:
+          - --ignore-missing-imports
+          - --no-strict-optional
+          - --show-error-codes
+          - --warn-redundant-casts
+          - --warn-unused-ignores
+        exclude: ^(tests/|scripts/|docs/)
+
+  # Black for code formatting (backup/comparison to Ruff)
+  - repo: https://github.com/psf/black
+    rev: 23.11.0
+    hooks:
+      - id: black
+        name: Black formatter (backup)
+        description: Python code formatter (if Ruff formatting differs)
+        language_version: python3.11
+        # Only run if explicitly requested
+        stages: [manual]
+
+  # isort for import sorting (integrated with Black/Ruff)
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: Import sorting
+        description: Sort and organize imports
+        args: [--profile, black, --line-length=88]
+
+  # Built-in hooks for basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # File formatting
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        description: Remove trailing whitespace from files
+        
+      - id: end-of-file-fixer
+        name: Fix end-of-file
+        description: Ensure files end with newline
+        
+      - id: check-yaml
+        name: Validate YAML files
+        description: Check YAML files for syntax errors
+        
+      - id: check-json
+        name: Validate JSON files
+        description: Check JSON files for syntax errors
+        
+      - id: check-toml
+        name: Validate TOML files
+        description: Check TOML files for syntax errors
+        
+      # Python-specific checks
+      - id: check-ast
+        name: Validate Python AST
+        description: Check Python files can be parsed
+        
+      - id: debug-statements
+        name: Check for debug statements
+        description: Detect Python debug statements (pdb, etc.)
+        
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+        description: Detect merge conflict markers
+        
+      # File security
+      - id: check-executables-have-shebangs
+        name: Check executable shebangs
+        description: Ensure executables have proper shebangs
+        
+      - id: check-shebang-scripts-are-executable
+        name: Check script executability
+        description: Ensure scripts with shebangs are executable
+
+  # Security checks with bandit
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        name: Security linting with Bandit
+        description: Check for common security issues
+        args: [--skip, "B101,B601", --recursive, --format, custom]
+        exclude: ^tests/
+
+  # Documentation checks
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        name: Docstring style checking
+        description: Check docstring conventions
+        args: [--convention=google, --add-ignore=D100,D104]
+        exclude: ^(tests/|scripts/)
+
+  # Custom hooks for project-specific rules
   - repo: local
     hooks:
-      - id: tail-chasing
-        name: Tail-Chasing Detection
-        entry: tailchasing
+      # Block new TODO comments (encourage proper issue tracking)
+      - id: no-todos
+        name: Block new TODO comments
+        description: Prevent new TODO comments (use GitHub issues instead)
+        entry: bash -c 'if git diff --cached --name-only | grep -E "\\.py$" | xargs grep -l "TODO\|FIXME\|XXX" > /dev/null; then echo "❌ Found TODO/FIXME/XXX comments. Use GitHub issues instead!"; exit 1; fi'
         language: system
-        types: [python]
         pass_filenames: false
-        args: [
-          "--fail-on", "20",  # Fail if score > 20
-          "--incremental",    # Only analyze changed files
-          "--quiet"           # Less verbose output
-        ]
+        stages: [commit]
         
-      - id: semantic-duplicates
-        name: Semantic Duplicate Check
-        entry: tailchasing
+      # Block new print statements (use logging instead)
+      - id: no-print-statements
+        name: Block new print statements
+        description: Prevent new print() calls (use logging instead)
+        entry: bash -c 'if git diff --cached --name-only | grep -E "\\.py$" | xargs git diff --cached | grep "^+" | grep -E "print\\(" > /dev/null; then echo "❌ Found new print() statements. Use logging instead!"; exit 1; fi'
         language: system
-        types: [python]
-        pass_filenames: true
-        args: [
-          "--only", "semantic_duplicate_function",
-          "--min-severity", "3"
-        ]
+        pass_filenames: false
+        stages: [commit]
+        
+      # Block bare except clauses
+      - id: no-bare-excepts
+        name: Block bare except clauses
+        description: Prevent bare except: clauses (specify exception types)
+        entry: bash -c 'if git diff --cached --name-only | grep -E "\\.py$" | xargs git diff --cached | grep "^+" | grep -E "except:\\s*$" > /dev/null; then echo "❌ Found bare except: clauses. Specify exception types!"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        stages: [commit]
+        
+      # Type coverage check
+      - id: type-coverage
+        name: Type coverage check
+        description: Ensure type coverage stays above 80%
+        entry: python scripts/check_type_coverage.py
+        language: system
+        files: '\.py$'
+        pass_filenames: false
+        stages: [push]
+        
+      # Run tests before push
+      - id: run-tests
+        name: Run test suite
+        description: Run tests before pushing
+        entry: python -m pytest tests/ -x --tb=short
+        language: system
+        pass_filenames: false
+        stages: [push]
+        
+      # Check for missing __init__.py files
+      - id: check-init-files
+        name: Check __init__.py files
+        description: Ensure Python packages have __init__.py files
+        entry: python scripts/check_init_files.py
+        language: system
+        pass_filenames: false
+        
+      # Validate configuration files
+      - id: validate-config
+        name: Validate configuration
+        description: Validate .tailchasing.yml configuration files
+        entry: python -c "import yaml; [yaml.safe_load(open(f)) for f in ['example.tailchasing.yml'] if __import__('pathlib').Path(f).exists()]"
+        language: system
+        files: '\.tailchasing\.ya?ml$'
+        
+      # Check for circular imports
+      - id: check-circular-imports
+        name: Check circular imports
+        description: Detect potential circular imports
+        entry: python scripts/check_circular_imports.py
+        language: system
+        files: '\.py$'
+        pass_filenames: false
+
+# Global configuration
+default_stages: [commit]
+minimum_pre_commit_version: "3.0.0"
+
+# CI configuration
+ci:
+  # Don't run on CI by default (use GitHub Actions instead)
+  skip: [type-coverage, run-tests]
+  
+  # Auto-update frequency
+  autoupdate_schedule: weekly
+  
+  # Commit message for auto-updates
+  autoupdate_commit_msg: "chore: pre-commit autoupdate"

@@ -12,7 +12,7 @@ paths:
     - .git
     - build
     - dist
-    - *.egg-info
+    - "*.egg-info"
 
 risk_thresholds:
   warn: 15

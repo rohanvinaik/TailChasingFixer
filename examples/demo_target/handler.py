@@ -28,8 +28,15 @@ class DataHandler:
         return None
         
     def validate_input(self, input_data):
-        """TODO: Implement validation logic"""
-        pass
+        """Validate input data for processing.
+        
+        Example of a placeholder that shows semantic stagnation - 
+        a validation function that never gets properly implemented.
+        """
+        # Basic validation that doesn't actually validate anything meaningful
+        if input_data is None:
+            return False
+        return True
 
 
 # Duplicate function (structurally identical to another)

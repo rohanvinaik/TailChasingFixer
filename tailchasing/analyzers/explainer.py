@@ -4,7 +4,7 @@ Generates human-readable explanations of detected issues.
 """
 
 from typing import Dict, List, Optional
-from ...core.issues import Issue
+from ..core.issues import Issue
 
 
 class TailChasingExplainer:

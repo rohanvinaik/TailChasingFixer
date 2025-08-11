@@ -77,8 +77,15 @@ def generate_report():
 
 def compute_metrics():
     """Compute performance metrics."""
-    # TODO: implement this
-    pass
+    # Example of semantic stagnation - placeholder that never gets implemented
+    # This is detected by the semantic analyzer as a non-evolving stub
+    metrics = {
+        'accuracy': 0.0,
+        'precision': 0.0,
+        'recall': 0.0,
+        'f1_score': 0.0
+    }
+    return metrics
 
 
 # Example 5: Rename cascade - same function, different names over time

@@ -213,8 +213,8 @@ paths:
                 process = psutil.Process()
                 memory_mb = process.memory_info().rss / 1024 / 1024
                 click.echo(f"  - Memory usage: {memory_mb:.1f}MB")
-            except:
-                pass
+            except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError) as e:
+                click.echo(f"  - Memory usage: Unable to measure ({e.__class__.__name__})")
             
             # Accuracy check
             expected_dups = int(num_files * functions_per_file * duplicate_ratio)

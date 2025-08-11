@@ -1,0 +1,215 @@
+# TailChasing Fixer Configuration
+# This file configures how the tail-chasing detector analyzes your codebase
+
+# File path configuration
+paths:
+  # Patterns to include (glob patterns)
+  include:
+    - "**/*.py"
+  
+  # Patterns to exclude (glob patterns)
+  exclude:
+    - "**/tests/**"
+    - "**/test_*.py"
+    - "**/__pycache__/**"
+    - "**/venv/**"
+    - "**/env/**"
+    - "**/node_modules/**"
+    - "**/.git/**"
+
+# Analysis configuration
+analysis:
+  # Enable enhanced pattern detection (hallucination cascades, context thrashing)
+  enhanced_detection: true
+  
+  # Enable semantic analysis with 16384-dimensional hypervectors
+  semantic_analysis: true
+  
+  # Analyze git history for temporal patterns
+  git_history: false
+  
+  # Enable parallel processing for large codebases
+  parallel: true
+  
+  # Enable caching for incremental analysis
+  cache: true
+  
+  # Custom analyzer configuration
+  analyzers:
+    # Configure specific analyzers
+    duplicates:
+      enabled: true
+      similarity_threshold: 0.8
+    
+    placeholders:
+      enabled: true
+      check_docstrings: true
+      
+    semantic_duplicates:
+      enabled: true
+      vector_dim: 16384
+      z_threshold: 2.5
+      similarity_threshold: 0.85
+
+# Output configuration
+output:
+  # Default output format (text, json, html, yaml)
+  format: "text"
+  
+  # Minimum severity to show (1-5)
+  severity_threshold: 1
+  
+  # Show suggested fixes in output
+  show_fixes: true
+  
+  # Show detailed explanations
+  show_explanations: false
+  
+  # Rich formatting options
+  rich:
+    # Use colors and formatting
+    enabled: true
+    
+    # Show progress bars
+    progress: true
+    
+    # Table style for text output
+    table_style: "rounded"
+
+# Fix generation and application
+fixes:
+  # Default mode: interactive, automatic, plan_only
+  mode: "interactive"
+  
+  # Create backups before applying fixes
+  backup: true
+  
+  # Validate fixes before applying (run in sandbox)
+  validation: true
+  
+  # Automatically apply "safe" fixes without confirmation
+  auto_apply_safe: false
+  
+  # Risk threshold for automatic application (low, medium, high)
+  auto_apply_threshold: "low"
+  
+  # Fix strategy preferences
+  strategies:
+    # Prefer specific strategies
+    preferred: 
+      - "ImportResolutionStrategy"
+      - "DuplicateMergeStrategy"
+    
+    # Avoid certain strategies
+    avoided: []
+
+# Reporting configuration
+reporting:
+  # Include metrics in reports
+  include_metrics: true
+  
+  # Include fix suggestions
+  include_fixes: true
+  
+  # Include code context in reports
+  include_context: true
+  
+  # Context lines to show around issues
+  context_lines: 3
+  
+  # Generate visualization diagrams
+  generate_diagrams: false
+
+# Integration configuration
+integrations:
+  # Git integration
+  git:
+    # Check for recent changes
+    check_recent_changes: true
+    
+    # Number of recent commits to analyze
+    recent_commits: 10
+    
+    # Ignore files not in git
+    tracked_files_only: false
+  
+  # IDE/LSP integration
+  lsp:
+    # Enable LSP server mode
+    enabled: false
+    
+    # Port for LSP server
+    port: 9000
+  
+  # CI/CD integration
+  ci:
+    # Fail build on high-severity issues
+    fail_on_severity: 4
+    
+    # Maximum issues before failing
+    fail_threshold: 10
+    
+    # Generate CI-friendly output
+    ci_format: true
+
+# Performance configuration
+performance:
+  # Maximum number of files to analyze in parallel
+  max_parallel_files: 4
+  
+  # Cache configuration
+  cache:
+    # Enable persistent cache
+    enabled: true
+    
+    # Cache directory
+    directory: ".tailchasing_cache"
+    
+    # Cache TTL in seconds (24 hours default)
+    ttl: 86400
+  
+  # Memory management
+  memory:
+    # Maximum memory usage (MB)
+    max_memory: 1024
+    
+    # Enable memory monitoring
+    monitor: false
+
+# Experimental features
+experimental:
+  # Enable ML-based pattern detection
+  ml_detection: false
+  
+  # Use LLM for fix generation (requires API keys)
+  llm_fixes: false
+  
+  # Semantic drift detection
+  drift_detection: true
+  
+  # Cross-repository analysis
+  cross_repo: false
+
+# Plugin configuration
+plugins:
+  # Enable specific plugins
+  enabled: []
+  
+  # Plugin directories to search
+  directories:
+    - "plugins"
+    - "~/.tailchasing/plugins"
+
+# Logging configuration
+logging:
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  level: "INFO"
+  
+  # Log file path
+  file: "logs/tailchasing.log"
+  
+  # Enable structured logging (JSON)
+  structured: true
+  
+  # Disable sensitive information in logs
+  redact_sensitive: true
