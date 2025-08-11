@@ -81,8 +81,8 @@ class FixStrategy(Protocol):
         """Estimate the risk level of fixing this issue."""
         ...
     
-    def get_dependencies(self, issue: Issue) -> List[str]:
-        """Get list of other issue types that should be fixed first."""
+    def get_dependencies(self) -> List[str]:
+        """Get list of dependencies required by this strategy."""
         ...
     
     def learn_from_outcome(self, issue: Issue, patch: Patch, success: bool, feedback: str) -> None:
@@ -92,6 +92,11 @@ class FixStrategy(Protocol):
 
 class BaseFixStrategy(ABC):
     """Base implementation of FixStrategy with common functionality."""
+    
+    # Dependency declarations - override in subclasses
+    REQUIRES_ANALYZERS: Tuple[str, ...] = ()
+    REQUIRES_TOOLS: Tuple[str, ...] = ()
+    REQUIRES_MODELS: Tuple[str, ...] = ()
     
     def __init__(self, name: str):
         self.name = name
@@ -121,9 +126,19 @@ class BaseFixStrategy(ABC):
         else:
             return RiskLevel.CRITICAL
     
-    def get_dependencies(self, issue: Issue) -> List[str]:
-        """Get dependencies - override in subclasses."""
-        return []
+    def get_dependencies(self) -> List[str]:
+        """Get list of dependencies required by this strategy."""
+        deps = []
+        for a in getattr(self, "REQUIRES_ANALYZERS", ()):
+            deps.append(f"analyzer:{a}")
+        for t in getattr(self, "REQUIRES_TOOLS", ()):
+            deps.append(f"tool:{t}")
+        for m in getattr(self, "REQUIRES_MODELS", ()):
+            deps.append(f"model:{m}")
+        # Dedup
+        out = sorted(set(deps))
+        logging.debug("Strategy %s deps: %s", type(self).__name__, out)
+        return out
     
     def learn_from_outcome(self, issue: Issue, patch: Patch, success: bool, feedback: str) -> None:
         """Learn from the outcome of applying this strategy."""

@@ -97,11 +97,16 @@ class OpenAIAdapter(BaseLLMAdapter):
         max_tokens = kwargs.get("max_tokens", 2000)
         temperature = kwargs.get("temperature", 0.1)
         
+        # Determine mode from kwargs or context
+        mode = kwargs.get("mode", "refactor")
+        settings = kwargs.get("settings", None)
+        context = kwargs.get("context", None)
+        
         # Build messages for chat completion
         messages = [
             {
                 "role": "system",
-                "content": self._get_system_prompt()
+                "content": self._get_system_prompt(mode, settings=settings, context=context)
             },
             {
                 "role": "user", 
@@ -142,29 +147,33 @@ class OpenAIAdapter(BaseLLMAdapter):
             self.logger.error(f"OpenAI API call failed: {e}")
             raise
     
-    def _get_system_prompt(self) -> str:
-        """Get system prompt for tail-chasing fix generation."""
-        return """You are an expert Python developer specialized in detecting and fixing tail-chasing patterns in code.
-
-Key principles:
-1. COMPLETE implementations only - never create stubs or incomplete functions
-2. AST-safe transformations - maintain syntactic correctness  
-3. Consolidate duplicates - choose the best implementation and remove others
-4. Fix root causes, not symptoms
-5. Preserve existing functionality while eliminating patterns
-
-When responding:
-- Provide working, complete code solutions
-- Include confidence scores (0.0-1.0) for your fixes
-- Explain your rationale briefly
-- Focus on eliminating the tail-chasing pattern completely
-
-For JSON responses, use this format:
-{
-  "content": "your code or explanation",
-  "confidence": 0.0-1.0,
-  "rationale": "brief explanation of approach"
-}"""
+    def _get_system_prompt(self, mode: str = "refactor", *, settings=None, context=None) -> str:
+        """Get system prompt tuned for specific refactor/verification tasks."""
+        base = [
+            "You are a meticulous senior software engineer.",
+            "Follow these rules strictly:",
+            "1) Prefer AST-safe, minimal diffs.",
+            "2) Preserve public API and behavior.",
+            "3) Do not invent symbols, imports, or files.",
+            "4) If uncertain, explain and stop rather than hallucinate.",
+        ]
+        
+        if mode == "lint_fix":
+            base.append("Scope: style-only changes (format, import order). No behavior changes.")
+        elif mode == "test_fix":
+            base.append("Scope: make the smallest change to satisfy failing tests in the provided logs.")
+        elif mode == "codegen":
+            base.append("Scope: generate new code only when explicitly instructed.")
+        else:
+            base.append("Scope: refactor existing code with minimal, safe edits.")
+        
+        # Optional toggles from settings/context
+        pyver = getattr(settings, "python_version", "3.11")
+        base.append(f"Environment: Python {pyver}; tools available: ruff, mypy, pytest.")
+        base.append("Output format: unified diff or patched function body only, no commentary unless asked.")
+        base.append("PROMPT_VERSION=openai.v1")
+        
+        return "\n".join(base)
     
     def _requires_json(self, prompt: str) -> bool:
         """Check if prompt requires JSON response format."""

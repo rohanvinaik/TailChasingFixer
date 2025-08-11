@@ -9,6 +9,9 @@ that indicate tail-chasing behavior.
 from typing import List, Dict, Optional, Tuple, Set
 from pathlib import Path
 from datetime import datetime
+import ast
+import hashlib
+from difflib import SequenceMatcher
 import numpy as np
 
 from ..core.issues import Issue
@@ -341,11 +344,52 @@ class SemanticHVAnalyzer(Analyzer):
             'line': int(line)
         }
     
-    def _are_structural_duplicates(self, func1: Dict, func2: Dict) -> bool:
+    def _are_structural_duplicates(self, f1: dict, f2: dict, *, 
+                                   seq_threshold: float = 0.9, skel_threshold: float = 0.9) -> bool:
         """Check if functions are structural duplicates."""
-        # This would check against structural duplicate analyzer results
-        # For now, return False
-        return False
+        n1 = f1.get("ast_node")
+        n2 = f2.get("ast_node")
+        if not isinstance(n1, ast.AST) or not isinstance(n2, ast.AST):
+            return False
+
+        def normalize(node: ast.AST) -> ast.AST:
+            class N(ast.NodeTransformer):
+                def visit_Name(self, n: ast.Name):
+                    return ast.copy_location(ast.Name(id="ID", ctx=n.ctx), n)
+                def visit_Attribute(self, n: ast.Attribute):
+                    self.generic_visit(n)
+                    return ast.copy_location(ast.Attribute(value=n.value, attr="ATTR", ctx=n.ctx), n)
+                def visit_Constant(self, n: ast.Constant):
+                    tag = "NUM" if isinstance(n.value, (int, float, complex)) else \
+                          "STR" if isinstance(n.value, str) else \
+                          "BOOL" if isinstance(n.value, bool) else "CONST"
+                    return ast.copy_location(ast.Name(id=tag, ctx=ast.Load()), n)
+                def visit_FunctionDef(self, n: ast.FunctionDef):
+                    # strip decorators and docstring
+                    body = n.body
+                    if body and isinstance(body[0], ast.Expr) and isinstance(getattr(body[0], "value", None), ast.Constant):
+                        body = body[1:]
+                    n = ast.FunctionDef(name="FUNC", args=n.args, body=body, decorator_list=[], returns=None, type_comment=None)
+                    return self.generic_visit(n)
+                visit_AsyncFunctionDef = visit_FunctionDef
+            return N().visit(ast.fix_missing_locations(ast.parse(ast.unparse(node))))
+
+        def seq(node: ast.AST) -> list[str]:
+            out: list[str] = []
+            for sub in ast.walk(node):
+                out.append(type(sub).__name__)
+            return out
+
+        def bigrams(tokens): 
+            return set(zip(tokens, tokens[1:]))
+
+        sk1 = ast.dump(normalize(n1), annotate_fields=False, include_attributes=False)
+        sk2 = ast.dump(normalize(n2), annotate_fields=False, include_attributes=False)
+        seq1, seq2 = seq(ast.parse(sk1)), seq(ast.parse(sk2))
+        bg1, bg2 = bigrams(seq1), bigrams(seq2)
+        jacc = len(bg1 & bg2) / max(1, len(bg1 | bg2))
+        ratio = SequenceMatcher(None, sk1, sk2).ratio()
+        return (jacc >= seq_threshold) and (ratio >= skel_threshold)
     
     def _compute_duplicate_severity(self, z_score: float, analysis: Dict) -> int:
         """Compute severity for semantic duplicate."""

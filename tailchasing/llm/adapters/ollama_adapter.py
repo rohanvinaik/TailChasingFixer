@@ -6,7 +6,9 @@ and other open-source models for code generation and fix suggestions.
 """
 
 import json
+import logging
 import requests
+import time
 from typing import Dict, Optional, Any, Union, List
 
 from .base import BaseLLMAdapter, LLMResponse, ModelTier, RetryConfig
@@ -70,9 +72,116 @@ class OllamaAdapter(BaseLLMAdapter):
         # Ollama doesn't provide exact token counting, use approximation
         return super().count_tokens(text)
     
-    def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        """Local models have no monetary cost."""
-        return 0.0
+    def estimate_cost(self, input_tokens: int, output_tokens: int) -> Dict[str, Any]:
+        """
+        Estimate equivalent cost for local models.
+        
+        While local models run for free, we track an equivalent cost for:
+        - Resource accounting and comparison
+        - Understanding relative computational expense
+        - Capacity planning for local vs cloud models
+        """
+        pt = max(0, int(input_tokens or 0))
+        ct = max(0, int(output_tokens or 0))
+        total = pt + ct
+        
+        # Equivalent pricing map: per-1k tokens (input, output)
+        # Based on relative compute requirements vs cloud models
+        PRICING = {
+            # Llama models
+            "llama3:8b": (0.05, 0.10),
+            "llama3:70b": (0.60, 0.80),
+            "llama2:7b": (0.04, 0.08),
+            "llama2:13b": (0.08, 0.15),
+            "llama2:70b": (0.55, 0.75),
+            
+            # CodeLlama models
+            "codellama:7b": (0.04, 0.08),
+            "codellama:7b-code": (0.04, 0.08),
+            "codellama:13b": (0.08, 0.15),
+            "codellama:13b-code": (0.08, 0.15),
+            "codellama:34b": (0.20, 0.35),
+            
+            # Mistral models
+            "mistral:7b": (0.03, 0.06),
+            "mixtral:8x7b": (0.25, 0.40),
+            "mistral-nemo:12b": (0.10, 0.18),
+            
+            # DeepSeek models
+            "deepseek-coder:6.7b": (0.03, 0.06),
+            "deepseek-coder:33b": (0.18, 0.30),
+            
+            # Qwen models
+            "codeqwen:7b": (0.04, 0.08),
+            "qwen2:7b": (0.04, 0.08),
+            "qwen2:72b": (0.65, 0.85),
+            
+            # Phi models
+            "phi3:mini": (0.02, 0.04),
+            "phi3:medium": (0.08, 0.15),
+            
+            # StarCoder models
+            "starcoder2:3b": (0.02, 0.04),
+            "starcoder2:7b": (0.04, 0.08),
+            "starcoder2:15b": (0.12, 0.20),
+            
+            # Default for unknown models (conservative estimate)
+            "default": (0.05, 0.10)
+        }
+        
+        def get_model_family(model_name: str) -> str:
+            """Extract model family for pricing fallback."""
+            # Try exact match first
+            if model_name in PRICING:
+                return model_name
+            
+            # Try family prefix match
+            for key in PRICING:
+                if model_name.startswith(key.split(":")[0]):
+                    return key
+            
+            # Try to match by parameter count
+            import re
+            param_match = re.search(r'(\d+)b', model_name.lower())
+            if param_match:
+                param_size = int(param_match.group(1))
+                if param_size <= 7:
+                    return "default"
+                elif param_size <= 13:
+                    return "codellama:13b"  # Medium model equivalent
+                elif param_size <= 34:
+                    return "codellama:34b"  # Large model equivalent
+                else:
+                    return "llama3:70b"  # Very large model equivalent
+            
+            return "default"
+        
+        # Get pricing for this model
+        pricing_key = get_model_family(self.model)
+        in_rate, out_rate = PRICING.get(pricing_key, PRICING["default"])
+        
+        # Calculate equivalent cost
+        equivalent_cost = (pt / 1000.0) * in_rate + (ct / 1000.0) * out_rate
+        
+        # Build comprehensive info
+        info = {
+            "model": self.model,
+            "prompt_tokens": pt,
+            "completion_tokens": ct,
+            "total_tokens": total,
+            "cost_usd": round(equivalent_cost, 6),
+            "actual_cost_usd": 0.0,  # Always 0 for local models
+            "equivalent_cost_usd": round(equivalent_cost, 6),
+            "pricing_model": pricing_key,
+            "is_local": True,
+            "rates": {
+                "input_per_1k": in_rate,
+                "output_per_1k": out_rate
+            }
+        }
+        
+        logging.debug("Ollama cost estimation: %s", info)
+        return info
     
     def _check_ollama_availability(self) -> None:
         """Check if Ollama is running and model is available."""
@@ -102,8 +211,13 @@ class OllamaAdapter(BaseLLMAdapter):
         max_tokens = kwargs.get("max_tokens", 2000)
         temperature = kwargs.get("temperature", 0.1)
         
+        # Determine mode from kwargs or context
+        mode = kwargs.get("mode", "refactor")
+        settings = kwargs.get("settings", None)
+        context = kwargs.get("context", None)
+        
         # Build prompt with system context
-        full_prompt = f"{self._get_system_prompt()}\n\n{prompt}"
+        full_prompt = f"{self._get_system_prompt(mode, settings=settings, context=context)}\n\n{prompt}"
         
         payload = {
             "model": self.model,
@@ -120,11 +234,17 @@ class OllamaAdapter(BaseLLMAdapter):
         input_tokens = self.count_tokens(full_prompt)
         
         try:
+            # Track timing
+            start_time = time.time()
+            
             response = requests.post(
                 f"{self.ollama_host}/api/generate",
                 json=payload,
                 timeout=120  # Local models can be slow
             )
+            
+            # Calculate duration
+            duration_seconds = time.time() - start_time
             
             if response.status_code != 200:
                 raise Exception(f"Ollama API error: {response.status_code} - {response.text}")
@@ -135,42 +255,65 @@ class OllamaAdapter(BaseLLMAdapter):
             # Approximate output token count
             output_tokens = self.count_tokens(content)
             
+            # Get cost estimation with all details
+            cost_info = self.estimate_cost(input_tokens, output_tokens)
+            
             # Parse structured response if needed
             parsed_content = self._parse_response(content, prompt)
             
-            return LLMResponse(
+            # Create response with full accounting
+            llm_response = LLMResponse(
                 content=parsed_content["content"] if isinstance(parsed_content, dict) else parsed_content,
                 confidence=parsed_content.get("confidence") if isinstance(parsed_content, dict) else None,
                 rationale=parsed_content.get("rationale") if isinstance(parsed_content, dict) else None,
                 model_used=self.model,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
-                cost_usd=0.0  # Local models are free
+                cost_usd=cost_info["equivalent_cost_usd"],  # Use equivalent cost for accounting
+                duration_seconds=duration_seconds
             )
+            
+            # Log comprehensive metrics
+            self.logger.debug(
+                "Ollama call completed: model=%s, tokens=%d (in=%d, out=%d), "
+                "time=%.2fs, equivalent_cost=$%.6f",
+                self.model, cost_info["total_tokens"], input_tokens, output_tokens,
+                duration_seconds, cost_info["equivalent_cost_usd"]
+            )
+            
+            return llm_response
             
         except requests.RequestException as e:
             self.logger.error(f"Ollama API call failed: {e}")
             raise
     
-    def _get_system_prompt(self) -> str:
-        """Get system prompt optimized for local code models."""
-        return """You are a Python expert focused on fixing tail-chasing patterns in code. Provide complete, working solutions.
-
-Key rules:
-1. Never create incomplete functions or stubs - always implement fully
-2. Fix the root cause, not just symptoms  
-3. Consolidate duplicate code by choosing the best implementation
-4. Ensure all code is syntactically correct
-5. Preserve existing functionality while eliminating problems
-
-For structured responses, use this exact JSON format:
-{
-  "content": "your complete code or explanation here",
-  "confidence": 0.8,
-  "rationale": "brief explanation of your approach"
-}
-
-Focus on practical, working solutions that eliminate tail-chasing patterns completely."""
+    def _get_system_prompt(self, mode: str = "refactor", *, settings=None, context=None) -> str:
+        """Get system prompt tuned for specific refactor/verification tasks."""
+        base = [
+            "You are a meticulous senior software engineer.",
+            "Follow these rules strictly:",
+            "1) Prefer AST-safe, minimal diffs.",
+            "2) Preserve public API and behavior.",
+            "3) Do not invent symbols, imports, or files.",
+            "4) If uncertain, explain and stop rather than hallucinate.",
+        ]
+        
+        if mode == "lint_fix":
+            base.append("Scope: style-only changes (format, import order). No behavior changes.")
+        elif mode == "test_fix":
+            base.append("Scope: make the smallest change to satisfy failing tests in the provided logs.")
+        elif mode == "codegen":
+            base.append("Scope: generate new code only when explicitly instructed.")
+        else:
+            base.append("Scope: refactor existing code with minimal, safe edits.")
+        
+        # Optional toggles from settings/context
+        pyver = getattr(settings, "python_version", "3.11")
+        base.append(f"Environment: Python {pyver}; tools available: ruff, mypy, pytest.")
+        base.append("Output format: unified diff or patched function body only, no commentary unless asked.")
+        base.append("PROMPT_VERSION=ollama.v1")
+        
+        return "\n".join(base)
     
     def _parse_response(self, content: str, original_prompt: str) -> Union[str, Dict[str, Any]]:
         """Parse response from local model, handling various formats."""

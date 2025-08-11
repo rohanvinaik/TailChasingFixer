@@ -86,8 +86,14 @@ class AnthropicAdapter(BaseLLMAdapter):
         max_tokens = kwargs.get("max_tokens", 2000)
         temperature = kwargs.get("temperature", 0.1)
         
+        # Determine mode from kwargs or context
+        mode = kwargs.get("mode", "refactor")
+        settings = kwargs.get("settings", None)
+        context = kwargs.get("context", None)
+        
         # Build Claude-specific prompt format
-        full_prompt = f"{self._get_system_prompt()}\n\nHuman: {prompt}\n\nAssistant:"
+        system_prompt = self._get_system_prompt(mode, settings=settings, context=context)
+        full_prompt = f"{system_prompt}\n\nHuman: {prompt}\n\nAssistant:"
         
         # Count input tokens
         input_tokens = self.count_tokens(full_prompt)
@@ -97,7 +103,7 @@ class AnthropicAdapter(BaseLLMAdapter):
                 model=self.model,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                system=self._get_system_prompt(),
+                system=system_prompt,
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
@@ -124,29 +130,33 @@ class AnthropicAdapter(BaseLLMAdapter):
             self.logger.error(f"Anthropic API call failed: {e}")
             raise
     
-    def _get_system_prompt(self) -> str:
-        """Get system prompt optimized for Claude."""
-        return """You are an expert Python developer specialized in detecting and fixing tail-chasing patterns in code. You excel at providing complete, working solutions that eliminate problematic patterns while preserving functionality.
-
-Core principles for tail-chasing fixes:
-1. Always provide COMPLETE implementations - never stubs or placeholders
-2. Maintain AST-safe transformations - all code must be syntactically correct
-3. Consolidate duplicate functionality by choosing the best implementation
-4. Address root causes rather than applying superficial fixes
-5. Preserve all existing functionality while eliminating the problematic pattern
-
-Response format guidelines:
-- For structured requests, respond in JSON with "content", "confidence" (0.0-1.0), and "rationale" fields
-- For code fixes, provide complete, runnable code
-- Include brief but clear explanations of your approach
-- Rate your confidence honestly based on available context
-
-You are particularly skilled at:
-- Identifying and removing phantom/stub functions
-- Consolidating semantically duplicate code
-- Resolving circular import dependencies  
-- Fixing missing symbol references
-- Preventing rename cascades"""
+    def _get_system_prompt(self, mode: str = "refactor", *, settings=None, context=None) -> str:
+        """Get system prompt tuned for specific refactor/verification tasks."""
+        base = [
+            "You are a meticulous senior software engineer.",
+            "Follow these rules strictly:",
+            "1) Prefer AST-safe, minimal diffs.",
+            "2) Preserve public API and behavior.",
+            "3) Do not invent symbols, imports, or files.",
+            "4) If uncertain, explain and stop rather than hallucinate.",
+        ]
+        
+        if mode == "lint_fix":
+            base.append("Scope: style-only changes (format, import order). No behavior changes.")
+        elif mode == "test_fix":
+            base.append("Scope: make the smallest change to satisfy failing tests in the provided logs.")
+        elif mode == "codegen":
+            base.append("Scope: generate new code only when explicitly instructed.")
+        else:
+            base.append("Scope: refactor existing code with minimal, safe edits.")
+        
+        # Optional toggles from settings/context
+        pyver = getattr(settings, "python_version", "3.11")
+        base.append(f"Environment: Python {pyver}; tools available: ruff, mypy, pytest.")
+        base.append("Output format: unified diff or patched function body only, no commentary unless asked.")
+        base.append("PROMPT_VERSION=anthropic.v1")
+        
+        return "\n".join(base)
     
     def _parse_response(self, content: str, original_prompt: str) -> Union[str, Dict[str, Any]]:
         """Parse Claude's response, handling structured formats."""
