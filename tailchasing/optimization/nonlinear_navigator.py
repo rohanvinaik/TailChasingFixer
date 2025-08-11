@@ -605,13 +605,21 @@ class NonLinearNavigator:
         # Count downstream dependencies
         try:
             downstream = len(nx.descendants(cascade_graph, node.node_id))
-        except:
+        except (nx.NetworkXError, KeyError, AttributeError) as e:
+            self.logger.debug(f"Failed to calculate downstream dependencies for {node.node_id}: {e}")
+            downstream = 0
+        except Exception as e:
+            self.logger.warning(f"Unexpected error calculating downstream dependencies for {node.node_id}: {e}")
             downstream = 0
         
         # Count upstream dependencies  
         try:
             upstream = len(nx.ancestors(cascade_graph, node.node_id))
-        except:
+        except (nx.NetworkXError, KeyError, AttributeError) as e:
+            self.logger.debug(f"Failed to calculate upstream dependencies for {node.node_id}: {e}")
+            upstream = 0
+        except Exception as e:
+            self.logger.warning(f"Unexpected error calculating upstream dependencies for {node.node_id}: {e}")
             upstream = 0
         
         # Weight downstream more heavily (fixing this affects more)
@@ -813,7 +821,11 @@ class InfluenceBasedFixPrioritizer:
         try:
             descendants = nx.descendants(graph, node)
             cascade_score = len(descendants)
-        except:
+        except (nx.NetworkXError, KeyError, AttributeError) as e:
+            self.logger.debug(f"Failed to calculate issue descendants for {node}: {e}")
+            cascade_score = 0
+        except Exception as e:
+            self.logger.warning(f"Unexpected error calculating issue cascade for {node}: {e}")
             cascade_score = 0
         
         # Weight by issue severity
@@ -826,7 +838,11 @@ class InfluenceBasedFixPrioritizer:
         """Find all issues that depend on this one."""
         try:
             return list(nx.descendants(graph, node))
-        except:
+        except (nx.NetworkXError, KeyError, AttributeError) as e:
+            self.logger.debug(f"Failed to find dependent issues for {node}: {e}")
+            return []
+        except Exception as e:
+            self.logger.warning(f"Unexpected error finding dependent issues for {node}: {e}")
             return []
     
     def create_fix_clusters(self, 
