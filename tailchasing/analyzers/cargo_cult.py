@@ -36,7 +36,7 @@ class CargoCultDetector:
                 'severity': 2
             },
             'copy_paste_comments': {
-                'pattern': 'Comments that don't match the code',
+                'pattern': 'Comments that do not match the code',
                 'severity': 2
             },
             'unnecessary_abstractions': {
