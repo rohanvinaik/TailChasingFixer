@@ -4,19 +4,26 @@ Enhanced semantic analyzer using multimodal approach.
 
 import ast
 from typing import List, Tuple
-from ..base import Analyzer
+from .base_advanced import SemanticAwareAnalyzer
 from ...core.issues import Issue
 from .multimodal_semantic import SemanticDuplicateEnhancer
 
 
-class EnhancedSemanticAnalyzer(Analyzer):
+class EnhancedSemanticAnalyzer(SemanticAwareAnalyzer):
     """Enhanced semantic analysis with multimodal encoding."""
     
     name = "enhanced_semantic"
     
-    def __init__(self):
+    def _initialize_specific_config(self):
+        """Initialize enhanced semantic specific configuration."""
+        super()._initialize_specific_config()
+        self.set_threshold('similarity', 0.85)
         self.enhancer = SemanticDuplicateEnhancer()
-        self.similarity_threshold = 0.85
+    
+    @property
+    def similarity_threshold(self):
+        """Get similarity threshold."""
+        return self.get_threshold('similarity', 0.85)
     
     def run(self, ctx) -> List[Issue]:
         """Run enhanced semantic analysis."""

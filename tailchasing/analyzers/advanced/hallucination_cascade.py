@@ -6,19 +6,37 @@ import ast
 import networkx as nx
 from datetime import datetime
 from typing import List, Dict, Optional
+from .base_advanced import PatternDetectionAnalyzer
 from ..base import Analyzer
 from ...core.issues import Issue
 
 
-class HallucinationCascadeAnalyzer(Analyzer):
+class HallucinationCascadeAnalyzer(PatternDetectionAnalyzer, Analyzer):
     """Detect when LLM creates entire fictional subsystems."""
     
     name = "hallucination_cascade"
     
-    def __init__(self):
-        self.min_cascade_size = 3  # Minimum components for a cascade
-        self.max_time_span_days = 2  # Maximum time span for related creation
-        self.external_ref_threshold = 0.2  # Maximum external reference ratio
+    def _initialize_specific_config(self):
+        """Initialize hallucination cascade specific configuration."""
+        super()._initialize_specific_config()
+        self.set_config('min_cascade_size', 3)  # Minimum components for a cascade
+        self.set_config('max_time_span_days', 2)  # Maximum time span for related creation
+        self.set_threshold('external_ref', 0.2)  # Maximum external reference ratio
+    
+    @property
+    def min_cascade_size(self):
+        """Get minimum cascade size configuration."""
+        return self.get_config('min_cascade_size', 3)
+    
+    @property
+    def max_time_span_days(self):
+        """Get maximum time span days configuration."""
+        return self.get_config('max_time_span_days', 2)
+    
+    @property
+    def external_ref_threshold(self):
+        """Get external reference threshold."""
+        return self.get_threshold('external_ref', 0.2)
     
     def run(self, ctx) -> List[Issue]:
         """Run hallucination cascade analysis."""

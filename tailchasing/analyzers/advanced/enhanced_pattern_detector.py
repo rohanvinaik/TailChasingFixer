@@ -29,12 +29,16 @@ class TailChasingPattern:
     related_patterns: List[str]
 
 
-class EnhancedPatternDetector:
+from .base_advanced import PatternDetectionAnalyzer
+
+
+class EnhancedPatternDetector(PatternDetectionAnalyzer):
     """Advanced pattern detection beyond simple AST analysis."""
     
-    def __init__(self):
-        self.patterns = []
-        self.hallucination_threshold = 0.7
+    def _initialize_specific_config(self):
+        """Initialize enhanced pattern detector specific configuration."""
+        super()._initialize_specific_config()
+        self.set_threshold('hallucination', 0.7)
         
     def detect_hallucination_cascade(self, 
                                    codebase_ast: Dict[str, ast.AST],

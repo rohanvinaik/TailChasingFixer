@@ -5,18 +5,31 @@ Import anxiety analyzer for detecting defensive over-importing patterns.
 import ast
 from collections import defaultdict
 from typing import List, Dict, Set
+from .base_advanced import PatternDetectionAnalyzer
 from ..base import Analyzer
 from ...core.issues import Issue
 
 
-class ImportAnxietyAnalyzer(Analyzer):
+class ImportAnxietyAnalyzer(PatternDetectionAnalyzer, Analyzer):
     """Detect defensive over-importing patterns."""
     
     name = "import_anxiety"
     
-    def __init__(self):
-        self.min_imports = 5  # Minimum imports to consider anxiety
-        self.unused_ratio_threshold = 2  # Unused:used ratio threshold
+    def _initialize_specific_config(self):
+        """Initialize import anxiety specific configuration."""
+        super()._initialize_specific_config()
+        self.set_config('min_imports', 5)  # Minimum imports to consider anxiety
+        self.set_threshold('unused_ratio', 2.0)  # Unused:used ratio threshold
+    
+    @property
+    def min_imports(self):
+        """Get minimum imports configuration."""
+        return self.get_config('min_imports', 5)
+    
+    @property
+    def unused_ratio_threshold(self):
+        """Get unused ratio threshold."""
+        return self.get_threshold('unused_ratio', 2.0)
     
     def run(self, ctx) -> List[Issue]:
         """Run import anxiety analysis."""

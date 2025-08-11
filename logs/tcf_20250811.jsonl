@@ -253,3 +253,25 @@
 {"timestamp": "2025-08-11T19:10:04.632110Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer enhanced_semantic completed in 0.09s"}
 {"timestamp": "2025-08-11T19:10:04.632506Z", "level": "INFO", "module": "cli", "function": "main", "line": 252, "message": "Analysis complete: 138 issues, risk score 27.22"}
 {"timestamp": "2025-08-11T19:10:04.635211Z", "level": "INFO", "module": "cli", "function": "main", "line": 327, "message": "Found 136 fixable issues"}
+{"timestamp": "2025-08-11T19:14:21.816472Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-11T19:14:21.821355Z", "level": "INFO", "module": "cli", "function": "main", "line": 171, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-11T19:14:21.827468Z", "level": "INFO", "module": "cli", "function": "main", "line": 183, "message": "Found 74 Python files"}
+{"timestamp": "2025-08-11T19:14:21.827565Z", "level": "INFO", "module": "cli", "function": "main", "line": 186, "message": "Parsing Python files"}
+{"timestamp": "2025-08-11T19:14:21.954325Z", "level": "INFO", "module": "cli", "function": "main", "line": 194, "message": "Successfully parsed 74 files"}
+{"timestamp": "2025-08-11T19:14:21.954415Z", "level": "INFO", "module": "cli", "function": "main", "line": 197, "message": "Building symbol table"}
+{"timestamp": "2025-08-11T19:14:22.051322Z", "level": "INFO", "module": "cli", "function": "main", "line": 221, "message": "Running analyzers"}
+{"timestamp": "2025-08-11T19:14:22.051441Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-11T19:14:22.096463Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer import_graph completed in 0.04s"}
+{"timestamp": "2025-08-11T19:14:22.096551Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running duplicates analyzer"}
+{"timestamp": "2025-08-11T19:14:22.305970Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer duplicates completed in 0.21s"}
+{"timestamp": "2025-08-11T19:14:22.306068Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running placeholders analyzer"}
+{"timestamp": "2025-08-11T19:14:22.365804Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer placeholders completed in 0.06s"}
+{"timestamp": "2025-08-11T19:14:22.365894Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running missing_symbols analyzer"}
+{"timestamp": "2025-08-11T19:14:22.566942Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer missing_symbols completed in 0.20s"}
+{"timestamp": "2025-08-11T19:14:22.567039Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running git_chains analyzer"}
+{"timestamp": "2025-08-11T19:14:22.567100Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer git_chains completed in 0.00s"}
+{"timestamp": "2025-08-11T19:14:22.567148Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-11T19:14:36.163409Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer semantic_hv completed in 13.60s"}
+{"timestamp": "2025-08-11T19:14:36.163513Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running hallucination_cascade analyzer"}
+{"timestamp": "2025-08-11T19:14:38.551267Z", "level": "INFO", "module": "cli", "function": "main", "line": 235, "message": "Analyzer hallucination_cascade completed in 2.39s"}
+{"timestamp": "2025-08-11T19:14:38.551358Z", "level": "INFO", "module": "cli", "function": "main", "line": 227, "message": "Running context_thrashing analyzer"}

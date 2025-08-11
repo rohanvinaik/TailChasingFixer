@@ -5,19 +5,36 @@ Context thrashing analyzer for detecting when LLMs exceed context windows.
 import ast
 import difflib
 from typing import List, Dict, Tuple
-from ..base import Analyzer
+from .base_advanced import ContextAwareAnalyzer
 from ...core.issues import Issue
 
 
-class ContextThrashingAnalyzer(Analyzer):
+class ContextThrashingAnalyzer(ContextAwareAnalyzer):
     """Detect when LLM forgets context and reimplements functionality."""
     
     name = "context_thrashing"
     
-    def __init__(self):
-        self.min_distance = 500  # Minimum line distance to consider thrashing
-        self.similarity_threshold = 0.6  # Minimum similarity to flag
-        self.max_similarity = 0.95  # Maximum similarity (avoid exact duplicates)
+    def _initialize_specific_config(self):
+        """Initialize context thrashing specific configuration."""
+        super()._initialize_specific_config()
+        self.set_config('min_distance', 500)  # Minimum line distance to consider thrashing
+        self.set_threshold('similarity', 0.6)  # Minimum similarity to flag
+        self.set_threshold('max_similarity', 0.95)  # Maximum similarity (avoid exact duplicates)
+    
+    @property
+    def min_distance(self):
+        """Get minimum distance configuration."""
+        return self.get_config('min_distance', 500)
+    
+    @property
+    def similarity_threshold(self):
+        """Get similarity threshold."""
+        return self.get_threshold('similarity', 0.6)
+    
+    @property
+    def max_similarity(self):
+        """Get maximum similarity threshold."""
+        return self.get_threshold('max_similarity', 0.95)
     
     def run(self, ctx) -> List[Issue]:
         """Run context thrashing analysis."""
