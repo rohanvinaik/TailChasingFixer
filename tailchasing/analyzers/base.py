@@ -1,12 +1,13 @@
 """Base analyzer interface and context."""
 
 from __future__ import annotations
-from typing import Iterable, Protocol, List, Dict, Any, Optional, TYPE_CHECKING, runtime_checkable
+from typing import Iterable, Protocol, List, Dict, Any, TYPE_CHECKING, runtime_checkable
 from dataclasses import dataclass
 from pathlib import Path
 import ast
 
 from ..core.issues import Issue
+from ..shared import common_functions
 
 if TYPE_CHECKING:
     from ..core.symbols import SymbolTable
@@ -37,38 +38,19 @@ class AnalysisContext:
     
     def is_excluded(self, path: str) -> bool:
         """Check if a path should be excluded based on config."""
-        exclude_patterns: List[str] = self.config.get("paths", {}).get("exclude", [])
-        path_obj = Path(path)
-        
-        for pattern in exclude_patterns:
-            try:
-                path_obj.relative_to(self.root_dir / pattern)
-                return True
-            except ValueError:
-                pass
-                
-        return False
+        return common_functions.is_excluded(path, self.root_dir, self.config)
         
     def get_source_lines(self, file: str) -> List[str]:
         """Get source lines for a file (cached)."""
-        if file not in self.source_cache:
-            try:
-                path = Path(file)
-                self.source_cache[file] = path.read_text().splitlines()
-            except Exception:
-                self.source_cache[file] = []
-                
-        return self.source_cache[file]
+        return common_functions.get_source_lines(file, self.source_cache)
         
     def should_ignore_issue(self, issue_kind: str) -> bool:
         """Check if an issue type should be ignored."""
-        ignored: List[str] = self.config.get("ignore_issue_types", [])
-        return issue_kind in ignored
+        return common_functions.should_ignore_issue(issue_kind, self.config)
         
     def is_placeholder_allowed(self, symbol: str) -> bool:
         """Check if a placeholder is explicitly allowed."""
-        allowed: List[str] = self.config.get("placeholders", {}).get("allow", [])
-        return symbol in allowed
+        return common_functions.is_placeholder_allowed(symbol, self.config)
 
 
 class BaseAnalyzer:
@@ -89,14 +71,4 @@ class BaseAnalyzer:
         
     def get_confidence(self, base_confidence: float, modifiers: Dict[str, float]) -> float:
         """Calculate confidence score with modifiers."""
-        confidence: float = base_confidence
-        
-        for key, modifier in modifiers.items():
-            if key == "has_docstring":
-                confidence *= modifier
-            elif key == "is_test_file":
-                confidence *= modifier
-            elif key == "has_pragma":
-                confidence *= modifier
-                
-        return min(max(confidence, 0.0), 1.0)
+        return common_functions.get_confidence(base_confidence, modifiers)

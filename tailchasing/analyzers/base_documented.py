@@ -13,6 +13,7 @@ from pathlib import Path
 import ast
 
 from ..core.issues import Issue
+from ..shared import common_functions
 
 if TYPE_CHECKING:
     from ..core.symbols import SymbolTable
@@ -117,17 +118,7 @@ class AnalysisContext:
             >>> ctx.is_excluded('project/src/main.py')
             False
         """
-        exclude_patterns: List[str] = self.config.get("paths", {}).get("exclude", [])
-        path_obj = Path(path)
-        
-        for pattern in exclude_patterns:
-            try:
-                path_obj.relative_to(self.root_dir / pattern)
-                return True
-            except ValueError:
-                pass
-                
-        return False
+        return common_functions.is_excluded(path, self.root_dir, self.config)
         
     def get_source_lines(self, file: str) -> List[str]:
         """Get source code lines for a file with caching.
@@ -152,14 +143,7 @@ class AnalysisContext:
             The source cache is shared across all analyzers, improving
             performance when multiple analyzers need to access the same file.
         """
-        if file not in self.source_cache:
-            try:
-                path = Path(file)
-                self.source_cache[file] = path.read_text().splitlines()
-            except Exception:
-                self.source_cache[file] = []
-                
-        return self.source_cache[file]
+        return common_functions.get_source_lines(file, self.source_cache)
         
     def should_ignore_issue(self, issue_kind: str) -> bool:
         """Check if an issue type should be ignored.
@@ -180,8 +164,7 @@ class AnalysisContext:
             >>> ctx.should_ignore_issue('phantom_function')
             False
         """
-        ignored: List[str] = self.config.get("ignore_issue_types", [])
-        return issue_kind in ignored
+        return common_functions.should_ignore_issue(issue_kind, self.config)
         
     def is_placeholder_allowed(self, symbol: str) -> bool:
         """Check if a placeholder function/class is explicitly allowed.
@@ -203,8 +186,7 @@ class AnalysisContext:
             >>> ctx.is_placeholder_allowed('ConcreteClass.method')
             False
         """
-        allowed: List[str] = self.config.get("placeholders", {}).get("allow", [])
-        return symbol in allowed
+        return common_functions.is_placeholder_allowed(symbol, self.config)
     
     def get_analyzer_cache(self, analyzer_name: str) -> Dict[str, Any]:
         """Get or create a cache dictionary for a specific analyzer.
@@ -224,9 +206,7 @@ class AnalysisContext:
             >>> # Later access:
             >>> vectors = ctx.get_analyzer_cache('semantic_analyzer')['computed_vectors']
         """
-        if analyzer_name not in self.cache:
-            self.cache[analyzer_name] = {}
-        return self.cache[analyzer_name]
+        return common_functions.get_analyzer_cache(analyzer_name, self.cache)
     
     def get_file_metadata(self, file_path: str) -> Dict[str, Any]:
         """Get metadata about a specific file.
@@ -247,23 +227,7 @@ class AnalysisContext:
             >>> metadata['function_count']
             12
         """
-        if file_path not in self.ast_index:
-            return {}
-        
-        tree = self.ast_index[file_path]
-        lines = self.get_source_lines(file_path)
-        
-        # Count various elements
-        function_count = sum(1 for _ in ast.walk(tree) if isinstance(_, ast.FunctionDef))
-        class_count = sum(1 for _ in ast.walk(tree) if isinstance(_, ast.ClassDef))
-        
-        return {
-            'line_count': len(lines),
-            'function_count': function_count,
-            'class_count': class_count,
-            'has_main': any('if __name__' in line for line in lines),
-            'is_test': 'test' in Path(file_path).name.lower()
-        }
+        return common_functions.get_file_metadata(file_path, self.ast_index, self.source_cache)
 
 
 class BaseAnalyzer:
@@ -364,17 +328,7 @@ class BaseAnalyzer:
             - is_test_file: Decrease confidence in test files
             - has_pragma: Decrease if explicitly marked to ignore
         """
-        confidence: float = base_confidence
-        
-        for key, modifier in modifiers.items():
-            if key == "has_docstring":
-                confidence *= modifier
-            elif key == "is_test_file":
-                confidence *= modifier
-            elif key == "has_pragma":
-                confidence *= modifier
-                
-        return min(max(confidence, 0.0), 1.0)
+        return common_functions.get_confidence(base_confidence, modifiers)
     
     def filter_by_severity(self, issues: List[Issue], 
                           min_severity: int = 1) -> List[Issue]:
@@ -397,7 +351,7 @@ class BaseAnalyzer:
             >>> len(filtered)
             2
         """
-        return [issue for issue in issues if issue.severity >= min_severity]
+        return common_functions.filter_by_severity(issues, min_severity)
     
     def group_by_file(self, issues: List[Issue]) -> Dict[str, List[Issue]]:
         """Group issues by file path for organized reporting.
@@ -418,9 +372,4 @@ class BaseAnalyzer:
             >>> len(grouped['a.py'])
             2
         """
-        grouped: Dict[str, List[Issue]] = {}
-        for issue in issues:
-            if issue.file not in grouped:
-                grouped[issue.file] = []
-            grouped[issue.file].append(issue)
-        return grouped
+        return common_functions.group_by_file(issues)
