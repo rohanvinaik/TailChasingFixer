@@ -144,8 +144,8 @@ class SemanticHVAnalyzer(Analyzer):
         """Find semantically similar functions."""
         issues = []
         
-        # Get all similar pairs
-        pairs = self.index.find_all_similar_pairs()
+        # Get all similar pairs with a reasonable limit to prevent hanging
+        pairs = self.index.find_all_similar_pairs(limit=100)
         
         # Apply FDR correction
         significant_pairs = self.similarity_analyzer.filter_significant_pairs(pairs)

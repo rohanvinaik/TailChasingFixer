@@ -224,11 +224,15 @@ def main():
     issue_collection = IssueCollection()
     
     for analyzer in analyzers:
-        logger.debug(f"Running {analyzer.name} analyzer")
+        logger.info(f"Running {analyzer.name} analyzer")
         try:
+            import time
+            start_time = time.time()
             for issue in analyzer.run(ctx):
                 if not ctx.should_ignore_issue(issue.kind):
                     issue_collection.add(issue)
+            elapsed = time.time() - start_time
+            logger.info(f"Analyzer {analyzer.name} completed in {elapsed:.2f}s")
         except Exception as e:
             logger.error(f"Analyzer {analyzer.name} failed: {e}")
             

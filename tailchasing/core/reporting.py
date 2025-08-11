@@ -5,9 +5,22 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
+import numpy as np
 
 from .issues import Issue, IssueCollection
 from .scoring import RiskScorer
+
+
+class NumpyJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles numpy types."""
+    def default(self, obj):
+        if isinstance(obj, (np.float32, np.float64)):
+            return float(obj)
+        if isinstance(obj, (np.int32, np.int64, np.int16, np.int8)):
+            return int(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
 
 class Reporter:
@@ -168,7 +181,7 @@ class Reporter:
             "issues": [issue.to_dict() for issue in issues]
         }
         
-        return json.dumps(report, indent=2)
+        return json.dumps(report, indent=2, cls=NumpyJSONEncoder)
         
     def render_html(self, issues: List[Issue]) -> str:
         """Render an HTML report."""

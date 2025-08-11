@@ -148,30 +148,38 @@ class SemanticIndex:
         if n < 2:
             return (0.5, 0.05)  # Default for small samples
         
-        # Sample random pairs
+        # Sample random pairs more efficiently
         max_pairs = min(
-            self.config.get('max_pairs_sample', 10000),
+            self.config.get('max_pairs_sample', 1000),  # Reduced default
             n * (n - 1) // 2
         )
         
-        # Use reservoir sampling for large spaces
+        # For large sets, use random sampling instead of reservoir sampling
         distances: List[float] = []
-        pairs_seen: int = 0
         
-        for i in range(n):
-            for j in range(i + 1, n):
-                pairs_seen += 1
-                
-                if len(distances) < max_pairs:
-                    # Haven't filled reservoir yet
+        if n * (n - 1) // 2 <= max_pairs:
+            # Small enough to compute all pairs
+            for i in range(n):
+                for j in range(i + 1, n):
                     d = self.space.distance(valid_entries[i][1], valid_entries[j][1])
                     distances.append(d)
-                else:
-                    # Reservoir sampling
-                    k = random.randint(0, pairs_seen - 1)
-                    if k < max_pairs:
-                        d = self.space.distance(valid_entries[i][1], valid_entries[j][1])
-                        distances[k] = d
+        else:
+            # Random sampling for large sets
+            sampled = 0
+            attempts = 0
+            max_attempts = max_pairs * 3  # Prevent infinite loops
+            seen_pairs = set()
+            
+            while sampled < max_pairs and attempts < max_attempts:
+                i = random.randint(0, n - 1)
+                j = random.randint(0, n - 1)
+                attempts += 1
+                
+                if i != j and (i, j) not in seen_pairs and (j, i) not in seen_pairs:
+                    seen_pairs.add((i, j))
+                    d = self.space.distance(valid_entries[i][1], valid_entries[j][1])
+                    distances.append(d)
+                    sampled += 1
         
         if not distances:
             return (0.5, 0.05)
@@ -446,9 +454,9 @@ class SemanticIndex:
             self._matrix_valid = False
             return
         
-        # Stack vectors into matrix
+        # Stack vectors into matrix and convert to float32 for efficient computation
         vectors = [hv for _, hv, _ in valid_entries]
-        self._vector_matrix = np.stack(vectors)
+        self._vector_matrix = np.stack(vectors).astype(np.float32)
         self._matrix_valid = True
         self._last_rebuild_time = time.time()
         self._search_stats['matrix_rebuilds'] += 1
@@ -567,14 +575,34 @@ class SemanticIndex:
     def _compute_pairwise_distances_vectorized(self, matrix: NDArray[np.float32]) -> NDArray[np.float32]:
         """Compute all pairwise distances efficiently."""
         n = matrix.shape[0]
-        distances = np.zeros((n, n), dtype=np.float32)
+        
+        # For large matrices, warn about memory usage
+        if n > 1000:
+            self.logger.warning(f"Computing pairwise distances for {n} vectors - this may take time")
         
         if self.space.bipolar:
-            # For bipolar vectors
-            dot_products = np.dot(matrix, matrix.T)
-            distances = (self.space.dim - dot_products) / (2 * self.space.dim)
+            # For bipolar vectors - ensure float32 computation
+            # Normalize to [-1, 1] if needed
+            if matrix.dtype != np.float32:
+                matrix = matrix.astype(np.float32)
+            
+            # Compute dot products in chunks for very large matrices
+            if n > 500:
+                # Process in chunks to avoid memory issues
+                chunk_size = 100
+                distances = np.zeros((n, n), dtype=np.float32)
+                for i in range(0, n, chunk_size):
+                    end_i = min(i + chunk_size, n)
+                    for j in range(0, n, chunk_size):
+                        end_j = min(j + chunk_size, n)
+                        chunk_dot = np.dot(matrix[i:end_i], matrix[j:end_j].T)
+                        distances[i:end_i, j:end_j] = (self.space.dim - chunk_dot) / (2 * self.space.dim)
+            else:
+                dot_products = np.dot(matrix, matrix.T)
+                distances = (self.space.dim - dot_products) / (2 * self.space.dim)
         else:
             # For binary vectors
+            distances = np.zeros((n, n), dtype=np.float32)
             for i in range(n):
                 for j in range(i + 1, n):
                     dist = np.mean(matrix[i] != matrix[j])

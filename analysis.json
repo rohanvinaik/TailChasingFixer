@@ -1,0 +1,4752 @@
+2025-08-11 14:56:24 - INFO - [logging_setup] - Starting operation: cli_main
+2025-08-11 14:56:24 - INFO - [cli] - Collecting Python files from /Users/***REDACTED***
+INFO: Collecting Python files from /Users/***REDACTED***
+2025-08-11 14:56:24 - INFO - [cli] - Found 71 Python files
+INFO: Found 71 Python files
+2025-08-11 14:56:24 - INFO - [cli] - Parsing Python files
+INFO: Parsing Python files
+2025-08-11 14:56:24 - INFO - [cli] - Successfully parsed 71 files
+INFO: Successfully parsed 71 files
+2025-08-11 14:56:24 - INFO - [cli] - Building symbol table
+INFO: Building symbol table
+2025-08-11 14:56:24 - INFO - [cli] - Running analyzers
+INFO: Running analyzers
+2025-08-11 14:56:24 - INFO - [cli] - Running import_graph analyzer
+INFO: Running import_graph analyzer
+2025-08-11 14:56:24 - INFO - [cli] - Analyzer import_graph completed in 0.04s
+INFO: Analyzer import_graph completed in 0.04s
+2025-08-11 14:56:24 - INFO - [cli] - Running duplicates analyzer
+INFO: Running duplicates analyzer
+2025-08-11 14:56:25 - INFO - [cli] - Analyzer duplicates completed in 0.20s
+INFO: Analyzer duplicates completed in 0.20s
+2025-08-11 14:56:25 - INFO - [cli] - Running placeholders analyzer
+INFO: Running placeholders analyzer
+2025-08-11 14:56:25 - INFO - [cli] - Analyzer placeholders completed in 0.06s
+INFO: Analyzer placeholders completed in 0.06s
+2025-08-11 14:56:25 - INFO - [cli] - Running missing_symbols analyzer
+INFO: Running missing_symbols analyzer
+2025-08-11 14:56:25 - INFO - [cli] - Analyzer missing_symbols completed in 0.20s
+INFO: Analyzer missing_symbols completed in 0.20s
+2025-08-11 14:56:25 - INFO - [cli] - Running git_chains analyzer
+INFO: Running git_chains analyzer
+2025-08-11 14:56:25 - INFO - [cli] - Analyzer git_chains completed in 0.00s
+INFO: Analyzer git_chains completed in 0.00s
+2025-08-11 14:56:25 - INFO - [cli] - Running semantic_hv analyzer
+INFO: Running semantic_hv analyzer
+2025-08-11 14:56:35 - INFO - [cli] - Analyzer semantic_hv completed in 10.22s
+INFO: Analyzer semantic_hv completed in 10.22s
+2025-08-11 14:56:35 - INFO - [cli] - Running hallucination_cascade analyzer
+INFO: Running hallucination_cascade analyzer
+2025-08-11 14:56:37 - INFO - [cli] - Analyzer hallucination_cascade completed in 2.34s
+INFO: Analyzer hallucination_cascade completed in 2.34s
+2025-08-11 14:56:37 - INFO - [cli] - Running context_thrashing analyzer
+INFO: Running context_thrashing analyzer
+2025-08-11 14:56:41 - INFO - [cli] - Analyzer context_thrashing completed in 3.43s
+INFO: Analyzer context_thrashing completed in 3.43s
+2025-08-11 14:56:41 - INFO - [cli] - Running import_anxiety analyzer
+INFO: Running import_anxiety analyzer
+2025-08-11 14:56:41 - INFO - [cli] - Analyzer import_anxiety completed in 0.09s
+INFO: Analyzer import_anxiety completed in 0.09s
+2025-08-11 14:56:41 - INFO - [cli] - Running enhanced_semantic analyzer
+INFO: Running enhanced_semantic analyzer
+2025-08-11 14:56:41 - INFO - [cli] - Analyzer enhanced_semantic completed in 0.09s
+INFO: Analyzer enhanced_semantic completed in 0.09s
+2025-08-11 14:56:41 - INFO - [cli] - Analysis complete: 136 issues, risk score 27.8
+INFO: Analysis complete: 136 issues, risk score 27.8
+
+🧹 Filtered out legitimate patterns:
+  - Legitimate protocol_implementations pattern: 3 pairs
+
+Tail-Chasing Analysis Complete
+========================================
+Total Issues: 136
+Global Risk Score: 27.8 (WARNING)
+Affected Modules: 49
+
+Top Issues:
+  [semantic_duplicate_function] /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/context_thrashing.py:17 - Semantic duplicate: ContextThrashingAnalyzer.__init__ and EnhancedPatternDetector.__init__ (z-score: 7.15, distance: 0.000)
+  [semantic_duplicate_function] /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py:35 - Semantic duplicate: EnhancedPatternDetector.__init__ and EnhancedSemanticAnalyzer.__init__ (z-score: 7.15, distance: 0.000)
+  [semantic_duplicate_function] /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_semantic.py:17 - Semantic duplicate: EnhancedSemanticAnalyzer.__init__ and HallucinationCascadeAnalyzer.__init__ (z-score: 7.15, distance: 0.000)
+  [semantic_duplicate_function] /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py:29 - Semantic duplicate: EnhancedSemanticAnalyzer.__init__ and SemanticDuplicateEnhancer.__init__ (z-score: 7.15, distance: 0.000)
+  [semantic_duplicate_function] /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/hallucination_cascade.py:18 - Semantic duplicate: HallucinationCascadeAnalyzer.__init__ and ImportAnxietyAnalyzer.__init__ (z-score: 7.15, distance: 0.000)
+{
+  "metadata": {
+    "version": "1.0",
+    "generated": "2025-08-11T14:56:41.600275",
+    "tool": "tail-chasing-detector"
+  },
+  "summary": {
+    "total_issues": 136,
+    "global_score": 27.8,
+    "risk_level": "WARNING",
+    "affected_modules": 49
+  },
+  "distribution": {
+    "duplicate_function": 45,
+    "phantom_function": 16,
+    "semantic_duplicate_function": 5,
+    "prototype_fragmentation": 1,
+    "hallucination_cascade": 6,
+    "context_window_thrashing": 21,
+    "import_anxiety": 41,
+    "semantic_duplicate_multimodal": 1
+  },
+  "module_scores": {
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py": 8.6,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py": 35.2,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cargo_cult.py": 8.5,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py": 10.5,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py": 6.699999999999999,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py": 3.8,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_enhanced.py": 3.8,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py": 4.8,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py": 8.6,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/suggestions.py": 4.8,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py": 230.59999999999997,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py": 19.9,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py": 20.6,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py": 6.6,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py": 9.200000000000001,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py": 6.6,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py": 30.1,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py": 18.099999999999998,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/utils/logging_setup.py": 3.8,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/semantic_hv.py": 2.8,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py": 4.6,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py": 2.8,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/context_thrashing.py": 15.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py": 16.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_semantic.py": 15.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py": 16.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/hallucination_cascade.py": 15.0,
+    "<global>": 12.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/manager.py": 21.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py": 61.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/drift.py": 21.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/index.py": 21.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cross_file_duplication.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/git_chains.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/import_graph.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/root_cause_tracer.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/loader.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/scoring.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/symbols.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/__init__.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/intelligent_fixer.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/__init__.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/__init__.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/__init__.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/advanced_patterns.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/hv_space.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/prototypes.py": 1.0,
+    "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/similarity.py": 1.0
+  },
+  "issues": [
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _are_likely_duplicates (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py), _are_likely_duplicates (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py",
+      "line": 273,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "3c2c164129ebae34",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_are_likely_duplicates",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py",
+            "line": 273,
+            "size": 7
+          },
+          {
+            "name": "_are_likely_duplicates",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py",
+            "line": 711,
+            "size": 7
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _name_similarity (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py), _name_similarity (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py",
+      "line": 287,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "c1db1458397bd0e5",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_name_similarity",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py",
+            "line": 287,
+            "size": 3
+          },
+          {
+            "name": "_name_similarity",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py",
+            "line": 725,
+            "size": 3
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: run (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), run (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py), can_handle (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), get_dependencies (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), count_tokens (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 21,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "f1af9e1ea3b67c67",
+        "count": 5,
+        "functions": [
+          {
+            "name": "run",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 21,
+            "size": 2
+          },
+          {
+            "name": "run",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 41,
+            "size": 2
+          },
+          {
+            "name": "can_handle",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 73,
+            "size": 2
+          },
+          {
+            "name": "get_dependencies",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 85,
+            "size": 2
+          },
+          {
+            "name": "count_tokens",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 125,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: is_excluded (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), is_excluded (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 38,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "ae69af37b0e0773b",
+        "count": 2,
+        "functions": [
+          {
+            "name": "is_excluded",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 38,
+            "size": 9
+          },
+          {
+            "name": "is_excluded",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 101,
+            "size": 9
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: get_source_lines (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), get_source_lines (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 52,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "4b65e11ab26b7c0a",
+        "count": 2,
+        "functions": [
+          {
+            "name": "get_source_lines",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 52,
+            "size": 7
+          },
+          {
+            "name": "get_source_lines",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 132,
+            "size": 7
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: should_ignore_issue (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), should_ignore_issue (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 63,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "f4029d1e56b3fc17",
+        "count": 2,
+        "functions": [
+          {
+            "name": "should_ignore_issue",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 63,
+            "size": 3
+          },
+          {
+            "name": "should_ignore_issue",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 164,
+            "size": 3
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: is_placeholder_allowed (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), is_placeholder_allowed (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 68,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "4c16118f92355c94",
+        "count": 2,
+        "functions": [
+          {
+            "name": "is_placeholder_allowed",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 68,
+            "size": 3
+          },
+          {
+            "name": "is_placeholder_allowed",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 186,
+            "size": 3
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: run (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), run (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 82,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "8c7ab699d1866bae",
+        "count": 2,
+        "functions": [
+          {
+            "name": "run",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 82,
+            "size": 2
+          },
+          {
+            "name": "run",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 298,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: add_issue (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), add_issue (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py), add (/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 86,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "7f1fede5e3810104",
+        "count": 3,
+        "functions": [
+          {
+            "name": "add_issue",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 86,
+            "size": 2
+          },
+          {
+            "name": "add_issue",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 315,
+            "size": 2
+          },
+          {
+            "name": "add",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+            "line": 112,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: get_confidence (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py), get_confidence (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 90,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "2f881c4c29772990",
+        "count": 2,
+        "functions": [
+          {
+            "name": "get_confidence",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+            "line": 90,
+            "size": 10
+          },
+          {
+            "name": "get_confidence",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+            "line": 337,
+            "size": 10
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _parent_has_init (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cargo_cult.py), _are_structural_duplicates (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/semantic_hv.py), estimate_cost (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cargo_cult.py",
+      "line": 403,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "b3b727976612f997",
+        "count": 3,
+        "functions": [
+          {
+            "name": "_parent_has_init",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cargo_cult.py",
+            "line": 403,
+            "size": 2
+          },
+          {
+            "name": "_are_structural_duplicates",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/semantic_hv.py",
+            "line": 344,
+            "size": 2
+          },
+          {
+            "name": "estimate_cost",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py",
+            "line": 73,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: visit_ClassDef (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py), visit_ClassDef (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py",
+      "line": 203,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "75f5d4cec61a83c9",
+        "count": 2,
+        "functions": [
+          {
+            "name": "visit_ClassDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py",
+            "line": 203,
+            "size": 5
+          },
+          {
+            "name": "visit_ClassDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py",
+            "line": 37,
+            "size": 5
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: visit_AsyncFunctionDef (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py), visit_AsyncFunctionDef (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py), visit_AsyncFunctionDef (/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py), visit_AsyncFunctionDef (/Users/rohanvinaik/TailChasingFixer/tailchasing/core/symbols.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py",
+      "line": 234,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "8d319fdd52e229aa",
+        "count": 4,
+        "functions": [
+          {
+            "name": "visit_AsyncFunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py",
+            "line": 234,
+            "size": 2
+          },
+          {
+            "name": "visit_AsyncFunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+            "line": 260,
+            "size": 2
+          },
+          {
+            "name": "visit_AsyncFunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+            "line": 339,
+            "size": 2
+          },
+          {
+            "name": "visit_AsyncFunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/symbols.py",
+            "line": 250,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py: visit_DictComp, visit_GeneratorExp, visit_ListComp, visit_SetComp",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+      "line": 437,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "659dbb7f6c606151",
+        "count": 4,
+        "functions": [
+          {
+            "name": "visit_DictComp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+            "line": 437,
+            "size": 2
+          },
+          {
+            "name": "visit_GeneratorExp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+            "line": 441,
+            "size": 2
+          },
+          {
+            "name": "visit_ListComp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+            "line": 429,
+            "size": 2
+          },
+          {
+            "name": "visit_SetComp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+            "line": 433,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py: visit_AsyncFunctionDef, visit_FunctionDef",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py",
+      "line": 49,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "0be989b52e6a6508",
+        "count": 2,
+        "functions": [
+          {
+            "name": "visit_AsyncFunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py",
+            "line": 49,
+            "size": 3
+          },
+          {
+            "name": "visit_FunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py",
+            "line": 44,
+            "size": 3
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _run_enhanced_detection (/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_enhanced.py), _run_enhanced_detection (/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_enhanced.py",
+      "line": 211,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "0653dafb757ec6eb",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_run_enhanced_detection",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_enhanced.py",
+            "line": 211,
+            "size": 8
+          },
+          {
+            "name": "_run_enhanced_detection",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py",
+            "line": 304,
+            "size": 8
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _merge_configs (/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py), _merge_configs (/Users/rohanvinaik/TailChasingFixer/tailchasing/config.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py",
+      "line": 160,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "06d0a2beb68b8531",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_merge_configs",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py",
+            "line": 160,
+            "size": 7
+          },
+          {
+            "name": "_merge_configs",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/config.py",
+            "line": 110,
+            "size": 7
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: from_dict (/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py), create_llm_manager (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/manager.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+      "line": 85,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "802953d987a49bb2",
+        "count": 2,
+        "functions": [
+          {
+            "name": "from_dict",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+            "line": 85,
+            "size": 2
+          },
+          {
+            "name": "create_llm_manager",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/manager.py",
+            "line": 490,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py: __iter__, __len__",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+      "line": 152,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "d6be62151a3e63f7",
+        "count": 2,
+        "functions": [
+          {
+            "name": "__iter__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+            "line": 152,
+            "size": 2
+          },
+          {
+            "name": "__len__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+            "line": 148,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/core/suggestions.py: _suggest_context_thrashing_fix, _suggest_import_anxiety_fix",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/suggestions.py",
+      "line": 360,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "f9fe6ed0ae9607a9",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_suggest_context_thrashing_fix",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/suggestions.py",
+            "line": 360,
+            "size": 3
+          },
+          {
+            "name": "_suggest_import_anxiety_fix",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/suggestions.py",
+            "line": 310,
+            "size": 3
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: estimate_risk (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), propose_fix (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), estimate_cost (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py), generate_explanation (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 81,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "f6a80564a1c1e95c",
+        "count": 4,
+        "functions": [
+          {
+            "name": "estimate_risk",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 81,
+            "size": 2
+          },
+          {
+            "name": "propose_fix",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 77,
+            "size": 2
+          },
+          {
+            "name": "estimate_cost",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 129,
+            "size": 2
+          },
+          {
+            "name": "generate_explanation",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 141,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: learn_from_outcome (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), generate_fix (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 89,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "6dd3194feb2651d3",
+        "count": 2,
+        "functions": [
+          {
+            "name": "learn_from_outcome",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 89,
+            "size": 2
+          },
+          {
+            "name": "generate_fix",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 133,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: can_handle (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), _make_api_call (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py), _build_cooccurrence_matrix (/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 105,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "8942f3facce67b9a",
+        "count": 3,
+        "functions": [
+          {
+            "name": "can_handle",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 105,
+            "size": 2
+          },
+          {
+            "name": "_make_api_call",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 173,
+            "size": 2
+          },
+          {
+            "name": "_build_cooccurrence_matrix",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py",
+            "line": 46,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py: get_dependencies, get_dependencies, get_dependencies",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 162,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "5f0b672359edb7bc",
+        "count": 3,
+        "functions": [
+          {
+            "name": "get_dependencies",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 162,
+            "size": 2
+          },
+          {
+            "name": "get_dependencies",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 491,
+            "size": 2
+          },
+          {
+            "name": "get_dependencies",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 1098,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py: __init__, __init__, __init__, __init__, __init__",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 298,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "5e5c956bda79dae0",
+        "count": 5,
+        "functions": [
+          {
+            "name": "__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 298,
+            "size": 1
+          },
+          {
+            "name": "__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 499,
+            "size": 1
+          },
+          {
+            "name": "__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 657,
+            "size": 1
+          },
+          {
+            "name": "__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 929,
+            "size": 1
+          },
+          {
+            "name": "__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 1117,
+            "size": 1
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py: can_handle, can_handle, can_handle",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 301,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "d2f4b24017c2faa1",
+        "count": 3,
+        "functions": [
+          {
+            "name": "can_handle",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 301,
+            "size": 2
+          },
+          {
+            "name": "can_handle",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 660,
+            "size": 2
+          },
+          {
+            "name": "can_handle",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 1120,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py: can_handle, can_handle",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 502,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "535523cd1c20d2ca",
+        "count": 2,
+        "functions": [
+          {
+            "name": "can_handle",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 502,
+            "size": 2
+          },
+          {
+            "name": "can_handle",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 932,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py: _get_base_risk_level, _get_base_risk_level",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 510,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "12f0754120473f47",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_get_base_risk_level",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 510,
+            "size": 1
+          },
+          {
+            "name": "_get_base_risk_level",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 1129,
+            "size": 1
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py: get_dependencies, get_dependencies",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 649,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "583ed8e0efbc92b0",
+        "count": 2,
+        "functions": [
+          {
+            "name": "get_dependencies",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 649,
+            "size": 2
+          },
+          {
+            "name": "get_dependencies",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 1228,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py: _get_base_risk_level, _get_base_risk_level",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 669,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "54f675bb9d020454",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_get_base_risk_level",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 669,
+            "size": 1
+          },
+          {
+            "name": "_get_base_risk_level",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 940,
+            "size": 1
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _generate_getter_implementation (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), _generate_predicate_implementation (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), _generate_setter_implementation (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), _generate_validator_implementation (/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py), _get_output_format_requirements (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 731,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "e0f3f8581ad61b9e",
+        "count": 5,
+        "functions": [
+          {
+            "name": "_generate_getter_implementation",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 731,
+            "size": 2
+          },
+          {
+            "name": "_generate_predicate_implementation",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 767,
+            "size": 2
+          },
+          {
+            "name": "_generate_setter_implementation",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 749,
+            "size": 2
+          },
+          {
+            "name": "_generate_validator_implementation",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+            "line": 784,
+            "size": 2
+          },
+          {
+            "name": "_get_output_format_requirements",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py",
+            "line": 297,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: model_tier (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py), model_tier (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+      "line": 65,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "bcc21acc2619848b",
+        "count": 2,
+        "functions": [
+          {
+            "name": "model_tier",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+            "line": 65,
+            "size": 1
+          },
+          {
+            "name": "model_tier",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+            "line": 78,
+            "size": 1
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: estimate_cost (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py), estimate_cost (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+      "line": 78,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "12e1e5e235402d02",
+        "count": 2,
+        "functions": [
+          {
+            "name": "estimate_cost",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+            "line": 78,
+            "size": 4
+          },
+          {
+            "name": "estimate_cost",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+            "line": 89,
+            "size": 4
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _get_system_prompt (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py), _get_system_prompt (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py), _get_system_prompt (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py), _get_role_prompt (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py)",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+      "line": 127,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "4c4a8475fbbf7409",
+        "count": 4,
+        "functions": [
+          {
+            "name": "_get_system_prompt",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+            "line": 127,
+            "size": 2
+          },
+          {
+            "name": "_get_system_prompt",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py",
+            "line": 155,
+            "size": 2
+          },
+          {
+            "name": "_get_system_prompt",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+            "line": 145,
+            "size": 2
+          },
+          {
+            "name": "_get_role_prompt",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py",
+            "line": 152,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _requires_structured_response (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py), _requires_json (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+      "line": 200,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "204d011fe88f0d5e",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_requires_structured_response",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+            "line": 200,
+            "size": 4
+          },
+          {
+            "name": "_requires_json",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+            "line": 169,
+            "size": 4
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py: cost_tracker, model_tier",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+      "line": 121,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "02f5e2c9d8bd0bbf",
+        "count": 2,
+        "functions": [
+          {
+            "name": "cost_tracker",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 121,
+            "size": 2
+          },
+          {
+            "name": "model_tier",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 116,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: model_tier (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py), is_success (/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+      "line": 168,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "e3e754d7a0411d0b",
+        "count": 2,
+        "functions": [
+          {
+            "name": "model_tier",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+            "line": 168,
+            "size": 2
+          },
+          {
+            "name": "is_success",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+            "line": 81,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _get_few_shot_examples (/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py), _get_drift_recommendation (/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/advanced_patterns.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+      "line": 237,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "b5e70a1091624135",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_get_few_shot_examples",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+            "line": 237,
+            "size": 3
+          },
+          {
+            "name": "_get_drift_recommendation",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/advanced_patterns.py",
+            "line": 209,
+            "size": 3
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py: _extract_structural_features, _extract_temporal_features",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py",
+      "line": 116,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "19eb55e3105fe45f",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_extract_structural_features",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py",
+            "line": 116,
+            "size": 2
+          },
+          {
+            "name": "_extract_temporal_features",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py",
+            "line": 121,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Structurally identical functions: _rand_vec (/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py), _rand_vec (/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/hv_space.py)",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py",
+      "line": 41,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "267ad52e2ce718a2",
+        "count": 2,
+        "functions": [
+          {
+            "name": "_rand_vec",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py",
+            "line": 41,
+            "size": 4
+          },
+          {
+            "name": "_rand_vec",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/hv_space.py",
+            "line": 58,
+            "size": 4
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py: is_success, is_success, is_success",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+      "line": 93,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "375f301121ac1b7c",
+        "count": 3,
+        "functions": [
+          {
+            "name": "is_success",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+            "line": 93,
+            "size": 1
+          },
+          {
+            "name": "is_success",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+            "line": 106,
+            "size": 1
+          },
+          {
+            "name": "is_success",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+            "line": 118,
+            "size": 1
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py: visit_For, visit_If, visit_Return, visit_While, visit_With, visit_Yield, visit_YieldFrom",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+      "line": 166,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "0d5debf5adef373c",
+        "count": 7,
+        "functions": [
+          {
+            "name": "visit_For",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 166,
+            "size": 2
+          },
+          {
+            "name": "visit_If",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 162,
+            "size": 2
+          },
+          {
+            "name": "visit_Return",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 193,
+            "size": 2
+          },
+          {
+            "name": "visit_While",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 170,
+            "size": 2
+          },
+          {
+            "name": "visit_With",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 182,
+            "size": 2
+          },
+          {
+            "name": "visit_Yield",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 197,
+            "size": 2
+          },
+          {
+            "name": "visit_YieldFrom",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 201,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py: visit_DictComp, visit_GeneratorExp, visit_ListComp, visit_SetComp",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+      "line": 230,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "8ed1ae35b45301a1",
+        "count": 4,
+        "functions": [
+          {
+            "name": "visit_DictComp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 230,
+            "size": 2
+          },
+          {
+            "name": "visit_GeneratorExp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 234,
+            "size": 2
+          },
+          {
+            "name": "visit_ListComp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 222,
+            "size": 2
+          },
+          {
+            "name": "visit_SetComp",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 226,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py: visit_AsyncFunctionDef, visit_FunctionDef, visit_Lambda",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+      "line": 242,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "fde271e2639624a5",
+        "count": 3,
+        "functions": [
+          {
+            "name": "visit_AsyncFunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 242,
+            "size": 1
+          },
+          {
+            "name": "visit_FunctionDef",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 238,
+            "size": 1
+          },
+          {
+            "name": "visit_Lambda",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+            "line": 245,
+            "size": 1
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "duplicate_function",
+      "message": "Duplicate functions in /Users/rohanvinaik/TailChasingFixer/tailchasing/utils/logging_setup.py: get_quiet_logger, get_verbose_logger",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/utils/logging_setup.py",
+      "line": 239,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "hash": "bd493a9733afc019",
+        "count": 2,
+        "functions": [
+          {
+            "name": "get_quiet_logger",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/utils/logging_setup.py",
+            "line": 239,
+            "size": 2
+          },
+          {
+            "name": "get_verbose_logger",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/utils/logging_setup.py",
+            "line": 234,
+            "size": 2
+          }
+        ]
+      },
+      "suggestions": [
+        "Extract common functionality into a shared function",
+        "Consider creating a base class if functions are in related classes",
+        "Remove redundant implementations"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: CargoCultDetector._parent_has_init",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cargo_cult.py",
+      "line": 403,
+      "end_line": 406,
+      "column": null,
+      "end_column": null,
+      "symbol": "CargoCultDetector._parent_has_init",
+      "evidence": {
+        "function_name": "_parent_has_init",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: SemanticHVAnalyzer._are_structural_duplicates",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/semantic_hv.py",
+      "line": 344,
+      "end_line": 348,
+      "column": null,
+      "end_column": null,
+      "symbol": "SemanticHVAnalyzer._are_structural_duplicates",
+      "evidence": {
+        "function_name": "_are_structural_duplicates",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: BaseFixStrategy.get_dependencies",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 162,
+      "end_line": 164,
+      "column": null,
+      "end_column": null,
+      "symbol": "BaseFixStrategy.get_dependencies",
+      "evidence": {
+        "function_name": "get_dependencies",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: ImportResolutionStrategy.get_dependencies",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 491,
+      "end_line": 493,
+      "column": null,
+      "end_column": null,
+      "symbol": "ImportResolutionStrategy.get_dependencies",
+      "evidence": {
+        "function_name": "get_dependencies",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: CircularDependencyBreaker.get_dependencies",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 1098,
+      "end_line": 1100,
+      "column": null,
+      "end_column": null,
+      "symbol": "CircularDependencyBreaker.get_dependencies",
+      "evidence": {
+        "function_name": "get_dependencies",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: AnthropicAdapter._get_system_prompt",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+      "line": 127,
+      "end_line": 149,
+      "column": null,
+      "end_column": null,
+      "symbol": "AnthropicAdapter._get_system_prompt",
+      "evidence": {
+        "function_name": "_get_system_prompt",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: OllamaAdapter.estimate_cost",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py",
+      "line": 73,
+      "end_line": 75,
+      "column": null,
+      "end_column": null,
+      "symbol": "OllamaAdapter.estimate_cost",
+      "evidence": {
+        "function_name": "estimate_cost",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: OllamaAdapter._get_system_prompt",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py",
+      "line": 155,
+      "end_line": 173,
+      "column": null,
+      "end_column": null,
+      "symbol": "OllamaAdapter._get_system_prompt",
+      "evidence": {
+        "function_name": "_get_system_prompt",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: OpenAIAdapter._get_system_prompt",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+      "line": 145,
+      "end_line": 167,
+      "column": null,
+      "end_column": null,
+      "symbol": "OpenAIAdapter._get_system_prompt",
+      "evidence": {
+        "function_name": "_get_system_prompt",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: TailChasingPrompts._get_role_prompt",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py",
+      "line": 152,
+      "end_line": 162,
+      "column": null,
+      "end_column": null,
+      "symbol": "TailChasingPrompts._get_role_prompt",
+      "evidence": {
+        "function_name": "_get_role_prompt",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Pass-only function: LearnedHypervectorEncoder._build_cooccurrence_matrix",
+      "severity": 2,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py",
+      "line": 46,
+      "end_line": 49,
+      "column": null,
+      "end_column": null,
+      "symbol": "LearnedHypervectorEncoder._build_cooccurrence_matrix",
+      "evidence": {
+        "function_name": "_build_cooccurrence_matrix",
+        "placeholder_type": "pass-only_function"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: SemanticAnomalyDetector._compute_anomaly_score",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/ml_enhancements.py",
+      "line": 163,
+      "end_line": 167,
+      "column": null,
+      "end_column": null,
+      "symbol": "SemanticAnomalyDetector._compute_anomaly_score",
+      "evidence": {
+        "function_name": "_compute_anomaly_score",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: ParallelSemanticAnalyzer._analyze_chunk",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py",
+      "line": 141,
+      "end_line": 144,
+      "column": null,
+      "end_column": null,
+      "symbol": "ParallelSemanticAnalyzer._analyze_chunk",
+      "evidence": {
+        "function_name": "_analyze_chunk",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: SandboxSuccess.is_success",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+      "line": 93,
+      "end_line": 94,
+      "column": null,
+      "end_column": null,
+      "symbol": "SandboxSuccess.is_success",
+      "evidence": {
+        "function_name": "is_success",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: SandboxFailure.is_success",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+      "line": 106,
+      "end_line": 107,
+      "column": null,
+      "end_column": null,
+      "symbol": "SandboxFailure.is_success",
+      "evidence": {
+        "function_name": "is_success",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "phantom_function",
+      "message": "Trivial return stub: SandboxTimeout.is_success",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+      "line": 118,
+      "end_line": 119,
+      "column": null,
+      "end_column": null,
+      "symbol": "SandboxTimeout.is_success",
+      "evidence": {
+        "function_name": "is_success",
+        "placeholder_type": "trivial_return_stub"
+      },
+      "suggestions": [
+        "Implement the function or remove if not needed",
+        "If this is intentional, add to 'placeholders.allow' in config",
+        "Consider using abstract base classes for interface definitions"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "kind": "semantic_duplicate_function",
+      "message": "Semantic duplicate: ContextThrashingAnalyzer.__init__ and EnhancedPatternDetector.__init__ (z-score: 7.15, distance: 0.000)",
+      "severity": 5,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/context_thrashing.py",
+      "line": 17,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "ContextThrashingAnalyzer.__init__",
+      "evidence": {
+        "pair": [
+          {
+            "name": "ContextThrashingAnalyzer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/context_thrashing.py",
+            "line": 17
+          },
+          {
+            "name": "EnhancedPatternDetector.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py",
+            "line": 35
+          }
+        ],
+        "z_score": 7.14718770980835,
+        "distance": 0.0,
+        "p_value": 8.857359290459499e-13,
+        "channel_contributions": {
+          "COMPLEXITY": 0.3333333333333333,
+          "ARG_SIG": 0.3333333333333333,
+          "NAME_TOKENS": 0.3333333333333333
+        },
+        "same_file": false,
+        "name_similar": false
+      },
+      "suggestions": [
+        "Extract common functionality to a shared module",
+        "Consider if ContextThrashingAnalyzer.__init__ and EnhancedPatternDetector.__init__ serve the same purpose",
+        "Review naming conventions - these functions have different names but similar behavior"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "semantic_duplicate_function",
+      "message": "Semantic duplicate: EnhancedPatternDetector.__init__ and EnhancedSemanticAnalyzer.__init__ (z-score: 7.15, distance: 0.000)",
+      "severity": 5,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py",
+      "line": 35,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "EnhancedPatternDetector.__init__",
+      "evidence": {
+        "pair": [
+          {
+            "name": "EnhancedPatternDetector.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py",
+            "line": 35
+          },
+          {
+            "name": "EnhancedSemanticAnalyzer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_semantic.py",
+            "line": 17
+          }
+        ],
+        "z_score": 7.14718770980835,
+        "distance": 0.0,
+        "p_value": 8.857359290459499e-13,
+        "channel_contributions": {
+          "COMPLEXITY": 0.3333333333333333,
+          "ARG_SIG": 0.3333333333333333,
+          "NAME_TOKENS": 0.3333333333333333
+        },
+        "same_file": false,
+        "name_similar": false
+      },
+      "suggestions": [
+        "Extract common functionality to a shared module",
+        "Consider if EnhancedPatternDetector.__init__ and EnhancedSemanticAnalyzer.__init__ serve the same purpose",
+        "Review naming conventions - these functions have different names but similar behavior"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "semantic_duplicate_function",
+      "message": "Semantic duplicate: EnhancedSemanticAnalyzer.__init__ and HallucinationCascadeAnalyzer.__init__ (z-score: 7.15, distance: 0.000)",
+      "severity": 5,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_semantic.py",
+      "line": 17,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "EnhancedSemanticAnalyzer.__init__",
+      "evidence": {
+        "pair": [
+          {
+            "name": "EnhancedSemanticAnalyzer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_semantic.py",
+            "line": 17
+          },
+          {
+            "name": "HallucinationCascadeAnalyzer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/hallucination_cascade.py",
+            "line": 18
+          }
+        ],
+        "z_score": 7.14718770980835,
+        "distance": 0.0,
+        "p_value": 8.857359290459499e-13,
+        "channel_contributions": {
+          "COMPLEXITY": 0.3333333333333333,
+          "ARG_SIG": 0.3333333333333333,
+          "NAME_TOKENS": 0.3333333333333333
+        },
+        "same_file": false,
+        "name_similar": false
+      },
+      "suggestions": [
+        "Extract common functionality to a shared module",
+        "Consider if EnhancedSemanticAnalyzer.__init__ and HallucinationCascadeAnalyzer.__init__ serve the same purpose",
+        "Review naming conventions - these functions have different names but similar behavior"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "semantic_duplicate_function",
+      "message": "Semantic duplicate: EnhancedSemanticAnalyzer.__init__ and SemanticDuplicateEnhancer.__init__ (z-score: 7.15, distance: 0.000)",
+      "severity": 5,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py",
+      "line": 29,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "EnhancedSemanticAnalyzer.__init__",
+      "evidence": {
+        "pair": [
+          {
+            "name": "EnhancedSemanticAnalyzer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py",
+            "line": 29
+          },
+          {
+            "name": "SemanticDuplicateEnhancer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py",
+            "line": 17
+          }
+        ],
+        "z_score": 7.14718770980835,
+        "distance": 0.0,
+        "p_value": 8.857359290459499e-13,
+        "channel_contributions": {
+          "COMPLEXITY": 0.2,
+          "ARG_SIG": 0.6,
+          "NAME_TOKENS": 0.2
+        },
+        "same_file": false,
+        "name_similar": false
+      },
+      "suggestions": [
+        "Extract common functionality to a shared module",
+        "Consider if EnhancedSemanticAnalyzer.__init__ and SemanticDuplicateEnhancer.__init__ serve the same purpose",
+        "Review naming conventions - these functions have different names but similar behavior"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "semantic_duplicate_function",
+      "message": "Semantic duplicate: HallucinationCascadeAnalyzer.__init__ and ImportAnxietyAnalyzer.__init__ (z-score: 7.15, distance: 0.000)",
+      "severity": 5,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/hallucination_cascade.py",
+      "line": 18,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "HallucinationCascadeAnalyzer.__init__",
+      "evidence": {
+        "pair": [
+          {
+            "name": "HallucinationCascadeAnalyzer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/hallucination_cascade.py",
+            "line": 18
+          },
+          {
+            "name": "ImportAnxietyAnalyzer.__init__",
+            "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/import_anxiety.py",
+            "line": 17
+          }
+        ],
+        "z_score": 7.14718770980835,
+        "distance": 0.0,
+        "p_value": 8.857359290459499e-13,
+        "channel_contributions": {
+          "COMPLEXITY": 0.3333333333333333,
+          "ARG_SIG": 0.3333333333333333,
+          "NAME_TOKENS": 0.3333333333333333
+        },
+        "same_file": false,
+        "name_similar": false
+      },
+      "suggestions": [
+        "Extract common functionality to a shared module",
+        "Consider if HallucinationCascadeAnalyzer.__init__ and ImportAnxietyAnalyzer.__init__ serve the same purpose",
+        "Review naming conventions - these functions have different names but similar behavior"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "prototype_fragmentation",
+      "message": "Fragmented implementation pattern: interface_variants (41 variants)",
+      "severity": 4,
+      "file": null,
+      "line": null,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "prototype_id": "proto_0",
+        "pattern": "interface_variants",
+        "size": 41,
+        "cohesion": 0.9389810701695884,
+        "risk_score": 0.6122037859660823,
+        "functions": [
+          "ContextThrashingAnalyzer.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/context_thrashing.py:17",
+          "EnhancedPatternDetector.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py:35",
+          "OptimizedSemanticHVAnalyzer.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py:287",
+          "EnhancedSemanticAnalyzer.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_semantic.py:17",
+          "PromptTemplate.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py:98",
+          "SandboxError.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py:43",
+          "HallucinationCascadeAnalyzer.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/hallucination_cascade.py:18",
+          "Normalizer.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py:92",
+          "EnhancedCLI.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_enhanced.py:29",
+          "ImportAnxietyAnalyzer.__init__@/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/import_anxiety.py:17"
+        ]
+      },
+      "suggestions": [
+        "Use optional parameters instead of multiple function variants",
+        "Consider using function overloading or a builder pattern",
+        "High fragmentation (41 variants) suggests architectural issues"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "hallucination_cascade",
+      "message": "Detected 90 interdependent classes created together with minimal external references",
+      "severity": 4,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/manager.py",
+      "line": 25,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "components": [
+          "TaskComplexity",
+          "EnhancedPatternDetector",
+          "EnhancedSemanticAnalyzer",
+          "TailChasingCLI",
+          "PromptContext",
+          "FixAttempt",
+          "PatchValidator",
+          "CircularDependencyBreaker",
+          "FixAction",
+          "MissingSymbolAnalyzer",
+          "EnhancedCLI",
+          "OpenAIAdapter",
+          "BaseAnalyzer",
+          "UndefinedReference",
+          "AnthropicAdapter",
+          "SandboxResult",
+          "RootCauseTracer",
+          "Patch",
+          "OllamaAdapter",
+          "TailChasingFeedbackGenerator",
+          "PlaceholderVisitor",
+          "FixStrategy",
+          "IntelligentAutoFixer",
+          "Analyzer",
+          "PlaceholderImplementationStrategy",
+          "ClassSymbolInfo",
+          "FixPlan",
+          "TailChasingVisualizer",
+          "ExecutionMetrics",
+          "DuplicateFunctionAnalyzer",
+          "DuplicateMergeStrategy",
+          "CrossFileDuplicationAnalyzer",
+          "BaseFixStrategy",
+          "ProcessMonitor",
+          "SemanticDuplicateEnhancer",
+          "TDDAntipatternAnalyzer",
+          "SymbolReference",
+          "SandboxFailure",
+          "SymbolVisitor",
+          "SymbolTable",
+          "SandboxSuccess",
+          "ImportGraphAnalyzer",
+          "CargoCultDetector",
+          "GitChainAnalyzer",
+          "ErrorType",
+          "RiskLevel",
+          "TailChaseEvent",
+          "Action",
+          "CostTracker",
+          "FunctionSymbolInfo",
+          "IssueCollection",
+          "SandboxTimeout",
+          "AutoFixGenerator",
+          "FixOrchestrator",
+          "SandboxRunner",
+          "EnhancedSemanticAnalyzer",
+          "TailChasingExplainer",
+          "LLMManager",
+          "RetryConfig",
+          "LLMResponse",
+          "AnalysisContext",
+          "IterationState",
+          "SemanticHVAnalyzer",
+          "FixPlan",
+          "ImportResolutionStrategy",
+          "ImportAnxietyAnalyzer",
+          "ConvergenceTracker",
+          "StrategyRanking",
+          "TailChaseChain",
+          "PatchInfo",
+          "StrategySelector",
+          "Issue",
+          "HallucinationCascadeAnalyzer",
+          "ModelTier",
+          "Symbol",
+          "LLMAdapter",
+          "ParallelSemanticAnalyzer",
+          "ResourceLimits",
+          "TailChasingPrompts",
+          "ContextThrashingAnalyzer",
+          "IssueDict",
+          "BaseAnalyzer",
+          "PlaceholderAnalyzer",
+          "SandboxError",
+          "AsyncSyncMismatchFixer",
+          "Reporter",
+          "Analyzer",
+          "CachedResponse",
+          "RiskScorer",
+          "BaseLLMAdapter"
+        ],
+        "component_count": 90,
+        "files": [
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/visualization/__init__.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/symbols.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/context_thrashing.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/hallucination_cascade.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/import_graph.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cargo_cult.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/git_chains.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/explainer.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm_integration/__init__.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_semantic.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/tdd_antipatterns.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/root_cause_tracer.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/manager.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/scoring.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/intelligent_fixer.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cross_file_duplication.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_enhanced.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/reporting.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/semantic_hv.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/import_anxiety.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/placeholders.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py"
+        ]
+      },
+      "suggestions": [
+        "Review if TaskComplexity, EnhancedPatternDetector, EnhancedSemanticAnalyzer... are actually needed",
+        "Check if existing functionality could be used instead",
+        "Consider consolidating related classes",
+        "Verify that this subsystem serves a real purpose"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "hallucination_cascade",
+      "message": "Detected 3 interdependent classes created together with minimal external references",
+      "severity": 4,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py",
+      "line": 37,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "components": [
+          "LoopDetectedError",
+          "ConvergenceError",
+          "IterationLimitError"
+        ],
+        "component_count": 3,
+        "files": [
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py"
+        ]
+      },
+      "suggestions": [
+        "Review if LoopDetectedError, ConvergenceError, IterationLimitError are actually needed",
+        "Check if existing functionality could be used instead",
+        "Consider consolidating related classes",
+        "Verify that this subsystem serves a real purpose"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "hallucination_cascade",
+      "message": "Detected 3 interdependent classes created together with minimal external references",
+      "severity": 4,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py",
+      "line": 42,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "components": [
+          "PatchValidationError",
+          "SyntaxValidationError",
+          "RiskThresholdError"
+        ],
+        "component_count": 3,
+        "files": [
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py"
+        ]
+      },
+      "suggestions": [
+        "Review if PatchValidationError, SyntaxValidationError, RiskThresholdError are actually needed",
+        "Check if existing functionality could be used instead",
+        "Consider consolidating related classes",
+        "Verify that this subsystem serves a real purpose"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "hallucination_cascade",
+      "message": "Detected 3 interdependent classes created together with minimal external references",
+      "severity": 4,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py",
+      "line": 67,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "components": [
+          "RollbackError",
+          "OrchestrationError",
+          "TestFailureError"
+        ],
+        "component_count": 3,
+        "files": [
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py"
+        ]
+      },
+      "suggestions": [
+        "Review if RollbackError, OrchestrationError, TestFailureError are actually needed",
+        "Check if existing functionality could be used instead",
+        "Consider consolidating related classes",
+        "Verify that this subsystem serves a real purpose"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "hallucination_cascade",
+      "message": "Detected 7 interdependent classes created together with minimal external references",
+      "severity": 4,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/drift.py",
+      "line": 16,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "components": [
+          "SemanticDriftAnalyzer",
+          "PrototypeDetector",
+          "ImplementationPingPongDetector",
+          "EvolutionaryAnalyzer",
+          "ConceptualDriftDetector",
+          "HVSpace",
+          "CrossModuleDuplicationDetector"
+        ],
+        "component_count": 7,
+        "files": [
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/advanced_patterns.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/drift.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/hv_space.py",
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/prototypes.py"
+        ]
+      },
+      "suggestions": [
+        "Review if SemanticDriftAnalyzer, PrototypeDetector, ImplementationPingPongDetector... are actually needed",
+        "Check if existing functionality could be used instead",
+        "Consider consolidating related classes",
+        "Verify that this subsystem serves a real purpose"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "hallucination_cascade",
+      "message": "Detected 4 interdependent classes created together with minimal external references",
+      "severity": 4,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/index.py",
+      "line": 39,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "components": [
+          "IndexStats",
+          "FunctionEntry",
+          "SimilarityAnalysis",
+          "SemanticIndex"
+        ],
+        "component_count": 4,
+        "files": [
+          "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/index.py"
+        ]
+      },
+      "suggestions": [
+        "Review if IndexStats, FunctionEntry, SimilarityAnalysis... are actually needed",
+        "Check if existing functionality could be used instead",
+        "Consider consolidating related classes",
+        "Verify that this subsystem serves a real purpose"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'can_handle' and 'get_dependencies' are 69% similar but 576 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 73,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "can_handle",
+      "evidence": {
+        "function1": "can_handle",
+        "function2": "get_dependencies",
+        "line1": 73,
+        "line2": 649,
+        "similarity": 0.6861639014580192,
+        "distance": 576,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'can_handle' and 'get_dependencies'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'get_dependencies' and 'can_handle' are 63% similar but 575 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 85,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "get_dependencies",
+      "evidence": {
+        "function1": "get_dependencies",
+        "function2": "can_handle",
+        "line1": 85,
+        "line2": 660,
+        "similarity": 0.632047105988474,
+        "distance": 575,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'get_dependencies' and 'can_handle'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '__init__' and '__init__' are 66% similar but 1158 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 97,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "__init__",
+      "evidence": {
+        "function1": "__init__",
+        "function2": "__init__",
+        "line1": 97,
+        "line2": 1255,
+        "similarity": 0.6649545772187281,
+        "distance": 1158,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '__init__' and '__init__'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'can_handle' and 'get_dependencies' are 65% similar but 544 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 105,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "can_handle",
+      "evidence": {
+        "function1": "can_handle",
+        "function2": "get_dependencies",
+        "line1": 105,
+        "line2": 649,
+        "similarity": 0.6541446910140312,
+        "distance": 544,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'can_handle' and 'get_dependencies'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '_generate_fix_actions' and '_generate_fix_actions' are 72% similar but 562 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 110,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "_generate_fix_actions",
+      "evidence": {
+        "function1": "_generate_fix_actions",
+        "function2": "_generate_fix_actions",
+        "line1": 110,
+        "line2": 672,
+        "similarity": 0.7195876288659794,
+        "distance": 562,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '_generate_fix_actions' and '_generate_fix_actions'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'get_dependencies' and 'can_handle' are 64% similar but 770 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 162,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "get_dependencies",
+      "evidence": {
+        "function1": "get_dependencies",
+        "function2": "can_handle",
+        "line1": 162,
+        "line2": 932,
+        "similarity": 0.6424185570527035,
+        "distance": 770,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'get_dependencies' and 'can_handle'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'learn_from_outcome' and 'record_application_outcome' are 61% similar but 1199 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 166,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "learn_from_outcome",
+      "evidence": {
+        "function1": "learn_from_outcome",
+        "function2": "record_application_outcome",
+        "line1": 166,
+        "line2": 1365,
+        "similarity": 0.6091715976331361,
+        "distance": 1199,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'learn_from_outcome' and 'record_application_outcome'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '_generate_validation_tests' and '_generate_validation_tests' are 76% similar but 678 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 233,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "_generate_validation_tests",
+      "evidence": {
+        "function1": "_generate_validation_tests",
+        "function2": "_generate_validation_tests",
+        "line1": 233,
+        "line2": 911,
+        "similarity": 0.7569957601453664,
+        "distance": 678,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '_generate_validation_tests' and '_generate_validation_tests'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '__init__' and '_get_base_risk_level' are 63% similar but 642 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 298,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "__init__",
+      "evidence": {
+        "function1": "__init__",
+        "function2": "_get_base_risk_level",
+        "line1": 298,
+        "line2": 940,
+        "similarity": 0.6299792291714748,
+        "distance": 642,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '__init__' and '_get_base_risk_level'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'can_handle' and 'get_dependencies' are 65% similar but 606 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 301,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "can_handle",
+      "evidence": {
+        "function1": "can_handle",
+        "function2": "get_dependencies",
+        "line1": 301,
+        "line2": 907,
+        "similarity": 0.6535980148883375,
+        "distance": 606,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'can_handle' and 'get_dependencies'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '_get_base_risk_level' and '__init__' are 62% similar but 619 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 310,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "_get_base_risk_level",
+      "evidence": {
+        "function1": "_get_base_risk_level",
+        "function2": "__init__",
+        "line1": 310,
+        "line2": 929,
+        "similarity": 0.6226074895977808,
+        "distance": 619,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '_get_base_risk_level' and '__init__'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '_generate_fix_actions' and '_generate_fix_actions' are 79% similar but 630 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 313,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "_generate_fix_actions",
+      "evidence": {
+        "function1": "_generate_fix_actions",
+        "function2": "_generate_fix_actions",
+        "line1": 313,
+        "line2": 943,
+        "similarity": 0.7865121668597914,
+        "distance": 630,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '_generate_fix_actions' and '_generate_fix_actions'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'get_dependencies' and 'can_handle' are 64% similar but 629 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 491,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "get_dependencies",
+      "evidence": {
+        "function1": "get_dependencies",
+        "function2": "can_handle",
+        "line1": 491,
+        "line2": 1120,
+        "similarity": 0.6361995841995842,
+        "distance": 629,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'get_dependencies' and 'can_handle'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '__init__' and '_get_base_risk_level' are 63% similar but 630 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 499,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "__init__",
+      "evidence": {
+        "function1": "__init__",
+        "function2": "_get_base_risk_level",
+        "line1": 499,
+        "line2": 1129,
+        "similarity": 0.6291925465838509,
+        "distance": 630,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '__init__' and '_get_base_risk_level'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'can_handle' and 'get_dependencies' are 62% similar but 596 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 502,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "can_handle",
+      "evidence": {
+        "function1": "can_handle",
+        "function2": "get_dependencies",
+        "line1": 502,
+        "line2": 1098,
+        "similarity": 0.6246801978509295,
+        "distance": 596,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'can_handle' and 'get_dependencies'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '_get_base_risk_level' and '__init__' are 64% similar but 607 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 510,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "_get_base_risk_level",
+      "evidence": {
+        "function1": "_get_base_risk_level",
+        "function2": "__init__",
+        "line1": 510,
+        "line2": 1117,
+        "similarity": 0.6382102599493904,
+        "distance": 607,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '_get_base_risk_level' and '__init__'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '_generate_fix_actions' and '_generate_fix_actions' are 78% similar but 619 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 513,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "_generate_fix_actions",
+      "evidence": {
+        "function1": "_generate_fix_actions",
+        "function2": "_generate_fix_actions",
+        "line1": 513,
+        "line2": 1132,
+        "similarity": 0.7841269841269841,
+        "distance": 619,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '_generate_fix_actions' and '_generate_fix_actions'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions '__init__' and '__init__' are 74% similar but 598 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 657,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "__init__",
+      "evidence": {
+        "function1": "__init__",
+        "function2": "__init__",
+        "line1": 657,
+        "line2": 1255,
+        "similarity": 0.7376673040152963,
+        "distance": 598,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging '__init__' and '__init__'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'can_handle' and 'get_dependencies' are 64% similar but 568 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 660,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "can_handle",
+      "evidence": {
+        "function1": "can_handle",
+        "function2": "get_dependencies",
+        "line1": 660,
+        "line2": 1228,
+        "similarity": 0.6408113042787966,
+        "distance": 568,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'can_handle' and 'get_dependencies'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'is_success' and '__enter__' are 64% similar but 519 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+      "line": 81,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "is_success",
+      "evidence": {
+        "function1": "is_success",
+        "function2": "__enter__",
+        "line1": 81,
+        "line2": 600,
+        "similarity": 0.6419697759249609,
+        "distance": 519,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'is_success' and '__enter__'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "context_window_thrashing",
+      "message": "Functions 'is_success' and '__enter__' are 63% similar but 507 lines apart",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+      "line": 93,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": "is_success",
+      "evidence": {
+        "function1": "is_success",
+        "function2": "__enter__",
+        "line1": 93,
+        "line2": 600,
+        "similarity": 0.6332877648667122,
+        "distance": 507,
+        "likely_cause": "context_window_exceeded"
+      },
+      "suggestions": [
+        "Consider merging 'is_success' and '__enter__'",
+        "Extract common functionality into a shared helper",
+        "Review if both functions are actually needed",
+        "Break large files into smaller, focused modules"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/enhanced_pattern_detector.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Optional",
+          "Dict",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Optional, Dict, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Optional",
+          "Dict",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Optional, Dict, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 7 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/advanced/multimodal_semantic_enhanced.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 7,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Union",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 7.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Any, Optional, Dict, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 8 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 8,
+        "used_count": 0,
+        "unused_items": [
+          "Optional",
+          "List",
+          "Dict",
+          "Protocol",
+          "TYPE_CHECKING",
+          "Iterable",
+          "Any",
+          "runtime_checkable"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 8.0
+      },
+      "suggestions": [
+        "Remove unused imports: Optional, List, Dict, Protocol, TYPE_CHECKING...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 8 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/base_documented.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 8,
+        "used_count": 0,
+        "unused_items": [
+          "Optional",
+          "List",
+          "Dict",
+          "Protocol",
+          "TYPE_CHECKING",
+          "Iterable",
+          "Any",
+          "runtime_checkable"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 8.0
+      },
+      "suggestions": [
+        "Remove unused imports: Optional, List, Dict, Protocol, TYPE_CHECKING...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cargo_cult.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/cross_file_duplication.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Optional",
+          "Dict",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Optional, Dict, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 6 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/duplicates.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 6,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Iterable",
+          "Optional",
+          "Dict",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 6.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Iterable, Optional, Dict, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 7 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/git_chains.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 7,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Iterable",
+          "Any",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 7.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Iterable, Any, Optional...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 6 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/import_graph.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 6,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Iterable",
+          "Optional",
+          "Dict",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 6.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Iterable, Optional, Dict, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 6 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 6,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Iterable",
+          "Any",
+          "Optional",
+          "Dict",
+          "List"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 6.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Iterable, Any, Optional, Dict...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/root_cause_tracer.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Optional",
+          "Dict",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Optional, Dict, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/semantic_hv.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/cli_typer.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Dict",
+          "Any",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Dict, Any, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 9 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/issues.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 9,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Optional",
+          "List",
+          "Dict",
+          "Literal",
+          "Union",
+          "Iterator",
+          "Any",
+          "TypedDict"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 9.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Optional, List, Dict, Literal...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/loader.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Any",
+          "Optional",
+          "Dict",
+          "List"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Any, Optional, Dict, List",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/scoring.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Any, Optional, Dict, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/suggestions.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Dict",
+          "Any",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Dict, Any, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 8 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/core/symbols.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 8,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Optional",
+          "Dict",
+          "List",
+          "Union",
+          "Any",
+          "cast",
+          "TypedDict"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 8.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Optional, Dict, List, Union...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 6 items from convergence but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/__init__.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "convergence",
+        "imported_count": 6,
+        "used_count": 0,
+        "unused_items": [
+          "FixOrchestrator",
+          "PatchValidationError",
+          "OrchestrationError",
+          "ConvergenceTracker",
+          "PatchValidator",
+          "ConvergenceError"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 6.0
+      },
+      "suggestions": [
+        "Remove unused imports: FixOrchestrator, PatchValidationError, OrchestrationError, ConvergenceTracker, PatchValidator...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 7 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/engine/convergence.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 7,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Protocol",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 7.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Any, Optional, Dict, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 7 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/fix_strategies.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 7,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Any",
+          "Optional",
+          "List",
+          "Protocol",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 7.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Any, Optional, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/advanced/intelligent_fixer.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Any",
+          "Optional",
+          "Dict",
+          "List"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Any, Optional, Dict, List",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from adapters.base but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/__init__.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "adapters.base",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "PromptTemplate",
+          "RetryConfig",
+          "CostTracker",
+          "LLMResponse",
+          "LLMAdapter"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: PromptTemplate, RetryConfig, CostTracker, LLMResponse, LLMAdapter",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from base but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/__init__.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "base",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "PromptTemplate",
+          "RetryConfig",
+          "CostTracker",
+          "LLMResponse",
+          "LLMAdapter"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: PromptTemplate, RetryConfig, CostTracker, LLMResponse, LLMAdapter",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/anthropic_adapter.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Union"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Any, Optional, Dict, List, Union",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 7 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 7,
+        "used_count": 0,
+        "unused_items": [
+          "Tuple",
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Protocol",
+          "Union"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 7.0
+      },
+      "suggestions": [
+        "Remove unused imports: Tuple, Any, Optional, Dict, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/ollama_adapter.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Union"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Any, Optional, Dict, List, Union",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/openai_adapter.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Union"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Any, Optional, Dict, List, Union",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 6 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/manager.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 6,
+        "used_count": 0,
+        "unused_items": [
+          "Tuple",
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Union"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 6.0
+      },
+      "suggestions": [
+        "Remove unused imports: Tuple, Any, Optional, Dict, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/prompts.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Any",
+          "Optional",
+          "Dict",
+          "List"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Any, Optional, Dict, List",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/performance.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Dict",
+          "Any",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Dict, Any, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 7 items from executor but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/__init__.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "executor",
+        "imported_count": 7,
+        "used_count": 0,
+        "unused_items": [
+          "SandboxError",
+          "SandboxResult",
+          "SandboxSuccess",
+          "SandboxFailure",
+          "SandboxTimeout",
+          "SandboxRunner",
+          "ResourceLimits"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 7.0
+      },
+      "suggestions": [
+        "Remove unused imports: SandboxError, SandboxResult, SandboxSuccess, SandboxFailure, SandboxTimeout...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 6 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/sandbox/executor.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 6,
+        "used_count": 0,
+        "unused_items": [
+          "Tuple",
+          "Any",
+          "Optional",
+          "Dict",
+          "List",
+          "Union"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 6.0
+      },
+      "suggestions": [
+        "Remove unused imports: Tuple, Any, Optional, Dict, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/advanced_patterns.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/drift.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 6 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/encoder.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 6,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Any",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 6.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Any, Optional, List...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/hv_space.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Tuple",
+          "Optional",
+          "Dict",
+          "List",
+          "Union"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Tuple, Optional, Dict, List, Union",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 8 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/index.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 8,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Optional",
+          "List",
+          "Dict",
+          "Tuple",
+          "Any",
+          "cast",
+          "TypedDict"
+        ],
+        "pattern": "mixed_imports",
+        "unused_ratio": 8.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Optional, List, Dict, Tuple...",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/prototypes.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "import_anxiety",
+      "message": "Importing 5 items from typing but only using 0",
+      "severity": 1,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/similarity.py",
+      "line": 0,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "module": "typing",
+        "imported_count": 5,
+        "used_count": 0,
+        "unused_items": [
+          "Set",
+          "Dict",
+          "Optional",
+          "List",
+          "Tuple"
+        ],
+        "pattern": "class_import_spree",
+        "unused_ratio": 5.0
+      },
+      "suggestions": [
+        "Remove unused imports: Set, Dict, Optional, List, Tuple",
+        "Import only what you need",
+        "Use qualified imports where appropriate",
+        "Consider using 'from module import specific_item' instead of wildcard imports"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "kind": "semantic_duplicate_multimodal",
+      "message": "High semantic similarity (99.63%) between 'add_usage' and '__init__'",
+      "severity": 3,
+      "file": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+      "line": 38,
+      "end_line": null,
+      "column": null,
+      "end_column": null,
+      "symbol": null,
+      "evidence": {
+        "function1": "add_usage",
+        "function2": "__init__",
+        "file1": "/Users/rohanvinaik/TailChasingFixer/tailchasing/llm/adapters/base.py",
+        "file2": "/Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers/missing_symbols.py",
+        "similarity": 0.9962877948338213,
+        "channels": {
+          "data_flow": 1.0,
+          "return_patterns": 0.0,
+          "error_handling": 0.0,
+          "loop_patterns": 0.0,
+          "name_tokens": 0.0
+        }
+      },
+      "suggestions": [
+        "Consider consolidating 'add_usage' and '__init__'",
+        "Extract common functionality into a shared helper",
+        "Review if both implementations are needed"
+      ],
+      "confidence": 1.0
+    }
+  ]
+}
+2025-08-11 14:56:41 - INFO - [cli] - Found 135 fixable issues
+INFO: Found 135 fixable issues
+
+Generated Reports:
+----------------------------------------
+Text report: (displayed above)
+
+Fix Suggestions:
+----------------------------------------
+Found 135 fixable issues out of 136 total
+Run with --generate-fixes to create:
+  • Interactive fix script (tailchasing_fixes.py)
+  • Detailed suggestions file (tailchasing_suggestions.md)
+
+Example: tailchasing . --generate-fixes

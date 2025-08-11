@@ -53,6 +53,13 @@ class SemanticDuplicateEnhancer:
         """Find semantically similar functions across the codebase."""
         issues = []
         
+        # Limit the number of functions to analyze to prevent hanging
+        MAX_FUNCTIONS = 200
+        if len(functions) > MAX_FUNCTIONS:
+            # Sample the functions if there are too many
+            import random
+            functions = random.sample(functions, MAX_FUNCTIONS)
+        
         # Encode all functions
         encoded_functions = []
         for filepath, func_ast in functions:
@@ -62,8 +69,11 @@ class SemanticDuplicateEnhancer:
             except Exception:
                 continue  # Skip functions that can't be encoded
         
-        # Compare all pairs
+        # Compare all pairs (with early termination if too many issues)
+        MAX_ISSUES = 50
         for i, (file1, func1, vec1) in enumerate(encoded_functions):
+            if len(issues) >= MAX_ISSUES:
+                break
             for file2, func2, vec2 in encoded_functions[i+1:]:
                 # Calculate similarity
                 similarity = self._cosine_similarity(vec1, vec2)
