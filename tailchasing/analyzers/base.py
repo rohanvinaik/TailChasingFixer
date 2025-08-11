@@ -1,14 +1,18 @@
 """Base analyzer interface and context."""
 
 from __future__ import annotations
-from typing import Iterable, Protocol, List, Dict, Any, Optional
+from typing import Iterable, Protocol, List, Dict, Any, Optional, TYPE_CHECKING, runtime_checkable
 from dataclasses import dataclass
 from pathlib import Path
 import ast
 
 from ..core.issues import Issue
 
+if TYPE_CHECKING:
+    from ..core.symbols import SymbolTable
 
+
+@runtime_checkable
 class Analyzer(Protocol):
     """Protocol for analyzers."""
     
@@ -27,13 +31,13 @@ class AnalysisContext:
     root_dir: Path
     file_paths: List[Path]
     ast_index: Dict[str, ast.AST]
-    symbol_table: Any  # Avoid circular import
+    symbol_table: 'SymbolTable'  # Forward reference to avoid circular import
     source_cache: Dict[str, List[str]]
     cache: Dict[str, Any]  # General purpose cache for analyzers
     
     def is_excluded(self, path: str) -> bool:
         """Check if a path should be excluded based on config."""
-        exclude_patterns = self.config.get("paths", {}).get("exclude", [])
+        exclude_patterns: List[str] = self.config.get("paths", {}).get("exclude", [])
         path_obj = Path(path)
         
         for pattern in exclude_patterns:
@@ -58,12 +62,12 @@ class AnalysisContext:
         
     def should_ignore_issue(self, issue_kind: str) -> bool:
         """Check if an issue type should be ignored."""
-        ignored = self.config.get("ignore_issue_types", [])
+        ignored: List[str] = self.config.get("ignore_issue_types", [])
         return issue_kind in ignored
         
     def is_placeholder_allowed(self, symbol: str) -> bool:
         """Check if a placeholder is explicitly allowed."""
-        allowed = self.config.get("placeholders", {}).get("allow", [])
+        allowed: List[str] = self.config.get("placeholders", {}).get("allow", [])
         return symbol in allowed
 
 
@@ -72,7 +76,7 @@ class BaseAnalyzer:
     
     name: str = "base"
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.issues: List[Issue] = []
         
     def run(self, ctx: AnalysisContext) -> Iterable[Issue]:
@@ -85,7 +89,7 @@ class BaseAnalyzer:
         
     def get_confidence(self, base_confidence: float, modifiers: Dict[str, float]) -> float:
         """Calculate confidence score with modifiers."""
-        confidence = base_confidence
+        confidence: float = base_confidence
         
         for key, modifier in modifiers.items():
             if key == "has_docstring":

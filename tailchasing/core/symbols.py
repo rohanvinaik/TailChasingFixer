@@ -1,12 +1,36 @@
 """Symbol table and code analysis utilities."""
 
 import ast
-from typing import Dict, List, Set, Optional, Any
+from typing import Dict, List, Set, Optional, Any, TypedDict, Union, cast
 from dataclasses import dataclass, field
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class SymbolReference(TypedDict):
+    """Type definition for symbol references."""
+    file: str
+    line: int
+    context: str
+
+
+class FunctionSymbolInfo(TypedDict):
+    """Type definition for function symbol information."""
+    file: str
+    lineno: int
+    node: Optional[ast.FunctionDef]
+    args: List[str]
+    name: str
+
+
+class ClassSymbolInfo(TypedDict):
+    """Type definition for class symbol information."""
+    file: str
+    lineno: int
+    node: Optional[ast.ClassDef]
+    name: str
 
 
 @dataclass
@@ -18,64 +42,68 @@ class Symbol:
     line: int
     end_line: Optional[int] = None
     args: List[str] = field(default_factory=list)
-    node: Optional[ast.AST] = None
-    references: List[Dict[str, Any]] = field(default_factory=list)
+    node: Optional[Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.AST]] = None
+    references: List[SymbolReference] = field(default_factory=list)
+    evidence: Optional[Dict[str, Any]] = None
     
-    def add_reference(self, file: str, line: int, context: str = ""):
+    def add_reference(self, file: str, line: int, context: str = "") -> None:
         """Add a reference to this symbol."""
-        self.references.append({
+        ref: SymbolReference = {
             "file": file,
             "line": line,
             "context": context
-        })
+        }
+        self.references.append(ref)
 
 
 class SymbolTable:
     """Global symbol table for the codebase."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.symbols: Dict[str, List[Symbol]] = {}
         self.modules: Dict[str, Set[str]] = {}  # module -> exported names
         self.file_symbols: Dict[str, List[Symbol]] = {}  # file -> symbols defined
         
     @property
-    def functions(self) -> Dict[str, List[Dict[str, Any]]]:
+    def functions(self) -> Dict[str, List[FunctionSymbolInfo]]:
         """Get all function symbols grouped by name."""
-        result = {}
+        result: Dict[str, List[FunctionSymbolInfo]] = {}
         for name, symbols in self.symbols.items():
-            func_symbols = []
+            func_symbols: List[FunctionSymbolInfo] = []
             for sym in symbols:
-                if sym.kind == "function":
-                    func_symbols.append({
+                if sym.kind == "function" and isinstance(sym.node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    func_info: FunctionSymbolInfo = {
                         "file": sym.file,
                         "lineno": sym.line,
-                        "node": sym.node,
+                        "node": cast(Optional[ast.FunctionDef], sym.node),
                         "args": sym.args,
                         "name": sym.name
-                    })
+                    }
+                    func_symbols.append(func_info)
             if func_symbols:
                 result[name] = func_symbols
         return result
     
     @property
-    def classes(self) -> Dict[str, List[Dict[str, Any]]]:
+    def classes(self) -> Dict[str, List[ClassSymbolInfo]]:
         """Get all class symbols grouped by name."""
-        result = {}
+        result: Dict[str, List[ClassSymbolInfo]] = {}
         for name, symbols in self.symbols.items():
-            class_symbols = []
+            class_symbols: List[ClassSymbolInfo] = []
             for sym in symbols:
-                if sym.kind == "class":
-                    class_symbols.append({
+                if sym.kind == "class" and isinstance(sym.node, ast.ClassDef):
+                    class_info: ClassSymbolInfo = {
                         "file": sym.file,
                         "lineno": sym.line,
-                        "node": sym.node,
+                        "node": cast(Optional[ast.ClassDef], sym.node),
                         "name": sym.name
-                    })
+                    }
+                    class_symbols.append(class_info)
             if class_symbols:
                 result[name] = class_symbols
         return result
         
-    def add_symbol(self, symbol: Symbol):
+    def add_symbol(self, symbol: Symbol) -> None:
         """Add a symbol to the table."""
         self.symbols.setdefault(symbol.name, []).append(symbol)
         self.file_symbols.setdefault(symbol.file, []).append(symbol)
@@ -103,25 +131,37 @@ class SymbolTable:
         """Check if a symbol exists."""
         return name in self.symbols
         
-    def ingest_file(self, file: str, tree: ast.AST, source: str):
+    def ingest_file(self, file: str, tree: ast.AST, source: str) -> None:
         """Ingest symbols from a file."""
         visitor = SymbolVisitor(self, file, source)
         visitor.visit(tree)
+    
+    # Compatibility method for older code
+    def ingest(self, file: str, tree: ast.AST, source: str) -> None:
+        """Legacy method name for backwards compatibility."""
+        self.ingest_file(file, tree, source)
         
-    def find_undefined_references(self) -> Dict[str, List[Dict[str, Any]]]:
+    class UndefinedReference(TypedDict):
+        """Type definition for undefined references."""
+        file: str
+        line: int
+        referenced_in: str
+    
+    def find_undefined_references(self) -> Dict[str, List[UndefinedReference]]:
         """Find all references to undefined symbols."""
-        undefined = {}
+        undefined: Dict[str, List[SymbolTable.UndefinedReference]] = {}
         
         for symbols in self.symbols.values():
             for symbol in symbols:
                 for ref in symbol.references:
                     ref_name = ref.get("context", "")
                     if ref_name and not self.has_symbol(ref_name):
-                        undefined.setdefault(ref_name, []).append({
+                        undef_ref: SymbolTable.UndefinedReference = {
                             "file": ref["file"],
                             "line": ref["line"],
                             "referenced_in": symbol.name
-                        })
+                        }
+                        undefined.setdefault(ref_name, []).append(undef_ref)
                         
         return undefined
 
@@ -129,15 +169,15 @@ class SymbolTable:
 class SymbolVisitor(ast.NodeVisitor):
     """AST visitor to extract symbols and references."""
     
-    def __init__(self, symbol_table: SymbolTable, file: str, source: str):
+    def __init__(self, symbol_table: SymbolTable, file: str, source: str) -> None:
         self.symbol_table = symbol_table
         self.file = file
         self.source_lines = source.splitlines()
-        self.current_class = None
-        self.current_function = None
+        self.current_class: Optional[str] = None
+        self.current_function: Optional[str] = None
         self.imported_names: Set[str] = set()
         
-    def visit_Import(self, node: ast.Import):
+    def visit_Import(self, node: ast.Import) -> None:
         """Handle import statements."""
         for alias in node.names:
             name = alias.asname or alias.name.split('.')[0]
@@ -154,7 +194,7 @@ class SymbolVisitor(ast.NodeVisitor):
             
         self.generic_visit(node)
         
-    def visit_ImportFrom(self, node: ast.ImportFrom):
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Handle from...import statements."""
         module = node.module or ""
         
@@ -178,7 +218,7 @@ class SymbolVisitor(ast.NodeVisitor):
             
         self.generic_visit(node)
         
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def visit_FunctionDef(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
         """Handle function definitions."""
         # Determine full name
         if self.current_class:
@@ -207,12 +247,12 @@ class SymbolVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         self.current_function = old_function
         
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         """Handle async function definitions."""
         # Treat async functions the same as regular functions
         self.visit_FunctionDef(node)
         
-    def visit_ClassDef(self, node: ast.ClassDef):
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
         """Handle class definitions."""
         symbol = Symbol(
             name=node.name,
@@ -242,7 +282,7 @@ class SymbolVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         self.current_class = old_class
         
-    def visit_Name(self, node: ast.Name):
+    def visit_Name(self, node: ast.Name) -> None:
         """Handle name references."""
         if isinstance(node.ctx, ast.Load):
             # This is a reference to a name
@@ -257,7 +297,7 @@ class SymbolVisitor(ast.NodeVisitor):
                     
         self.generic_visit(node)
         
-    def visit_Call(self, node: ast.Call):
+    def visit_Call(self, node: ast.Call) -> None:
         """Handle function calls."""
         # Extract the function name being called
         if isinstance(node.func, ast.Name):
@@ -280,7 +320,7 @@ class SymbolVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def extract_module_exports(file_path: str, tree: ast.AST) -> Set[str]:
+def extract_module_exports(file_path: str, tree: ast.Module) -> Set[str]:
     """Extract names that a module exports.
     
     This includes:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, TypedDict, Literal, Set, Iterator, Union
 from enum import Enum
 
 
@@ -14,11 +14,43 @@ class IssueSeverity(Enum):
     CRITICAL = 4
 
 
+IssueKind = Literal[
+    "circular_import",
+    "duplicate_function",
+    "semantic_duplicate_function",
+    "phantom_function",
+    "missing_symbol",
+    "wrapper_abstraction",
+    "prototype_fragmentation",
+    "hallucination_cascade",
+    "context_window_thrashing",
+    "import_anxiety",
+    "semantic_stagnant_placeholder",
+    "enhanced_semantic_duplicate"
+]
+
+
+class IssueDict(TypedDict, total=False):
+    """Type definition for issue dictionary representation."""
+    kind: str
+    message: str
+    severity: int
+    file: Optional[str]
+    line: Optional[int]
+    end_line: Optional[int]
+    column: Optional[int]
+    end_column: Optional[int]
+    symbol: Optional[str]
+    evidence: Dict[str, Any]
+    suggestions: List[str]
+    confidence: float
+
+
 @dataclass
 class Issue:
     """Represents a detected tail-chasing issue."""
     
-    kind: str
+    kind: str  # Could be IssueKind but keeping str for flexibility
     message: str
     severity: int
     file: Optional[str] = None
@@ -31,9 +63,9 @@ class Issue:
     suggestions: List[str] = field(default_factory=list)
     confidence: float = 1.0  # 0.0 to 1.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> IssueDict:
         """Convert to dictionary for JSON serialization."""
-        return {
+        result: IssueDict = {
             "kind": self.kind,
             "message": self.message,
             "severity": self.severity,
@@ -47,9 +79,10 @@ class Issue:
             "suggestions": self.suggestions,
             "confidence": self.confidence,
         }
+        return result
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Issue:
+    def from_dict(cls, data: Union[Dict[str, Any], IssueDict]) -> Issue:
         """Create from dictionary."""
         return cls(**data)
 
@@ -74,6 +107,7 @@ class IssueCollection:
     """Collection of issues with convenience methods."""
     
     issues: List[Issue] = field(default_factory=list)
+    _seen_hashes: Set[int] = field(default_factory=set, init=False, repr=False)
 
     def add(self, issue: Issue) -> None:
         """Add an issue to the collection."""
@@ -93,15 +127,16 @@ class IssueCollection:
 
     def deduplicate(self) -> None:
         """Remove duplicate issues."""
-        seen = set()
-        unique = []
+        seen: Set[Issue] = set()
+        unique: List[Issue] = []
         for issue in self.issues:
             if issue not in seen:
                 seen.add(issue)
                 unique.append(issue)
         self.issues = unique
+        self._seen_hashes = {hash(issue) for issue in unique}
 
-    def sort(self, key: str = "severity") -> None:
+    def sort(self, key: Literal["severity", "file", "kind"] = "severity") -> None:
         """Sort issues by the given key."""
         if key == "severity":
             self.issues.sort(key=lambda i: i.severity, reverse=True)
@@ -114,6 +149,26 @@ class IssueCollection:
         """Number of issues."""
         return len(self.issues)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Issue]:
         """Iterate over issues."""
         return iter(self.issues)
+    
+    def get_by_kinds(self, kinds: List[str]) -> List[Issue]:
+        """Get all issues matching any of the specified kinds."""
+        return [i for i in self.issues if i.kind in kinds]
+    
+    def get_high_confidence(self, threshold: float = 0.8) -> List[Issue]:
+        """Get all issues with confidence above threshold."""
+        return [i for i in self.issues if i.confidence >= threshold]
+    
+    def group_by_file(self) -> Dict[str, List[Issue]]:
+        """Group issues by file."""
+        result: Dict[str, List[Issue]] = {}
+        for issue in self.issues:
+            file_key = issue.file or "<no-file>"
+            result.setdefault(file_key, []).append(issue)
+        return result
+    
+    def to_dict_list(self) -> List[IssueDict]:
+        """Convert all issues to dictionary list."""
+        return [issue.to_dict() for issue in self.issues]

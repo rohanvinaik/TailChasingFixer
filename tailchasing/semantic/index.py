@@ -10,11 +10,35 @@ import pickle
 import random
 import math
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional, Set, Any
+from typing import List, Tuple, Dict, Optional, Set, Any, TypedDict, cast
 from collections import defaultdict
 import numpy as np
+from numpy.typing import NDArray
 
 from .hv_space import HVSpace
+
+
+class FunctionEntry(TypedDict, total=False):
+    """Type definition for function metadata."""
+    removed: bool
+    name: str
+    file: str
+    line: int
+    complexity: float
+    tokens: List[str]
+
+
+class SimilarityAnalysis(TypedDict):
+    """Type definition for similarity analysis results."""
+    files_same: bool
+    names_similar: bool
+
+
+class IndexStats(TypedDict):
+    """Type definition for index statistics."""
+    total_functions: int
+    space_stats: Dict[str, Any]
+    background_stats: Dict[str, Optional[float]]
 
 
 class SemanticIndex:
@@ -24,7 +48,7 @@ class SemanticIndex:
     Provides similarity search with statistical significance testing.
     """
     
-    def __init__(self, config: Dict[str, Any], cache_dir: Optional[Path] = None):
+    def __init__(self, config: Dict[str, Any], cache_dir: Optional[Path] = None) -> None:
         """
         Initialize semantic index.
         
@@ -43,7 +67,7 @@ class SemanticIndex:
         )
         
         # Function entries: (id, hv, metadata)
-        self.entries: List[Tuple[str, np.ndarray, Dict]] = []
+        self.entries: List[Tuple[str, Optional[NDArray[np.float32]], FunctionEntry]] = []
         
         # ID to entry index mapping
         self.id_to_index: Dict[str, int] = {}
@@ -56,8 +80,8 @@ class SemanticIndex:
         if cache_dir:
             self._load_cache()
     
-    def add(self, func_id: str, file: str, line: int, hv: np.ndarray,
-            metadata: Optional[Dict] = None) -> None:
+    def add(self, func_id: str, file: str, line: int, hv: NDArray[np.float32],
+            metadata: Optional[FunctionEntry] = None) -> None:
         """Add a function hypervector to the index."""
         full_id = f"{func_id}@{file}:{line}"
         
@@ -65,11 +89,13 @@ class SemanticIndex:
         if full_id in self.id_to_index:
             # Update existing entry
             idx = self.id_to_index[full_id]
-            self.entries[idx] = (full_id, hv, metadata or {})
+            entry_meta = metadata or cast(FunctionEntry, {})
+            self.entries[idx] = (full_id, hv, entry_meta)
         else:
             # Add new entry
             idx = len(self.entries)
-            self.entries.append((full_id, hv, metadata or {}))
+            entry_meta = metadata or cast(FunctionEntry, {})
+            self.entries.append((full_id, hv, entry_meta))
             self.id_to_index[full_id] = idx
         
         # Invalidate background stats
@@ -84,7 +110,8 @@ class SemanticIndex:
         
         # Mark as removed (don't shift indices)
         idx = self.id_to_index[full_id]
-        self.entries[idx] = (full_id, None, {"removed": True})
+        removed_meta: FunctionEntry = {"removed": True}
+        self.entries[idx] = (full_id, None, removed_meta)
         del self.id_to_index[full_id]
         
         # Invalidate stats
@@ -97,8 +124,10 @@ class SemanticIndex:
         
         Returns (mean, std) of random pair distances.
         """
-        valid_entries = [(id, hv, meta) for id, hv, meta in self.entries
-                        if hv is not None and not meta.get("removed", False)]
+        valid_entries: List[Tuple[str, NDArray[np.float32], FunctionEntry]] = [
+            (id, hv, meta) for id, hv, meta in self.entries
+            if hv is not None and not meta.get("removed", False)
+        ]
         
         n = len(valid_entries)
         if n < 2:
@@ -111,8 +140,8 @@ class SemanticIndex:
         )
         
         # Use reservoir sampling for large spaces
-        distances = []
-        pairs_seen = 0
+        distances: List[float] = []
+        pairs_seen: int = 0
         
         for i in range(n):
             for j in range(i + 1, n):
@@ -148,6 +177,7 @@ class SemanticIndex:
     def get_background_stats(self) -> Tuple[float, float]:
         """Get background distance statistics."""
         self._ensure_background_stats()
+        assert self._background_stats is not None
         return self._background_stats
     
     def compute_z_score(self, distance: float) -> float:
@@ -163,9 +193,9 @@ class SemanticIndex:
         # Lower distance = higher similarity = higher z-score
         return (mean - distance) / std
     
-    def find_similar(self, hv: np.ndarray, 
+    def find_similar(self, hv: NDArray[np.float32], 
                     z_threshold: Optional[float] = None,
-                    limit: int = 10) -> List[Tuple[str, float, float, Dict]]:
+                    limit: int = 10) -> List[Tuple[str, float, float, FunctionEntry]]:
         """
         Find functions similar to given hypervector.
         
@@ -174,7 +204,7 @@ class SemanticIndex:
         if z_threshold is None:
             z_threshold = self.config.get('z_threshold', 2.5)
         
-        results = []
+        results: List[Tuple[str, float, float, FunctionEntry]] = []
         
         for entry_id, entry_hv, entry_meta in self.entries:
             if entry_hv is None or entry_meta.get("removed", False):
@@ -193,7 +223,7 @@ class SemanticIndex:
     
     def find_all_similar_pairs(self, 
                               z_threshold: Optional[float] = None,
-                              limit: Optional[int] = None) -> List[Tuple[str, str, float, float, Dict]]:
+                              limit: Optional[int] = None) -> List[Tuple[str, str, float, float, SimilarityAnalysis]]:
         """
         Find all pairs of similar functions.
         
@@ -202,10 +232,12 @@ class SemanticIndex:
         if z_threshold is None:
             z_threshold = self.config.get('z_threshold', 2.5)
         
-        valid_entries = [(id, hv, meta) for id, hv, meta in self.entries
-                        if hv is not None and not meta.get("removed", False)]
+        valid_entries: List[Tuple[str, NDArray[np.float32], FunctionEntry]] = [
+            (id, hv, meta) for id, hv, meta in self.entries
+            if hv is not None and not meta.get("removed", False)
+        ]
         
-        pairs = []
+        pairs: List[Tuple[str, str, float, float, SimilarityAnalysis]] = []
         
         for i in range(len(valid_entries)):
             for j in range(i + 1, len(valid_entries)):
@@ -228,14 +260,14 @@ class SemanticIndex:
         
         return pairs
     
-    def _analyze_similarity(self, hv1: np.ndarray, hv2: np.ndarray,
-                           id1: str, id2: str) -> Dict[str, Any]:
+    def _analyze_similarity(self, hv1: NDArray[np.float32], hv2: NDArray[np.float32],
+                           id1: str, id2: str) -> SimilarityAnalysis:
         """
         Analyze what contributes to similarity between two functions.
         
         This is approximate since we can't perfectly decompose bound vectors.
         """
-        analysis = {
+        analysis: SimilarityAnalysis = {
             "files_same": id1.split('@')[1].split(':')[0] == id2.split('@')[1].split(':')[0],
             "names_similar": self._name_similarity(id1, id2) > 0.5,
         }
@@ -267,18 +299,18 @@ class SemanticIndex:
         
         return len(intersection) / len(union)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> IndexStats:
         """Get index statistics."""
         valid_count = sum(1 for _, hv, meta in self.entries
                          if hv is not None and not meta.get("removed", False))
         
-        stats = {
+        stats: IndexStats = {
             "total_functions": valid_count,
             "space_stats": self.space.get_stats(),
             "background_stats": {
                 "mean": self._background_stats[0] if self._background_stats else None,
                 "std": self._background_stats[1] if self._background_stats else None,
-                "sample_size": self._stats_sample_size
+                "sample_size": float(self._stats_sample_size)
             }
         }
         
