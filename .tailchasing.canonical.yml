@@ -1,0 +1,73 @@
+# Example configuration for Canonical Selector with Facility Location algorithms
+# This shows how to configure canonical definition selection using polymer physics
+
+# Enable canonical selection functionality
+canonical_selector:
+  enabled: true
+  
+  # Facility location algorithm parameters
+  facility_location:
+    algorithm: "1_median"  # Options: 1_median, k_median, fermat_weber
+    max_facilities: 1      # For k-median, maximum number of canonical definitions per cluster
+    optimization_method: "exhaustive"  # Options: exhaustive, greedy, approximation
+    
+  # Distance metric configuration (inherits from chromatin_contact)
+  distance_weights:
+    token: 0.3      # Token/line distance weight
+    ast: 0.25       # AST tree distance weight  
+    module: 0.25    # Module/import distance weight
+    git: 0.2        # Git co-edit correlation weight
+  
+  # Canonical selection criteria
+  selection_criteria:
+    min_confidence: 0.3        # Minimum confidence score to suggest canonicalization
+    max_migration_complexity: 4  # Maximum complexity (1-5) to recommend
+    prefer_core_modules: true   # Prefer functions in core/main/base modules
+    prefer_documented: true     # Prefer functions with docstrings
+    
+  # Aliasing playbook generation
+  playbook:
+    generate_aliases: true      # Generate backwards-compatible aliases
+    include_import_rewiring: true  # Include import migration instructions
+    rollback_plan: true         # Generate rollback instructions
+    migration_steps: "detailed"   # Options: minimal, standard, detailed
+    
+  # Integration with duplicate detection
+  duplicate_processing:
+    cluster_min_size: 2         # Minimum cluster size to process
+    similarity_threshold: 0.7   # Minimum similarity to consider for canonicalization
+    priority_weighting:
+      cluster_size: 0.3         # Weight for number of duplicates
+      confidence: 0.3           # Weight for canonical selection confidence
+      complexity: 0.2           # Weight for migration complexity (inverted)
+      file_diversity: 0.2       # Weight for spread across files
+
+# Required: ChromatinContactAnalyzer for polymer distance calculations
+chromatin_contact:
+  enabled: true
+  weights:
+    token: 0.3
+    ast: 0.25
+    module: 0.25
+    git: 0.2
+  contact_params:
+    kappa: 1.0
+    alpha: 1.5
+    epsilon: 0.1
+    tad_penalty: 0.7
+
+# Enable duplicate detection to feed canonical selector
+duplicates:
+  enabled: true
+  similarity_threshold: 0.85
+  min_function_length: 5
+
+# Example usage:
+# tailchasing-enhanced . --config .tailchasing.canonical.yml --canonical-selector
+# 
+# This will:
+# 1. Detect duplicate function clusters using semantic analysis
+# 2. Apply facility location algorithms with polymer distance metrics
+# 3. Select optimal canonical definitions using 1-median calculations
+# 4. Generate comprehensive aliasing playbooks with migration instructions
+# 5. Rank suggestions by priority for systematic canonicalization

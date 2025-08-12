@@ -1020,10 +1020,26 @@ class PlaceholderImplementationStrategy(BaseFixStrategy):
 
 
 class CircularDependencyBreaker(BaseFixStrategy):
-    """Strategy for breaking circular import dependencies."""
+    """
+    Strategy for breaking circular import dependencies.
     
-    def __init__(self):
+    Enhanced with chromatin loop extrusion algorithms for optimal cycle breaking
+    using hypervector structure and biologically-inspired optimization.
+    """
+    
+    def __init__(self, chromatin_analyzer=None):
         super().__init__("CircularDependencyBreaker")
+        self.chromatin_analyzer = chromatin_analyzer
+        self._loop_extrusion_breaker = None
+        
+        # Initialize loop extrusion if chromatin analyzer available
+        if chromatin_analyzer:
+            try:
+                from ..loop_extrusion import LoopExtrusionBreaker
+                self._loop_extrusion_breaker = LoopExtrusionBreaker(chromatin_analyzer)
+                self.logger.info("Loop extrusion capabilities enabled")
+            except ImportError as e:
+                self.logger.warning(f"Loop extrusion not available: {e}")
     
     def can_handle(self, issue: Issue) -> bool:
         """Handle circular import issues."""
@@ -1037,7 +1053,11 @@ class CircularDependencyBreaker(BaseFixStrategy):
         return RiskLevel.HIGH  # Circular dependency fixes can be risky
     
     def _generate_fix_actions(self, issue: Issue, context: Optional[Dict[str, Any]]) -> List[Action]:
-        """Generate actions to break circular dependencies."""
+        """
+        Generate actions to break circular dependencies.
+        
+        Enhanced with loop extrusion algorithms for optimal cycle breaking.
+        """
         actions = []
         
         if not issue.evidence or 'cycle' not in issue.evidence:
@@ -1047,10 +1067,18 @@ class CircularDependencyBreaker(BaseFixStrategy):
         if len(cycle) < 2:
             return actions
         
-        # Strategy 1: Move imports to function level
+        # Strategy 1: Loop extrusion (if available and beneficial)
+        if self._should_use_loop_extrusion(cycle, issue):
+            loop_actions = self._create_loop_extrusion_actions(cycle, issue, context)
+            if loop_actions:
+                actions.extend(loop_actions)
+                self.logger.info(f"Generated {len(loop_actions)} loop extrusion actions")
+                return actions  # Use loop extrusion as primary strategy
+        
+        # Strategy 2: Move imports to function level (fallback)
         actions.extend(self._create_local_import_actions(cycle, issue))
         
-        # Strategy 2: Create interface module (if cycle is complex)
+        # Strategy 3: Create interface module (if cycle is complex)
         if len(cycle) > 2:
             actions.extend(self._create_interface_module_actions(cycle, issue))
         
@@ -1205,6 +1233,219 @@ class SharedInterface(ABC):
                 tests.append(f"python -c \"import {module.replace('.py', '')}\"")
         
         return tests
+    
+    # === Loop Extrusion Integration ===
+    
+    def _should_use_loop_extrusion(self, cycle: List[str], issue: Issue) -> bool:
+        """
+        Determine if loop extrusion should be used for this cycle.
+        
+        Loop extrusion is preferred for:
+        - Complex cycles (3+ modules)
+        - Cycles with high binding strength (many reciprocal imports)
+        - When chromatin analyzer is available
+        """
+        if not self._loop_extrusion_breaker:
+            return False
+        
+        # Use for complex cycles
+        if len(cycle) >= 3:
+            return True
+            
+        # Use if evidence suggests strong coupling
+        evidence = issue.evidence or {}
+        if evidence.get('binding_strength', 0) > 0.5:
+            return True
+            
+        # Use if multiple symbols are involved
+        if evidence.get('symbol_count', 0) > 3:
+            return True
+            
+        return False
+    
+    def _create_loop_extrusion_actions(self, cycle: List[str], issue: Issue, 
+                                     context: Optional[Dict[str, Any]]) -> List[Action]:
+        """
+        Create loop extrusion actions using chromatin dynamics.
+        
+        Implements biologically-inspired loop extrusion to break cycles by:
+        1. Finding loop anchors (reciprocally imported symbols)
+        2. Computing optimal shared module location using 1-median
+        3. Generating shared module with TYPE_CHECKING guards
+        4. Rewiring imports to break cycles
+        """
+        if not self._loop_extrusion_breaker:
+            return []
+        
+        try:
+            # Build import graph from cycle
+            import_graph = self._build_import_graph_from_cycle(cycle, issue, context)
+            
+            # Create loop extrusion plan
+            extrusion_plan = self._loop_extrusion_breaker.create_loop_extrusion_plan(
+                import_graph, symbol_usage=self._extract_symbol_usage(issue)
+            )
+            
+            if not extrusion_plan.shared_modules:
+                self.logger.info("No shared modules recommended by loop extrusion")
+                return []
+            
+            # Convert plan to fix actions
+            actions = []
+            
+            # Action 1: Create shared modules
+            for shared_spec in extrusion_plan.shared_modules:
+                create_action = self._create_shared_module_action(shared_spec, issue)
+                actions.append(create_action)
+            
+            # Action 2: Rewire imports
+            for module, new_imports in extrusion_plan.import_rewiring.items():
+                rewire_action = self._create_import_rewiring_action(
+                    module, new_imports, issue
+                )
+                actions.append(rewire_action)
+            
+            # Action 3: Add validation
+            validation_action = self._create_extrusion_validation_action(
+                extrusion_plan, issue
+            )
+            actions.append(validation_action)
+            
+            self.logger.info(f"Generated {len(actions)} loop extrusion actions")
+            return actions
+            
+        except Exception as e:
+            self.logger.error(f"Loop extrusion failed: {e}")
+            return []
+    
+    def _build_import_graph_from_cycle(self, cycle: List[str], issue: Issue,
+                                     context: Optional[Dict[str, Any]]) -> 'nx.DiGraph':
+        """Build NetworkX graph from cycle information."""
+        import networkx as nx
+        
+        graph = nx.DiGraph()
+        
+        # Add nodes for each module in cycle
+        for module in cycle:
+            graph.add_node(module)
+        
+        # Add edges based on evidence
+        evidence = issue.evidence or {}
+        dependencies = evidence.get('dependencies', [])
+        
+        # Create cycle edges
+        for i, module in enumerate(cycle):
+            next_module = cycle[(i + 1) % len(cycle)]
+            
+            # Extract symbol information if available
+            symbols = evidence.get('symbols', {}).get(f"{module}->{next_module}", [])
+            
+            graph.add_edge(module, next_module, symbols=symbols)
+        
+        # Add any additional dependencies from evidence
+        for dep in dependencies:
+            if isinstance(dep, dict):
+                source = dep.get('source')
+                target = dep.get('target')
+                symbols = dep.get('symbols', [])
+                
+                if source and target:
+                    graph.add_edge(source, target, symbols=symbols)
+        
+        return graph
+    
+    def _extract_symbol_usage(self, issue: Issue) -> Optional[Dict[str, Dict[str, int]]]:
+        """Extract symbol usage information from issue evidence."""
+        evidence = issue.evidence or {}
+        return evidence.get('symbol_usage')
+    
+    def _create_shared_module_action(self, shared_spec, issue: Issue) -> Action:
+        """Create action to generate shared module."""
+        # Generate shared module content
+        content_lines = []
+        
+        # Add header comment
+        content_lines.extend([
+            '"""',
+            f'Shared module generated by Loop Extrusion algorithm.',
+            f'Contains common interfaces and types to break circular imports.',
+            f'Generated by TailChasingFixer LoopExtrusionBreaker.',
+            '"""',
+            ''
+        ])
+        
+        # Add imports
+        if shared_spec.imports_needed:
+            content_lines.extend(shared_spec.imports_needed)
+            content_lines.append('')
+        
+        # Add TYPE_CHECKING imports
+        if shared_spec.type_definitions:
+            content_lines.extend([
+                'from typing import TYPE_CHECKING',
+                '',
+                'if TYPE_CHECKING:',
+                '    # Type-only imports to avoid circular dependencies',
+                '    pass  # TODO: Add specific type imports',
+                ''
+            ])
+        
+        # Add type definitions
+        if shared_spec.type_definitions:
+            content_lines.extend(shared_spec.type_definitions)
+            content_lines.append('')
+        
+        # Add interface definitions
+        if shared_spec.interface_definitions:
+            content_lines.extend(shared_spec.interface_definitions)
+            content_lines.append('')
+        
+        content = '\n'.join(content_lines)
+        
+        return Action(
+            action_type=ActionType.CREATE_FILE,
+            file_path=shared_spec.file_path,
+            description=f"Create shared module {shared_spec.module_name} using loop extrusion",
+            content=content,
+            confidence=0.8
+        )
+    
+    def _create_import_rewiring_action(self, module: str, new_imports: List[str], 
+                                     issue: Issue) -> Action:
+        """Create action to rewire imports in a module."""
+        # Create import rewiring content
+        rewiring_instructions = []
+        rewiring_instructions.append(f"# Import rewiring for {module}")
+        rewiring_instructions.append("# Replace circular imports with:")
+        rewiring_instructions.extend(new_imports)
+        rewiring_instructions.append("")
+        rewiring_instructions.append("# TODO: Update function calls to use new imports")
+        
+        return Action(
+            action_type=ActionType.MODIFY_FILE,
+            file_path=module,
+            description=f"Rewire imports in {module} using loop extrusion strategy",
+            content='\n'.join(rewiring_instructions),
+            confidence=0.7
+        )
+    
+    def _create_extrusion_validation_action(self, extrusion_plan, issue: Issue) -> Action:
+        """Create validation action for loop extrusion."""
+        validation_steps = []
+        validation_steps.append("# Loop Extrusion Validation")
+        validation_steps.append(f"# Estimated effort: {extrusion_plan.estimated_effort}/5")
+        validation_steps.append(f"# Success probability: {extrusion_plan.success_probability:.2f}")
+        validation_steps.append("")
+        
+        validation_steps.extend(extrusion_plan.validation_steps)
+        
+        return Action(
+            action_type=ActionType.VALIDATE,
+            file_path="",
+            description="Validate loop extrusion results",
+            content='\n'.join(validation_steps),
+            confidence=extrusion_plan.success_probability
+        )
 
 
 class AsyncSyncMismatchFixer(BaseFixStrategy):
