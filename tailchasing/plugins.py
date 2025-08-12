@@ -82,6 +82,13 @@ try:
 except ImportError:
     ENHANCED_PLACEHOLDERS_AVAILABLE = False
 
+# Import enhanced missing symbols analyzer
+try:
+    from .analyzers.enhanced_missing_symbols import EnhancedMissingSymbolAnalyzer
+    ENHANCED_MISSING_SYMBOLS_AVAILABLE = True
+except ImportError:
+    ENHANCED_MISSING_SYMBOLS_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -167,6 +174,13 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
         # Replace regular placeholder analyzer with enhanced version
         analyzers = [a for a in analyzers if a.name != "placeholders"]
         analyzers.append(EnhancedPlaceholderAnalyzer())
+    
+    # Add enhanced missing symbols analyzer if enabled
+    enhanced_missing_config = config.get("enhanced_missing_symbols", {})
+    if enhanced_missing_config.get("enabled", False) and ENHANCED_MISSING_SYMBOLS_AVAILABLE:
+        # Replace regular missing symbols analyzer with enhanced version
+        analyzers = [a for a in analyzers if a.name != "missing_symbols"]
+        analyzers.append(EnhancedMissingSymbolAnalyzer())
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])

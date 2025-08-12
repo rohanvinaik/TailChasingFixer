@@ -74,3 +74,140 @@
 {"timestamp": "2025-08-12T10:33:10.248704Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Analyzer chromatin_contact completed in 22.70s"}
 {"timestamp": "2025-08-12T10:33:10.850369Z", "level": "INFO", "module": "cli", "function": "main", "line": 730, "message": "Analysis complete: 181 issues, risk score 13.2"}
 {"timestamp": "2025-08-12T10:33:10.854428Z", "level": "INFO", "module": "cli", "function": "main", "line": 805, "message": "Found 139 fixable issues"}
+{"timestamp": "2025-08-12T10:41:33.413600Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:41:33.419357Z", "level": "INFO", "module": "cli", "function": "main", "line": 409, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T10:41:33.436865Z", "level": "INFO", "module": "cli", "function": "main", "line": 431, "message": "Found 119 Python files"}
+{"timestamp": "2025-08-12T10:41:33.436940Z", "level": "INFO", "module": "cli", "function": "main", "line": 434, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T10:41:33.437013Z", "level": "INFO", "module": "cli", "function": "main", "line": 442, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T10:41:34.183876Z", "level": "INFO", "module": "cli", "function": "main", "line": 467, "message": "Successfully parsed 119 files"}
+{"timestamp": "2025-08-12T10:41:34.183944Z", "level": "INFO", "module": "cli", "function": "main", "line": 470, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T10:42:16.907990Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:42:16.909745Z", "level": "INFO", "module": "cli", "function": "main", "line": 325, "message": "Clearing cache..."}
+{"timestamp": "2025-08-12T10:42:16.926074Z", "level": "INFO", "module": "cli", "function": "main", "line": 409, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T10:42:16.940031Z", "level": "INFO", "module": "cli", "function": "main", "line": 431, "message": "Found 119 Python files"}
+{"timestamp": "2025-08-12T10:42:16.940110Z", "level": "INFO", "module": "cli", "function": "main", "line": 434, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T10:42:16.940180Z", "level": "INFO", "module": "cli", "function": "main", "line": 442, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T10:42:17.748041Z", "level": "INFO", "module": "cli", "function": "main", "line": 467, "message": "Successfully parsed 119 files"}
+{"timestamp": "2025-08-12T10:42:17.748126Z", "level": "INFO", "module": "cli", "function": "main", "line": 470, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T10:42:24.967213Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:42:24.968873Z", "level": "INFO", "module": "cli", "function": "main", "line": 325, "message": "Clearing cache..."}
+{"timestamp": "2025-08-12T10:42:24.985309Z", "level": "INFO", "module": "cli", "function": "main", "line": 409, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T10:42:24.999298Z", "level": "INFO", "module": "cli", "function": "main", "line": 431, "message": "Found 119 Python files"}
+{"timestamp": "2025-08-12T10:42:24.999375Z", "level": "INFO", "module": "cli", "function": "main", "line": 434, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T10:42:24.999446Z", "level": "INFO", "module": "cli", "function": "main", "line": 442, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T10:42:25.762067Z", "level": "INFO", "module": "cli", "function": "main", "line": 467, "message": "Successfully parsed 119 files"}
+{"timestamp": "2025-08-12T10:42:25.762150Z", "level": "INFO", "module": "cli", "function": "main", "line": 470, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T10:42:47.153502Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:42:47.155138Z", "level": "INFO", "module": "cli", "function": "main", "line": 325, "message": "Clearing cache..."}
+{"timestamp": "2025-08-12T10:42:47.171393Z", "level": "INFO", "module": "cli", "function": "main", "line": 409, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T10:42:47.185975Z", "level": "INFO", "module": "cli", "function": "main", "line": 431, "message": "Found 119 Python files"}
+{"timestamp": "2025-08-12T10:42:47.186066Z", "level": "INFO", "module": "cli", "function": "main", "line": 434, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T10:42:47.186140Z", "level": "INFO", "module": "cli", "function": "main", "line": 442, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T10:42:47.937291Z", "level": "INFO", "module": "cli", "function": "main", "line": 467, "message": "Successfully parsed 119 files"}
+{"timestamp": "2025-08-12T10:42:47.937372Z", "level": "INFO", "module": "cli", "function": "main", "line": 470, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T10:42:48.099726Z", "level": "INFO", "module": "cli", "function": "main", "line": 496, "message": "Running analyzers"}
+{"timestamp": "2025-08-12T10:42:48.099855Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-12T10:42:48.194628Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer import_graph completed in 0.09s"}
+{"timestamp": "2025-08-12T10:42:48.194718Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running fast_duplicates analyzer"}
+{"timestamp": "2025-08-12T10:42:50.007559Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer fast_duplicates completed in 1.81s"}
+{"timestamp": "2025-08-12T10:42:50.007635Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running placeholders analyzer"}
+{"timestamp": "2025-08-12T10:42:50.138592Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer placeholders completed in 0.13s"}
+{"timestamp": "2025-08-12T10:42:50.138678Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running missing_symbols analyzer"}
+{"timestamp": "2025-08-12T10:42:50.908034Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer missing_symbols completed in 0.77s"}
+{"timestamp": "2025-08-12T10:42:50.908129Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running git_chains analyzer"}
+{"timestamp": "2025-08-12T10:42:50.908320Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer git_chains completed in 0.00s"}
+{"timestamp": "2025-08-12T10:42:50.908396Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-12T10:43:03.918303Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer semantic_hv completed in 13.01s"}
+{"timestamp": "2025-08-12T10:43:03.918866Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running hallucination_cascade analyzer"}
+{"timestamp": "2025-08-12T10:43:15.594940Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer hallucination_cascade completed in 11.68s"}
+{"timestamp": "2025-08-12T10:43:15.595043Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-12T10:43:16.478349Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer context_thrashing completed in 0.88s"}
+{"timestamp": "2025-08-12T10:43:16.478448Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running import_anxiety analyzer"}
+{"timestamp": "2025-08-12T10:43:16.699249Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer import_anxiety completed in 0.22s"}
+{"timestamp": "2025-08-12T10:43:16.699338Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running enhanced_semantic analyzer"}
+{"timestamp": "2025-08-12T10:43:16.797709Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer enhanced_semantic completed in 0.10s"}
+{"timestamp": "2025-08-12T10:43:16.797807Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running circular_import_resolver analyzer"}
+{"timestamp": "2025-08-12T10:43:24.400035Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer circular_import_resolver completed in 7.60s"}
+{"timestamp": "2025-08-12T10:43:24.400272Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running phantom_triage analyzer"}
+{"timestamp": "2025-08-12T10:43:24.521604Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer phantom_triage completed in 0.12s"}
+{"timestamp": "2025-08-12T10:43:24.521705Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-12T10:43:25.398715Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer context_thrashing completed in 0.88s"}
+{"timestamp": "2025-08-12T10:43:25.398813Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running chromatin_contact analyzer"}
+{"timestamp": "2025-08-12T10:43:49.012227Z", "level": "ERROR", "module": "cli", "function": "run_with_timeout", "line": 566, "message": "Analyzer chromatin_contact failed: 'CodeElement' object has no attribute 'raw_body'"}
+{"timestamp": "2025-08-12T10:43:49.013477Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer chromatin_contact completed in 23.61s"}
+{"timestamp": "2025-08-12T10:43:49.591204Z", "level": "INFO", "module": "cli", "function": "main", "line": 760, "message": "Analysis complete: 180 issues, risk score 12.93"}
+{"timestamp": "2025-08-12T10:43:49.595193Z", "level": "INFO", "module": "cli", "function": "main", "line": 835, "message": "Found 139 fixable issues"}
+{"timestamp": "2025-08-12T10:43:58.282034Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:43:58.289417Z", "level": "INFO", "module": "cli", "function": "main", "line": 409, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T10:43:58.303842Z", "level": "INFO", "module": "cli", "function": "main", "line": 431, "message": "Found 119 Python files"}
+{"timestamp": "2025-08-12T10:43:58.303920Z", "level": "INFO", "module": "cli", "function": "main", "line": 434, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T10:43:58.304008Z", "level": "INFO", "module": "cli", "function": "main", "line": 442, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T10:43:58.715481Z", "level": "INFO", "module": "cli", "function": "main", "line": 467, "message": "Successfully parsed 119 files"}
+{"timestamp": "2025-08-12T10:43:58.715569Z", "level": "INFO", "module": "cli", "function": "main", "line": 470, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T10:43:58.885825Z", "level": "INFO", "module": "cli", "function": "main", "line": 496, "message": "Running analyzers"}
+{"timestamp": "2025-08-12T10:43:58.885973Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-12T10:43:58.985339Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer import_graph completed in 0.10s"}
+{"timestamp": "2025-08-12T10:43:58.985433Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running fast_duplicates analyzer"}
+{"timestamp": "2025-08-12T10:43:59.160846Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer fast_duplicates completed in 0.18s"}
+{"timestamp": "2025-08-12T10:43:59.160918Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running placeholders analyzer"}
+{"timestamp": "2025-08-12T10:43:59.294998Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer placeholders completed in 0.13s"}
+{"timestamp": "2025-08-12T10:43:59.295088Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running missing_symbols analyzer"}
+{"timestamp": "2025-08-12T10:44:00.080997Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer missing_symbols completed in 0.79s"}
+{"timestamp": "2025-08-12T10:44:00.081086Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running git_chains analyzer"}
+{"timestamp": "2025-08-12T10:44:00.081276Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer git_chains completed in 0.00s"}
+{"timestamp": "2025-08-12T10:44:00.081349Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-12T10:44:11.303567Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer semantic_hv completed in 11.22s"}
+{"timestamp": "2025-08-12T10:44:11.303659Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running hallucination_cascade analyzer"}
+{"timestamp": "2025-08-12T10:44:23.031514Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer hallucination_cascade completed in 11.73s"}
+{"timestamp": "2025-08-12T10:44:23.031616Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-12T10:44:23.925892Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer context_thrashing completed in 0.89s"}
+{"timestamp": "2025-08-12T10:44:23.925997Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running import_anxiety analyzer"}
+{"timestamp": "2025-08-12T10:44:24.155157Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer import_anxiety completed in 0.23s"}
+{"timestamp": "2025-08-12T10:44:24.155250Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running enhanced_semantic analyzer"}
+{"timestamp": "2025-08-12T10:44:24.257744Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer enhanced_semantic completed in 0.10s"}
+{"timestamp": "2025-08-12T10:44:24.257841Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running circular_import_resolver analyzer"}
+{"timestamp": "2025-08-12T10:44:31.955448Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer circular_import_resolver completed in 7.70s"}
+{"timestamp": "2025-08-12T10:44:31.955554Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running phantom_triage analyzer"}
+{"timestamp": "2025-08-12T10:44:32.089043Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer phantom_triage completed in 0.13s"}
+{"timestamp": "2025-08-12T10:44:32.089121Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-12T10:44:32.988966Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer context_thrashing completed in 0.90s"}
+{"timestamp": "2025-08-12T10:44:32.989061Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running chromatin_contact analyzer"}
+{"timestamp": "2025-08-12T10:44:56.426386Z", "level": "ERROR", "module": "cli", "function": "run_with_timeout", "line": 566, "message": "Analyzer chromatin_contact failed: 'CodeElement' object has no attribute 'raw_body'"}
+{"timestamp": "2025-08-12T10:44:56.426571Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer chromatin_contact completed in 23.44s"}
+{"timestamp": "2025-08-12T10:44:57.029422Z", "level": "INFO", "module": "cli", "function": "main", "line": 760, "message": "Analysis complete: 180 issues, risk score 12.93"}
+{"timestamp": "2025-08-12T10:44:57.033492Z", "level": "INFO", "module": "cli", "function": "main", "line": 835, "message": "Found 139 fixable issues"}
+{"timestamp": "2025-08-12T10:49:48.163856Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:50:14.069147Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:50:14.071933Z", "level": "INFO", "module": "cli", "function": "main", "line": 409, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T10:50:14.078254Z", "level": "INFO", "module": "cli", "function": "main", "line": 431, "message": "Found 37 Python files"}
+{"timestamp": "2025-08-12T10:50:14.078326Z", "level": "INFO", "module": "cli", "function": "main", "line": 434, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T10:50:14.078397Z", "level": "INFO", "module": "cli", "function": "main", "line": 442, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T10:50:14.224387Z", "level": "INFO", "module": "cli", "function": "main", "line": 467, "message": "Successfully parsed 37 files"}
+{"timestamp": "2025-08-12T10:50:14.224494Z", "level": "INFO", "module": "cli", "function": "main", "line": 470, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T10:50:14.282617Z", "level": "INFO", "module": "cli", "function": "main", "line": 496, "message": "Running analyzers"}
+{"timestamp": "2025-08-12T10:50:14.282760Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running enhanced_placeholders analyzer"}
+{"timestamp": "2025-08-12T10:50:14.392372Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer enhanced_placeholders completed in 0.11s"}
+{"timestamp": "2025-08-12T10:50:14.501903Z", "level": "INFO", "module": "cli", "function": "main", "line": 760, "message": "Analysis complete: 23 issues, risk score 6.4"}
+{"timestamp": "2025-08-12T10:51:15.512052Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T10:51:15.514916Z", "level": "INFO", "module": "cli", "function": "main", "line": 409, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T10:51:15.521000Z", "level": "INFO", "module": "cli", "function": "main", "line": 431, "message": "Found 37 Python files"}
+{"timestamp": "2025-08-12T10:51:15.521078Z", "level": "INFO", "module": "cli", "function": "main", "line": 434, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T10:51:15.521185Z", "level": "INFO", "module": "cli", "function": "main", "line": 442, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T10:51:15.668501Z", "level": "INFO", "module": "cli", "function": "main", "line": 467, "message": "Successfully parsed 37 files"}
+{"timestamp": "2025-08-12T10:51:15.668591Z", "level": "INFO", "module": "cli", "function": "main", "line": 470, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T10:51:15.728831Z", "level": "INFO", "module": "cli", "function": "main", "line": 496, "message": "Running analyzers"}
+{"timestamp": "2025-08-12T10:51:15.728985Z", "level": "INFO", "module": "cli", "function": "main", "line": 549, "message": "Running enhanced_placeholders analyzer"}
+{"timestamp": "2025-08-12T10:51:15.840887Z", "level": "INFO", "module": "cli", "function": "main", "line": 579, "message": "Analyzer enhanced_placeholders completed in 0.11s"}
+{"timestamp": "2025-08-12T10:51:15.952611Z", "level": "INFO", "module": "cli", "function": "main", "line": 760, "message": "Analysis complete: 23 issues, risk score 6.4"}
+{"timestamp": "2025-08-12T11:01:23.457808Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T11:01:41.027506Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T11:01:41.030260Z", "level": "INFO", "module": "cli", "function": "main", "line": 422, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T11:01:41.033140Z", "level": "INFO", "module": "cli", "function": "main", "line": 444, "message": "Found 1 Python files"}
+{"timestamp": "2025-08-12T11:01:41.033209Z", "level": "INFO", "module": "cli", "function": "main", "line": 447, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T11:01:41.033282Z", "level": "INFO", "module": "cli", "function": "main", "line": 455, "message": "Using robust parser (auto-fix: False)"}
+{"timestamp": "2025-08-12T11:01:41.034692Z", "level": "INFO", "module": "cli", "function": "main", "line": 480, "message": "Successfully parsed 1 files"}
+{"timestamp": "2025-08-12T11:01:41.034760Z", "level": "INFO", "module": "cli", "function": "main", "line": 483, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T11:01:41.035054Z", "level": "INFO", "module": "cli", "function": "main", "line": 509, "message": "Running analyzers"}
+{"timestamp": "2025-08-12T11:01:41.035195Z", "level": "INFO", "module": "cli", "function": "main", "line": 562, "message": "Running enhanced_missing_symbols analyzer"}
+{"timestamp": "2025-08-12T11:01:41.037946Z", "level": "INFO", "module": "cli", "function": "main", "line": 592, "message": "Analyzer enhanced_missing_symbols completed in 0.00s"}
+{"timestamp": "2025-08-12T11:01:41.077979Z", "level": "INFO", "module": "cli", "function": "main", "line": 773, "message": "Analysis complete: 9 issues, risk score 1.8"}

@@ -31,7 +31,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install numpy scipy  # Install required dependencies first
+        pip install numpy scipy pathspec pyyaml click rich chardet  # Install core dependencies first
     
     - name: Install Tail-Chasing Detector
       run: |

@@ -47,7 +47,7 @@ jobs:
         python -m pip install mypy types-PyYAML types-requests types-setuptools
         
         # Install optional dependencies for full feature testing
-        python -m pip install numpy scipy scikit-learn rich typer pydantic PyYAML
+        python -m pip install numpy scipy scikit-learn rich typer pydantic PyYAML pathspec chardet
         
         # Install development dependencies
         python -m pip install ruff black isort bandit pydocstyle

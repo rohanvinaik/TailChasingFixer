@@ -303,6 +303,19 @@ def main():
         help="Show cache statistics after analysis"
     )
     
+    parser.add_argument(
+        "--generate-missing-stubs",
+        action="store_true",
+        help="Generate typed skeleton functions for missing symbols"
+    )
+    
+    parser.add_argument(
+        "--missing-stubs-output",
+        type=Path,
+        default=Path("missing_symbols.py"),
+        help="Output file for missing symbol stubs (default: missing_symbols.py)"
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -902,6 +915,42 @@ def main():
         except Exception as e:
             logger.error(f"Failed to generate fix script: {e}")
             
+    # Generate missing symbol stubs if requested
+    if args.generate_missing_stubs:
+        sys.stdout.write("\nGenerating Missing Symbol Stubs:\n")
+        sys.stdout.write("-" * 40 + "\n")
+        
+        # Find the enhanced missing symbols analyzer
+        enhanced_missing_analyzer = None
+        for analyzer in analyzers:
+            if hasattr(analyzer, 'name') and analyzer.name == 'enhanced_missing_symbols':
+                enhanced_missing_analyzer = analyzer
+                break
+        
+        if enhanced_missing_analyzer and hasattr(enhanced_missing_analyzer, 'inferred_signatures'):
+            if enhanced_missing_analyzer.inferred_signatures:
+                # Generate stub file
+                stub_content = enhanced_missing_analyzer.generate_stub_file(args.missing_stubs_output)
+                args.missing_stubs_output.write_text(stub_content)
+                
+                sys.stdout.write(f"Generated {len(enhanced_missing_analyzer.inferred_signatures)} stub functions\n")
+                sys.stdout.write(f"Output file: {args.missing_stubs_output}\n")
+                sys.stdout.write("\nExample stubs generated:\n")
+                
+                # Show first few stubs as examples
+                for i, (name, sig) in enumerate(list(enhanced_missing_analyzer.inferred_signatures.items())[:3]):
+                    params = ", ".join(p.name for p in sig.parameters)
+                    return_hint = f" -> {sig.return_type}" if sig.return_type else ""
+                    sys.stdout.write(f"  - def {name}({params}){return_hint}\n")
+                
+                if len(enhanced_missing_analyzer.inferred_signatures) > 3:
+                    sys.stdout.write(f"  ... and {len(enhanced_missing_analyzer.inferred_signatures) - 3} more\n")
+            else:
+                sys.stdout.write("No missing symbols detected that require stubs.\n")
+        else:
+            sys.stdout.write("Enhanced missing symbol analyzer not available.\n")
+            sys.stdout.write("Enable it in configuration to generate stubs.\n")
+    
     # Show cache statistics if requested
     if args.cache_stats and cache_enabled:
         stats = cache_manager.get_statistics()

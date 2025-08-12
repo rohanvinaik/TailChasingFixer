@@ -1,0 +1,25 @@
+# Test configuration for missing symbols
+enhanced_missing_symbols:
+  enabled: true
+
+# Disable other analyzers
+disabled_analyzers:
+  - import_graph
+  - duplicates
+  - fast_duplicates
+  - placeholders
+  - git_chains
+  - semantic_hv
+  - hallucination_cascade
+  - context_thrashing
+  - import_anxiety
+  - enhanced_semantic
+  - circular_import_resolver
+  - phantom_triage
+  - chromatin_contact
+  - enhanced_placeholders
+  - missing_symbols
+
+paths:
+  include:
+    - test_missing_demo.py
