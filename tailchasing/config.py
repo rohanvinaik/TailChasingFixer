@@ -60,6 +60,18 @@ class Config:
             "auto_suppress_shadows": True,
             "generate_forwarders": True,
             "codemod_output": "./canonical_codemod.py"
+        },
+        "circular_import_resolver": {
+            "enabled": True,
+            "min_scc_size": 2,
+            "generate_fixes": True,
+            "fix_script_output": "./circular_import_fixes.py"
+        },
+        "issue_provenance": {
+            "enabled": True,
+            "db_path": ".tailchasing_history.db",
+            "track_regressions": True,
+            "git_integration": True
         }
     }
     

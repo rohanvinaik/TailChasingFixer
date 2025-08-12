@@ -14,10 +14,9 @@ from tailchasing.fixers.advanced.fix_strategies import (
     FixStrategy, FixOutcome, RiskLevel, StrategyRanking,
     ImportResolutionStrategy, DuplicateMergeStrategy, 
     PlaceholderImplementationStrategy, CircularDependencyBreaker,
-    AsyncSyncMismatchFixer, StrategySelector, FixAttempt
+    AsyncSyncMismatchFixer, StrategySelector, FixAttempt, Patch
 )
 from tailchasing.core.issues import Issue
-from tailchasing.core.patches import Patch, PatchInfo
 
 
 @pytest.fixture

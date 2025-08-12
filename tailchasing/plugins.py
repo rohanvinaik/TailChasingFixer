@@ -40,6 +40,13 @@ try:
 except ImportError:
     CANONICAL_POLICY_AVAILABLE = False
 
+# Import circular import resolver
+try:
+    from .analyzers.circular_import_resolver import CircularImportResolver
+    CIRCULAR_IMPORT_RESOLVER_AVAILABLE = True
+except ImportError:
+    CIRCULAR_IMPORT_RESOLVER_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -90,6 +97,11 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     canonical_config = config.get("canonical_policy", {})
     if (canonical_config.get("canonical_roots") or canonical_config.get("shadow_roots")) and CANONICAL_POLICY_AVAILABLE:
         analyzers.append(CanonicalPolicyAnalyzer(config))
+    
+    # Add circular import resolver if enabled
+    circular_config = config.get("circular_import_resolver", {})
+    if circular_config.get("enabled", True) and CIRCULAR_IMPORT_RESOLVER_AVAILABLE:
+        analyzers.append(CircularImportResolver(config))
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])

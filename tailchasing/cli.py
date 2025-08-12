@@ -17,6 +17,7 @@ from .core.reporting import Reporter
 from .core.scoring import RiskScorer
 from .analyzers.base import AnalysisContext
 from .analyzers.root_cause_clustering import RootCauseClusterer
+from .core.issue_provenance import IssueProvenanceTracker
 from .plugins import load_analyzers
 
 
@@ -117,6 +118,19 @@ def main():
         "--generate-canonical-codemod",
         action="store_true",
         help="Generate codemod script for canonical policy violations"
+    )
+    
+    parser.add_argument(
+        "--generate-circular-import-fixes",
+        action="store_true",
+        help="Generate fix script for circular import SCCs"
+    )
+    
+    parser.add_argument(
+        "--show-regressions",
+        type=int,
+        metavar="DAYS",
+        help="Show issue regressions from the last N days"
     )
     
     parser.add_argument(
@@ -260,6 +274,13 @@ def main():
     # Deduplicate issues
     issue_collection.deduplicate()
     
+    # Process issues with provenance tracking
+    provenance_tracker = IssueProvenanceTracker(config.to_dict())
+    enhanced_issues = provenance_tracker.process_issues(issue_collection.issues, ast_index)
+    
+    # Update issue collection with enhanced issues
+    issue_collection.issues = enhanced_issues
+    
     # Perform root cause clustering if requested
     if args.cluster_root_causes and issue_collection.issues:
         logger.info("Performing root cause clustering analysis")
@@ -331,6 +352,50 @@ def main():
                 sys.stdout.write("Canonical policy not configured. Add canonical_roots to config.\n")
             else:
                 sys.stdout.write("Canonical policy analyzer not available\n")
+    
+    # Generate circular import fixes if requested
+    if args.generate_circular_import_fixes:
+        sys.stdout.write(f"\n{'=' * 60}\n")
+        sys.stdout.write("CIRCULAR IMPORT FIX GENERATION\n")
+        sys.stdout.write(f"{'=' * 60}\n")
+        
+        # Find circular import resolver in loaded analyzers
+        circular_resolver = None
+        for analyzer in analyzers:
+            if hasattr(analyzer, 'name') and analyzer.name == 'circular_import_resolver':
+                circular_resolver = analyzer
+                break
+        
+        if circular_resolver:
+            try:
+                # Find circular import issues
+                circular_issues = [issue for issue in issue_collection.issues 
+                                 if issue.kind in ['circular_import_scc', 'circular_import_fix_orchestration']]
+                
+                if circular_issues:
+                    fix_script_path = config.get("circular_import_resolver", {}).get("fix_script_output", "./circular_import_fixes.py")
+                    script = circular_resolver.generate_fix_script(circular_issues, fix_script_path)
+                    
+                    Path(fix_script_path).write_text(script)
+                    sys.stdout.write(f"Generated circular import fix script: {fix_script_path}\n")
+                    sys.stdout.write("Review the script carefully before executing!\n")
+                    sys.stdout.write(f"To apply: python {fix_script_path}\n")
+                else:
+                    sys.stdout.write("No circular import SCCs detected - no fixes needed\n")
+                    
+            except Exception as e:
+                sys.stderr.write(f"Error generating circular import fixes: {e}\n")
+        else:
+            sys.stdout.write("Circular import resolver not available\n")
+    
+    # Show regressions if requested
+    if args.show_regressions:
+        sys.stdout.write(f"\n{'=' * 60}\n")
+        sys.stdout.write("ISSUE REGRESSION REPORT\n")
+        sys.stdout.write(f"{'=' * 60}\n")
+        
+        regression_report = provenance_tracker.get_regression_report(args.show_regressions)
+        sys.stdout.write(regression_report + "\n")
     
     # Generate reports
     reporter = Reporter(config.to_dict())
