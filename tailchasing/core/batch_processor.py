@@ -382,9 +382,9 @@ class BatchProcessor:
             # Check if file is in quarantine (parse errors, etc.)
             if hasattr(context, 'parse_results'):
                 parse_result = context.parse_results.get(file_path)
-                if parse_result and not parse_result.success:
+                if parse_result and not parse_result.is_valid:
                     quarantined_count += 1
-                    logger.debug(f"File {file_path} is quarantined: {parse_result.error}")
+                    logger.debug(f"File {file_path} is quarantined: {parse_result.warnings}")
                     
         return quarantined_count
         
