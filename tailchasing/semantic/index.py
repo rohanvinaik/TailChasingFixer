@@ -62,6 +62,10 @@ class SemanticIndex:
         self.cache_dir = cache_dir
         self.logger = logging.getLogger(__name__)
         
+        # Resource limits
+        self.max_duplicate_pairs = config.get('resource_limits', {}).get('max_duplicate_pairs', 200000)
+        self.lsh_bucket_cap = config.get('resource_limits', {}).get('lsh_bucket_cap', 2000)
+        
         # Initialize hypervector space with enhanced dimensions
         self.space = HVSpace(
             dim=config.get('hv_dim', 16384),  # Enhanced to 16384 dimensions
@@ -532,9 +536,28 @@ class SemanticIndex:
         
         # Find pairs above threshold
         pairs = []
+        pair_count = 0
+        max_pairs = min(self.max_duplicate_pairs, limit) if limit else self.max_duplicate_pairs
+        
+        # Log warning if we have many potential pairs
+        total_pairs = n * (n - 1) // 2
+        if total_pairs > max_pairs * 2:
+            self.logger.warning(
+                f"Large number of potential pairs ({total_pairs}), limiting to {max_pairs} pairs. "
+                f"Consider increasing max_duplicate_pairs or using stricter thresholds."
+            )
+        
         for i in range(n):
             for j in range(i + 1, n):
                 if z_scores[i, j] >= z_threshold:
+                    # Check if we've reached the limit
+                    if pair_count >= max_pairs:
+                        self.logger.warning(
+                            f"Reached max_duplicate_pairs limit ({max_pairs}), stopping pair search. "
+                            f"Found {pair_count} pairs so far."
+                        )
+                        break
+                    
                     id_i, hv_i, _ = valid_entries[i]
                     id_j, hv_j, _ = valid_entries[j]
                     
@@ -549,6 +572,11 @@ class SemanticIndex:
                         self._search_stats['cache_misses'] += 1
                     
                     pairs.append((id_i, id_j, distances[i, j], z_scores[i, j], analysis))
+                    pair_count += 1
+            
+            # Break outer loop if limit reached
+            if pair_count >= max_pairs:
+                break
         
         # Sort by z-score (descending)
         pairs.sort(key=lambda x: -x[3])

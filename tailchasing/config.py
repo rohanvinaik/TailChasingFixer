@@ -505,6 +505,15 @@ class Config:
             "backup_before_execution": True,
             "rollback_on_failure": True,
             "output_dir": "./playbooks"
+        },
+        "resource_limits": {
+            "max_duplicate_pairs": 200000,
+            "analyzer_timeout_seconds": 120,
+            "heartbeat_interval_seconds": 5,
+            "max_memory_mb": 8192,
+            "lsh_bucket_cap": 2000,
+            "semantic_analysis_file_limit": 1000,
+            "semantic_analysis_duplicate_limit": 500
         }
     }
     

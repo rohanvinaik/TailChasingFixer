@@ -90,6 +90,10 @@ class SemanticHVAnalyzer(Analyzer):
         if config.get('incremental_cache'):
             cache_dir = Path(config['incremental_cache'])
         
+        # Merge resource limits into config
+        resource_limits = ctx.config.get('resource_limits', {})
+        config['resource_limits'] = resource_limits
+        
         # Initialize index
         if 'semantic_index' in ctx.cache:
             self.index = ctx.cache['semantic_index']

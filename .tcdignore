@@ -1,0 +1,106 @@
+# TailChasing ignore file
+# Uses gitignore syntax: https://git-scm.com/docs/gitignore
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Type checking and testing
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+.tox/
+*.cover
+
+# Jupyter
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Version control
+.git/
+.svn/
+.hg/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Documentation builds
+docs/_build/
+site/
+
+# Backups
+*.backup
+*.bak
+*.tmp
+*.temp
+*/backup_*/*
+*/*backup*/*
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Node modules (for mixed projects)
+node_modules/
+
+# Temporary directories
+tmp/
+temp/
+
+# Generated files
+*.generated.py
+*_pb2.py
+*_pb2_grpc.py
+
+# Project-specific patterns
+# Add your custom patterns below
+examples/test_data/
+legacy/
+deprecated/
+experimental/
+scratch/

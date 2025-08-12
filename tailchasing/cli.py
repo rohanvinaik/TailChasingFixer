@@ -202,6 +202,41 @@ def main():
         help="Execute generated playbooks (requires --generate-playbooks)"
     )
     
+    # Resource limit arguments
+    parser.add_argument(
+        "--max-duplicate-pairs",
+        type=int,
+        metavar="N",
+        help="Maximum number of duplicate pairs to analyze (default: 200000)"
+    )
+    
+    parser.add_argument(
+        "--analyzer-timeout",
+        type=int,
+        metavar="SECONDS",
+        help="Timeout for each analyzer in seconds (default: 120)"
+    )
+    
+    parser.add_argument(
+        "--max-memory-mb",
+        type=int,
+        metavar="MB",
+        help="Maximum memory usage in MB (default: 8192)"
+    )
+    
+    parser.add_argument(
+        "--lsh-bucket-cap",
+        type=int,
+        metavar="N",
+        help="LSH bucket capacity for semantic analysis (default: 2000)"
+    )
+    
+    parser.add_argument(
+        "--force-semantic",
+        action="store_true",
+        help="Force semantic analysis even when file/duplicate counts exceed limits"
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -273,12 +308,35 @@ def main():
     if args.output:
         config.set("report.output_dir", str(args.output))
         
-    # Collect files
+    # Apply resource limit overrides from CLI
+    if args.max_duplicate_pairs:
+        config.set("resource_limits.max_duplicate_pairs", args.max_duplicate_pairs)
+        
+    if args.analyzer_timeout:
+        config.set("resource_limits.analyzer_timeout_seconds", args.analyzer_timeout)
+        
+    if args.max_memory_mb:
+        config.set("resource_limits.max_memory_mb", args.max_memory_mb)
+        
+    if args.lsh_bucket_cap:
+        config.set("resource_limits.lsh_bucket_cap", args.lsh_bucket_cap)
+        
+    # Collect files with IgnoreManager support
     logger.info(f"Collecting Python files from {root_path}")
+    
+    # Create IgnoreManager with exclude patterns from CLI and config
+    from .core.ignore import IgnoreManager
+    ignore_manager = IgnoreManager(
+        root_path=root_path,
+        additional_patterns=config.get("paths.exclude", []),
+        use_defaults=True
+    )
+    
     files = collect_files(
         root_path,
         include=config.get("paths.include"),
-        exclude=config.get("paths.exclude")
+        exclude=config.get("paths.exclude"),
+        ignore_manager=ignore_manager
     )
     
     if not files:
@@ -329,16 +387,90 @@ def main():
     
     issue_collection = IssueCollection()
     
+    # Check for bail-out conditions for semantic analysis
+    file_count = len(files)
+    resource_limits = config.get("resource_limits", {})
+    semantic_file_limit = resource_limits.get("semantic_analysis_file_limit", 1000)
+    semantic_duplicate_limit = resource_limits.get("semantic_analysis_duplicate_limit", 500)
+    
+    skip_semantic = False
+    duplicate_count = 0
+    
+    if not args.force_semantic:
+        # Count duplicates if needed
+        for analyzer in analyzers:
+            if analyzer.name == 'duplicates':
+                try:
+                    temp_issues = list(analyzer.run(ctx))
+                    duplicate_count = len(temp_issues)
+                    # Add issues to collection
+                    for issue in temp_issues:
+                        if not ctx.should_ignore_issue(issue.kind):
+                            issue_collection.add(issue)
+                except Exception as e:
+                    logger.error(f"Failed to count duplicates: {e}")
+                break
+        
+        # Check bail-out conditions
+        if file_count > semantic_file_limit:
+            logger.warning(
+                f"Skipping semantic analysis: {file_count} files exceeds limit of {semantic_file_limit}. "
+                f"Use --force-semantic to override."
+            )
+            skip_semantic = True
+        elif duplicate_count > semantic_duplicate_limit:
+            logger.warning(
+                f"Skipping semantic analysis: {duplicate_count} duplicates exceeds limit of {semantic_duplicate_limit}. "
+                f"Use --force-semantic to override."
+            )
+            skip_semantic = True
+    
     for analyzer in analyzers:
+        # Skip semantic analyzers if bail-out triggered
+        if skip_semantic and analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
+            logger.info(f"Skipping {analyzer.name} analyzer due to resource limits")
+            continue
+            
+        # Skip duplicates analyzer if already run
+        if analyzer.name == 'duplicates' and duplicate_count > 0:
+            continue
+            
         logger.info(f"Running {analyzer.name} analyzer")
         try:
             import time
+            import signal
+            import threading
+            
+            # Set up timeout for analyzer
+            timeout_seconds = config.get("resource_limits.analyzer_timeout_seconds", 120)
             start_time = time.time()
-            for issue in analyzer.run(ctx):
-                if not ctx.should_ignore_issue(issue.kind):
-                    issue_collection.add(issue)
-            elapsed = time.time() - start_time
-            logger.info(f"Analyzer {analyzer.name} completed in {elapsed:.2f}s")
+            
+            # Function to run analyzer with timeout
+            def run_with_timeout():
+                try:
+                    for issue in analyzer.run(ctx):
+                        if not ctx.should_ignore_issue(issue.kind):
+                            issue_collection.add(issue)
+                except Exception as e:
+                    logger.error(f"Analyzer {analyzer.name} failed: {e}")
+            
+            # Create and start thread
+            thread = threading.Thread(target=run_with_timeout)
+            thread.daemon = True
+            thread.start()
+            thread.join(timeout=timeout_seconds)
+            
+            if thread.is_alive():
+                logger.warning(f"Analyzer {analyzer.name} timed out after {timeout_seconds}s")
+                # Thread will continue running but we move on
+            else:
+                elapsed = time.time() - start_time
+                logger.info(f"Analyzer {analyzer.name} completed in {elapsed:.2f}s")
+                
+                # Warn if approaching timeout
+                if elapsed > timeout_seconds * 0.8:
+                    logger.warning(f"Analyzer {analyzer.name} took {elapsed:.2f}s, approaching timeout of {timeout_seconds}s")
+                    
         except Exception as e:
             logger.error(f"Analyzer {analyzer.name} failed: {e}")
             

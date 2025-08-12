@@ -1,1 +1,37 @@
 {"timestamp": "2025-08-12T04:27:39.429411Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T04:50:03.949950Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T04:50:03.955913Z", "level": "INFO", "module": "cli", "function": "main", "line": 277, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-12T04:50:03.977353Z", "level": "INFO", "module": "cli", "function": "main", "line": 299, "message": "Found 116 Python files"}
+{"timestamp": "2025-08-12T04:50:03.977461Z", "level": "INFO", "module": "cli", "function": "main", "line": 302, "message": "Parsing Python files"}
+{"timestamp": "2025-08-12T04:50:04.437108Z", "level": "INFO", "module": "cli", "function": "main", "line": 310, "message": "Successfully parsed 116 files"}
+{"timestamp": "2025-08-12T04:50:04.437205Z", "level": "INFO", "module": "cli", "function": "main", "line": 313, "message": "Building symbol table"}
+{"timestamp": "2025-08-12T04:50:04.631780Z", "level": "INFO", "module": "cli", "function": "main", "line": 337, "message": "Running analyzers"}
+{"timestamp": "2025-08-12T04:50:04.631936Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-12T04:50:04.742422Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer import_graph completed in 0.11s"}
+{"timestamp": "2025-08-12T04:50:04.742527Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running duplicates analyzer"}
+{"timestamp": "2025-08-12T04:50:05.361061Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer duplicates completed in 0.62s"}
+{"timestamp": "2025-08-12T04:50:05.361179Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running placeholders analyzer"}
+{"timestamp": "2025-08-12T04:50:05.504974Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer placeholders completed in 0.14s"}
+{"timestamp": "2025-08-12T04:50:05.505094Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running missing_symbols analyzer"}
+{"timestamp": "2025-08-12T04:50:05.998200Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer missing_symbols completed in 0.49s"}
+{"timestamp": "2025-08-12T04:50:05.998310Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running git_chains analyzer"}
+{"timestamp": "2025-08-12T04:50:05.998381Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer git_chains completed in 0.00s"}
+{"timestamp": "2025-08-12T04:50:05.998441Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-12T04:51:13.171211Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer semantic_hv completed in 67.17s"}
+{"timestamp": "2025-08-12T04:51:13.171345Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running hallucination_cascade analyzer"}
+{"timestamp": "2025-08-12T04:51:25.788234Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer hallucination_cascade completed in 12.62s"}
+{"timestamp": "2025-08-12T04:51:25.788346Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-12T04:51:26.765842Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer context_thrashing completed in 0.98s"}
+{"timestamp": "2025-08-12T04:51:26.765956Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running import_anxiety analyzer"}
+{"timestamp": "2025-08-12T04:51:26.989491Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer import_anxiety completed in 0.22s"}
+{"timestamp": "2025-08-12T04:51:26.989628Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running enhanced_semantic analyzer"}
+{"timestamp": "2025-08-12T04:51:27.100536Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer enhanced_semantic completed in 0.11s"}
+{"timestamp": "2025-08-12T04:51:27.100642Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running circular_import_resolver analyzer"}
+{"timestamp": "2025-08-12T04:51:35.406823Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer circular_import_resolver completed in 8.31s"}
+{"timestamp": "2025-08-12T04:51:35.406944Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running phantom_triage analyzer"}
+{"timestamp": "2025-08-12T04:51:35.522785Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer phantom_triage completed in 0.12s"}
+{"timestamp": "2025-08-12T04:51:35.522898Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-12T04:51:36.497698Z", "level": "INFO", "module": "cli", "function": "main", "line": 351, "message": "Analyzer context_thrashing completed in 0.97s"}
+{"timestamp": "2025-08-12T04:51:36.497814Z", "level": "INFO", "module": "cli", "function": "main", "line": 343, "message": "Running chromatin_contact analyzer"}
+{"timestamp": "2025-08-12T04:55:25.505978Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T04:55:32.520217Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}

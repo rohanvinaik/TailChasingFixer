@@ -6,13 +6,16 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Set
 import logging
 
+from .ignore import IgnoreManager
+
 logger = logging.getLogger(__name__)
 
 
 def collect_files(
     root: Path,
     include: Optional[List[str]] = None,
-    exclude: Optional[List[str]] = None
+    exclude: Optional[List[str]] = None,
+    ignore_manager: Optional[IgnoreManager] = None
 ) -> List[Path]:
     """Collect Python files from the given root directory.
     
@@ -20,6 +23,7 @@ def collect_files(
         root: Root directory to search
         include: List of paths to include (relative to root)
         exclude: List of paths to exclude (relative to root)
+        ignore_manager: Optional IgnoreManager for advanced pattern matching
         
     Returns:
         List of Python file paths
@@ -28,6 +32,20 @@ def collect_files(
     exclude = set(exclude or [])
     files = []
     
+    # Create IgnoreManager if not provided but exclude patterns exist
+    if not ignore_manager and exclude:
+        ignore_manager = IgnoreManager(
+            root_path=root,
+            additional_patterns=list(exclude),
+            use_defaults=True
+        )
+    elif not ignore_manager:
+        # Create default IgnoreManager to handle .tcdignore file
+        ignore_manager = IgnoreManager(
+            root_path=root,
+            use_defaults=True
+        )
+    
     for inc in include:
         base = root / inc
         if not base.exists():
@@ -35,26 +53,30 @@ def collect_files(
             continue
             
         if base.is_file() and base.suffix == ".py":
-            files.append(base)
+            # Check with IgnoreManager
+            if not ignore_manager.should_ignore(base):
+                files.append(base)
         else:
             for p in base.rglob("*.py"):
-                # Check if path should be excluded
-                rel_path = p.relative_to(root)
-                excluded = False
-                
-                for ex in exclude:
-                    ex_path = Path(ex)
-                    try:
-                        # Check if the file is under an excluded directory
-                        rel_path.relative_to(ex_path)
-                        excluded = True
-                        break
-                    except ValueError:
-                        # Not under this exclude path
-                        pass
-                        
-                if not excluded:
-                    files.append(p)
+                # Use IgnoreManager for filtering
+                if not ignore_manager.should_ignore(p):
+                    # Also check legacy exclude patterns for backward compatibility
+                    rel_path = p.relative_to(root)
+                    excluded = False
+                    
+                    for ex in exclude:
+                        ex_path = Path(ex)
+                        try:
+                            # Check if the file is under an excluded directory
+                            rel_path.relative_to(ex_path)
+                            excluded = True
+                            break
+                        except ValueError:
+                            # Not under this exclude path
+                            pass
+                            
+                    if not excluded:
+                        files.append(p)
                     
     return sorted(set(files))
 
