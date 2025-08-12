@@ -3,100 +3,86 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/tail-chasing-detector.svg)](https://pypi.org/project/tail-chasing-detector/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Detects LLM-assisted *tail-chasing* anti-patterns - a software development anti-pattern where LLMs repeatedly make superficial or circular fixes in response to immediate errors, without addressing underlying causes.
+A comprehensive tool that detects and fixes LLM-assisted *tail-chasing* anti-patterns - a software development anti-pattern where LLMs repeatedly make superficial or circular fixes in response to immediate errors, without addressing underlying architectural issues.
 
-## ✨ New in v0.1.0: Advanced Features
+## 🎯 What is Tail-Chasing?
 
-🧠 **Enhanced Pattern Detection**: Hallucination cascades, context window thrashing, import anxiety  
-🔬 **Multimodal Semantic Analysis**: Deep semantic duplicate detection across multiple dimensions  
-🔧 **Intelligent Auto-Fixing**: Generate and apply fixes with comprehensive impact analysis  
-📊 **Interactive Visualizations**: HTML reports with dependency graphs, heatmaps, and similarity matrices  
-🗣️ **Natural Language Explanations**: Detailed explanations of why patterns occur and how to fix them
+Tail-chasing occurs when AI assistants get stuck in unproductive loops while generating code:
 
-[📖 See Advanced Features Documentation](docs/ADVANCED_FEATURES.md)
+1. **Creating circular dependencies** - Modules that import each other in cycles
+2. **Generating phantom implementations** - Inventing classes/methods to satisfy mistaken imports
+3. **Duplicate implementations** - Creating multiple versions of the same functionality
+4. **Context window thrashing** - Reimplementing existing code after forgetting earlier context
+5. **Hallucination cascades** - Building entire fictional subsystems to satisfy import errors
+6. **Import anxiety** - Defensively importing many items "just in case"
+
+This tool detects these patterns using advanced semantic analysis and provides automated fixes.
+
+## ✨ Key Features
+
+### 🔍 Advanced Detection
+- **Semantic Hypervector Analysis** - Deep semantic duplicate detection using 8192-dimensional vectors
+- **Smart Filtering** - Reduces false positives by understanding legitimate patterns
+- **Multi-Modal Analysis** - Analyzes structure, behavior, data flow, and complexity
+- **Cargo Cult Detection** - Identifies copied boilerplate and misused patterns
+
+### 🔧 Intelligent Auto-Fixing
+- **Automated Fix Generation** - Creates safe, tested fixes for detected issues
+- **Risk Assessment** - Evaluates fix safety with LOW/MEDIUM/HIGH/CRITICAL ratings
+- **Rollback Plans** - Generates undo strategies for every fix
+- **Fix Strategies** - Specialized handlers for different issue types
+
+### 📊 Rich Reporting
+- **Interactive HTML Reports** - Dependency graphs, heatmaps, similarity matrices
+- **Multiple Formats** - Text, JSON, HTML, Markdown suggestions
+- **CI/CD Integration** - Fail on threshold, generate artifacts
+- **Natural Language Explanations** - Detailed explanations of issues and fixes
 
 ## 🚀 Quick Start
 
 ```bash
-# Install
+# Install from PyPI
 pip install tail-chasing-detector
 
 # Basic analysis
 tailchasing .
 
-# Enhanced analysis with all new features
-tailchasing-enhanced . --enhanced --semantic-multimodal --html report.html
-
-# Auto-fix with detailed explanations
-tailchasing-enhanced . --auto-fix --explain --fix-plan fixes.json
+# Enhanced analysis with semantic detection
+tailchasing-enhanced . --enhanced --semantic-multimodal
 
 # Generate comprehensive HTML report
-tailchasing-enhanced . --html full_report.html --enhanced
+tailchasing . --html report.html
+
+# Auto-fix with explanations
+tailchasing-enhanced . --auto-fix --explain
+
+# Show fix suggestions in terminal
+tailchasing . --show-suggestions --generate-fixes
 ```
 
-## What is a Tail-Chasing Bug?
-
-A Tail-Chasing Bug occurs when an LLM:
-1. **Creates circular dependencies or redundant implementations** (e.g., defining `ComparisonAnalyzer` when `QualityAnalyzer.compare_quality` already exists)
-2. **Renames or restructures code solely to match error messages** without resolving core issues
-3. **Generates phantom implementations** - inventing classes or methods to satisfy mistaken imports
-4. **Creates hallucination cascades** - entire fictional subsystems to satisfy import errors
-5. **Shows context window thrashing** - reimplements existing functionality after forgetting earlier code
-6. **Exhibits import anxiety** - defensively imports many items "just in case"
-
-This pattern emerges because LLMs operate with limited context windows, causing them to fixate on immediate errors rather than global architectural intent.
-
-## Features
-
-### Core Detection
-- **Phantom/placeholder implementation detection**
-- **Structural duplicate function detection** 
-- **Circular import analysis with runtime-risk weighting**
-- **Missing/hallucinated symbol detection**
-- **Wrapper/trivial abstraction detection**
-
-### Advanced Semantic Analysis
-- **Semantic Hypervector Analysis** - Detects deep semantic duplicates using high-dimensional computing
-- **Prototype Fragmentation Detection** - Finds multiple implementations of the same concept
-- **Semantic Stagnation Analysis** - Identifies placeholders that never evolve
-- **Multi-Modal Semantic Encoding** - Analyzes data flow, return patterns, and complexity
-
-### Advanced Pattern Detection
-- **Hallucination Cascade Detection** - Identifies entire fictional subsystems created by LLMs
-- **Context Window Thrashing Detection** - Finds reimplementations due to forgotten context
-- **Import Anxiety Pattern Detection** - Catches defensive over-importing
-
-### Fix Generation & Suggestions
-- **Interactive Fix Scripts** - Generate executable Python scripts to apply fixes
-- **Detailed Suggestion Documents** - Markdown files with code examples and explanations
-- **In-Terminal Suggestions** - View fix suggestions directly in terminal output
-- **Context-Aware Recommendations** - Suggestions based on specific issue patterns
-
-### Output & Integration
-- **Risk scoring system** with configurable thresholds
-- **Multiple output formats** (text, JSON, HTML)
-- **Always shows report paths** in terminal output
-- **Fix availability notifications** in standard output
-
-## Installation
+## 📦 Installation
 
 ### From PyPI
-
 ```bash
 pip install tail-chasing-detector
+
+# With all features
+pip install "tail-chasing-detector[all]"
 ```
 
 ### From Source
-
 ```bash
 git clone https://github.com/rohanvinaik/TailChasingFixer.git
 cd TailChasingFixer
 pip install -e .
+
+# With development tools
+pip install -e ".[dev]"
 ```
 
-## Usage
+## 📖 Usage
 
-### Basic Analysis
+### Basic Commands
 
 ```bash
 # Analyze current directory
@@ -104,48 +90,42 @@ tailchasing .
 
 # Analyze specific directory
 tailchasing /path/to/project
-```
 
-### Output Options
-
-```bash
-# Generate HTML report
-tailchasing . --html
-
-# Generate JSON report
-tailchasing . --json
-
-# Save reports to specific directory
-tailchasing . --output ./analysis
+# Generate reports
+tailchasing . --html --json --output ./reports
 
 # Show verbose progress
 tailchasing . --verbose
 ```
 
-### Fix Suggestions
+### Fix Generation
 
 ```bash
-# Show suggestions in terminal for top issues
+# Show suggestions in terminal
 tailchasing . --show-suggestions
 
-# Generate interactive fix script and detailed suggestions
+# Generate fix script and documentation
 tailchasing . --generate-fixes
 
-# Both together
-tailchasing . --show-suggestions --generate-fixes
+# Auto-apply fixes (use with caution)
+tailchasing-enhanced . --auto-fix --dry-run  # Preview first
+tailchasing-enhanced . --auto-fix             # Apply fixes
 ```
 
-### Filtering
+### Filtering & Configuration
 
 ```bash
-# Exclude specific paths
+# Exclude paths
 tailchasing . --exclude tests --exclude build
 
-# Include only specific paths
+# Include specific paths only
 tailchasing . --include src --include lib
 
 # Disable specific analyzers
-tailchasing . --disable semantic_hv --disable hallucination_cascade
+tailchasing . --disable semantic_hv --disable cargo_cult
+
+# Use configuration file
+tailchasing . --config .tailchasing.yml
 ```
 
 ### CI/CD Integration
@@ -154,238 +134,216 @@ tailchasing . --disable semantic_hv --disable hallucination_cascade
 # Fail if risk score exceeds threshold
 tailchasing . --fail-on 50
 
-# Generate all reports for CI artifacts
+# Generate all artifacts
 tailchasing . --json --html --generate-fixes --output ./ci-reports
+
+# GitHub Actions example
+tailchasing . --fail-on 30 --json --output $GITHUB_WORKSPACE/reports
 ```
 
-## Configuration
+## ⚙️ Configuration
 
-Create a `.tailchasing.yml` in your project root:
+Create `.tailchasing.yml` in your project root:
 
 ```yaml
+# Path configuration
 paths:
   include:
     - src
+    - lib
   exclude:
     - tests
     - build
     - venv
+    - .git
 
+# Risk thresholds
 risk_thresholds:
   warn: 15
   fail: 30
 
+# Allowed placeholders (won't be flagged)
 placeholders:
   allow:
-    - BasePlugin.initialize
+    - BaseClass.abstract_method
+    - Interface.template_method
 
+# Ignore specific issue types
 ignore_issue_types:
-  - wrapper_abstraction
+  - wrapper_abstraction  # If you use many wrapper patterns
 
+# Customize scoring weights
 scoring_weights:
+  circular_import: 3
   missing_symbol: 2
   phantom_function: 2
   duplicate_function: 2
-  wrapper_abstraction: 1
   semantic_duplicate_function: 3
-  prototype_fragmentation: 3
   hallucination_cascade: 4
   context_window_thrashing: 3
+  cargo_cult_pattern: 2
   import_anxiety: 1
 
+# Semantic analysis settings
 semantic:
   enable: true
-  hv_dim: 8192
-  min_functions: 30
-  z_threshold: 2.5
-  
+  hv_dim: 8192           # Hypervector dimensions
+  min_functions: 30      # Minimum functions to analyze
+  z_threshold: 2.5       # Statistical significance
+  smart_filter: true     # Enable false-positive reduction
+
+# Fix generation settings
+fixes:
+  auto_fix: false        # Don't auto-apply by default
+  require_confirmation: true
+  generate_rollback: true
+  risk_limit: MEDIUM     # Don't apply HIGH/CRITICAL fixes
+
+# Report settings
 report:
   formats:
     - text
     - html
   output_dir: ./reports
+  include_suggestions: true
+  include_examples: true
 ```
 
-## Terminal Output
-
-The tool always shows:
-- Analysis summary (issues, risk score, affected modules)
-- Paths to all generated reports
-- Fix suggestion availability and generation commands
-
-Example output:
-```
-Tail-Chasing Analysis Complete
-========================================
-Total Issues: 88
-Global Risk Score: 14.43 (OK)
-Affected Modules: 42
-
-Top Issues:
-  [semantic_duplicate_function] file.py:123 - Semantic duplicate: func1 and func2
-  [phantom_function] file.py:456 - Pass-only function: placeholder
-  [circular_import] module.py:1 - Circular import cycle of length 3
-
-Generated Reports:
-----------------------------------------
-TEXT report: ./tailchasing_report.txt
-HTML report: ./tailchasing_report.html
-
-Fix Suggestions:
-----------------------------------------
-Found 75 fixable issues out of 88 total
-Run with --generate-fixes to create:
-  • Interactive fix script (tailchasing_fixes.py)
-  • Detailed suggestions file (tailchasing_suggestions.md)
-
-Example: tailchasing . --generate-fixes
-```
-
-## Issue Types Detected
+## 🎯 Issue Types Detected
 
 ### Core Issues
+| Issue Type | Description | Risk |
+|------------|-------------|------|
+| `circular_import` | Import cycles that can cause runtime failures | HIGH |
+| `duplicate_function` | Structurally identical functions | MEDIUM |
+| `phantom_function` | Pass-only or NotImplementedError stubs | MEDIUM |
+| `missing_symbol` | References to non-existent functions/classes | HIGH |
+| `unused_code` | Dead code that's never called | LOW |
 
-| Issue Type | Description | Default Weight |
-|------------|-------------|----------------|
-| `circular_import` | Import cycles that can cause runtime failures | 3 |
-| `duplicate_function` | Structurally identical functions | 2 |
-| `phantom_function` | Pass-only or NotImplementedError stubs | 2 |
-| `missing_symbol` | References to non-existent functions/classes | 2 |
-| `wrapper_abstraction` | Trivial wrappers that add no value | 1 |
+### Semantic Issues
+| Issue Type | Description | Risk |
+|------------|-------------|------|
+| `semantic_duplicate` | Same behavior, different implementation | MEDIUM |
+| `prototype_fragmentation` | Multiple implementations of same concept | HIGH |
+| `semantic_stagnation` | Placeholders that never evolve | MEDIUM |
 
-### Semantic Analysis Issues
+### LLM-Specific Patterns
+| Issue Type | Description | Risk |
+|------------|-------------|------|
+| `hallucination_cascade` | Fictional subsystems created to satisfy errors | CRITICAL |
+| `context_window_thrashing` | Reimplementation due to forgotten context | HIGH |
+| `import_anxiety` | Defensive over-importing | LOW |
+| `cargo_cult_pattern` | Copied boilerplate without understanding | MEDIUM |
 
-| Issue Type | Description | Default Weight |
-|------------|-------------|----------------|
-| `semantic_duplicate_function` | Functions with same behavior but different code | 3 |
-| `prototype_fragmentation` | Multiple implementations of same concept | 3 |
-| `semantic_stagnant_placeholder` | Stubs that never evolve | 2 |
+## 📊 Example Output
 
-**Note**: Semantic analysis includes **smart filtering** to avoid false positives. The system automatically ignores legitimate patterns like `__init__.py` files, test boilerplate, property accessors, and protocol implementations.
-
-### Advanced Pattern Issues
-
-| Issue Type | Description | Default Weight |
-|------------|-------------|----------------|
-| `hallucination_cascade` | Fictional subsystems created to satisfy errors | 4 |
-| `context_window_thrashing` | Reimplementation due to forgotten context | 3 |
-| `import_anxiety` | Defensive over-importing patterns | 1 |
-| `enhanced_semantic_duplicate` | Multi-modal semantic duplicate | 3 |
-
-## Fix Suggestions
-
-Each detected issue includes actionable fix suggestions:
-
-### In Terminal (with `--show-suggestions`)
 ```
-[semantic_duplicate_function] file.py:123 - Semantic duplicate: func1 and func2
-  Suggestions:
-    Merge func1 and func2 in file.py
-    Review naming conventions - these functions have different names but similar behavior
-```
+🔍 Tail-Chasing Analysis Complete
+══════════════════════════════════════════════════
+📊 Summary:
+  Total Issues: 47
+  Risk Score: 28.5 (⚠️ MEDIUM)
+  Affected Files: 23
+  
+🔴 Critical Issues (3):
+  • hallucination_cascade: auth/validator.py:45
+    Entire validator subsystem never actually used
+    
+  • circular_import: models/user.py ↔ models/profile.py
+    Runtime failure risk in production
 
-### In Generated Files (with `--generate-fixes`)
+📈 Top Patterns:
+  • 12 semantic duplicates (25.5% of issues)
+  • 8 phantom functions (17.0% of issues)
+  • 5 circular imports (10.6% of issues)
 
-**Interactive Fix Script** (`tailchasing_fixes.py`):
-- Shows each issue interactively
-- Lets you review and apply fixes
-- Tracks which fixes were applied
+📁 Generated Reports:
+  ✓ HTML: ./reports/tailchasing_report.html
+  ✓ JSON: ./reports/tailchasing_data.json
+  ✓ Fixes: ./reports/suggested_fixes.py
 
-**Detailed Suggestions** (`tailchasing_suggestions.md`):
-- Grouped by issue type
-- Includes code examples
-- Step-by-step instructions
-- Command-line snippets
-
-## Semantic Hypervector Analysis
-
-The semantic analyzer detects deep patterns using high-dimensional computing:
-
-### Configuration
-
-```yaml
-semantic:
-  enable: true
-  hv_dim: 8192  # Hypervector dimension
-  min_functions: 30  # Minimum functions needed
-  z_threshold: 2.5  # Statistical significance threshold
+💡 Fix Suggestions Available:
+  37 of 47 issues have automated fixes
+  Run: tailchasing . --generate-fixes
 ```
 
-### What It Analyzes
+## 🔬 Advanced Features
 
-Each function is encoded based on:
-- Function and parameter names
-- Docstring content
-- Called functions
-- Control flow patterns
-- Data flow
-- Return patterns
-- Exception handling
+### Semantic Hypervector Analysis
 
-### Example Detection
-
-These functions would be detected as semantic duplicates:
+Detects deep semantic patterns using high-dimensional computing:
 
 ```python
+# These would be detected as semantic duplicates:
 def calculate_average(numbers):
-    """Calculate the mean of a list."""
-    total = sum(numbers)
-    count = len(numbers)
-    return total / count
+    return sum(numbers) / len(numbers)
 
 def compute_mean(data_list):
-    """Compute arithmetic mean."""
-    accumulator = 0
-    for value in data_list:
-        accumulator += value
-    return accumulator / len(data_list)
+    total = 0
+    for val in data_list:
+        total += val
+    return total / len(data_list)
 ```
 
-## Examples
+### Smart Filtering
 
-### Phantom Functions
-```python
-# Detected as phantom_function
-def process_data(data):
-    pass
+Automatically excludes false positives:
+- `__init__.py` standard patterns
+- Test boilerplate and fixtures
+- Property getters/setters
+- Protocol/interface implementations
+- Django/Flask view patterns
 
-def analyze_results():
-    raise NotImplementedError()
-```
+### Cargo Cult Detection
 
-### Circular Imports
-```python
-# file_a.py
-from file_b import helper
+Identifies code copied without understanding:
+- Unnecessary `super().__init__()` calls
+- Redundant docstrings
+- Trivial getters/setters
+- Misused design patterns
 
-# file_b.py  
-from file_a import process  # Circular!
-```
+## 🤝 Contributing
 
-### Hallucination Cascades
-```python
-# LLM creates these to satisfy non-existent imports
-class DataProcessor:  # Never actually used
-    pass
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development setup
+- Testing guidelines
+- Code style requirements
+- Pull request process
 
-class DataValidator:  # Created to satisfy DataProcessor
-    def __init__(self, processor: DataProcessor):
-        self.processor = processor
+## 📚 Documentation
 
-class DataPipeline:  # Created to use both above
-    def __init__(self):
-        self.processor = DataProcessor()
-        self.validator = DataValidator(self.processor)
-```
+- [Advanced Features](docs/ADVANCED_FEATURES.md) - Semantic analysis, auto-fixing
+- [API Reference](docs/API.md) - Using as a library
+- [Configuration Guide](docs/CONFIG.md) - Detailed configuration options
+- [VS Code Extension](vscode-extension/README.md) - IDE integration
 
-## Contributing
+## 🐛 Recent Fixes
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+### v0.2.0 (Latest)
+- ✅ Fixed advanced fixers package imports
+- ✅ Consolidated cargo cult analyzers with proper parent checking
+- ✅ Added missing dataclasses (FixOutcome, StrategyRanking)
+- ✅ Removed NotImplementedError from production paths
+- ✅ Implemented safe fallbacks for unknown imports
 
-## License
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-Conceptual inspiration from existing static analyzers and the novel "tail-chasing bug" pattern observed in LLM-assisted development workflows.
+- Inspired by patterns observed in LLM-assisted development
+- Built with love for the AI-assisted programming community
+- Special thanks to all contributors and early adopters
+
+## 📮 Support
+
+- 🐛 [Report Issues](https://github.com/rohanvinaik/TailChasingFixer/issues)
+- 💬 [Discussions](https://github.com/rohanvinaik/TailChasingFixer/discussions)
+- 📧 Contact: [Create an issue](https://github.com/rohanvinaik/TailChasingFixer/issues/new)
+
+---
+
+**Made with ❤️ to improve AI-assisted development**
+
+*Stop chasing your tail, start fixing real issues!*

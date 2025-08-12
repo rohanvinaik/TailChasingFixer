@@ -6,8 +6,10 @@ cargo-cult programming patterns where code is copied without understanding.
 """
 
 import ast
+import re
 from typing import Dict, Optional, Set, List, Union
 from pathlib import Path
+from collections import defaultdict
 
 from ..core.issues import Issue
 from .base import Analyzer, AnalysisContext
@@ -288,11 +290,30 @@ class CargoCultDetector(Analyzer):
 class EnhancedCargoCultDetector(CargoCultDetector):
     """Extended version with additional cargo cult pattern detection."""
     
+    def __init__(self):
+        """Initialize with boilerplate patterns."""
+        super().__init__()
+        self.boilerplate_patterns = {
+            'unnecessary_super': {'pattern': 'super().__init__() with no parent __init__', 'severity': 1},
+            'redundant_docstring': {'pattern': 'Docstring that just repeats function name', 'severity': 1},
+            'pointless_inheritance': {'pattern': 'Inherits from object or unnecessary base class', 'severity': 1},
+            'unused_imports': {'pattern': 'Common imports that are never used', 'severity': 2},
+            'copy_paste_comments': {'pattern': 'Comments that do not match the code', 'severity': 2},
+            'unnecessary_abstractions': {'pattern': 'Over-engineered simple functionality', 'severity': 3},
+            'misused_patterns': {'pattern': 'Design patterns applied incorrectly', 'severity': 3}
+        }
+    
     def _analyze_file(self, filepath: str, tree: ast.AST, ctx: AnalysisContext) -> List[Issue]:
         """Analyze file for multiple cargo cult patterns."""
         issues = super()._analyze_file(filepath, tree, ctx)
         
-        # Add more cargo cult patterns
+        # Add comprehensive cargo cult pattern checks
+        issues.extend(self._check_redundant_docstrings(filepath, tree))
+        issues.extend(self._check_copy_paste_comments(filepath, tree))
+        issues.extend(self._check_unnecessary_abstractions(filepath, tree))
+        issues.extend(self._check_misused_patterns(filepath, tree))
+        issues.extend(self._check_boilerplate_overuse(filepath, tree))
+        
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 # Check for unnecessary object inheritance (Python 3)
@@ -458,3 +479,271 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                 if node not in method.args.args:
                     return True
         return False
+    
+    def _check_redundant_docstrings(self, filepath: str, tree: ast.AST) -> List[Issue]:
+        """Check for docstrings that add no value."""
+        issues = []
+        
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                docstring = ast.get_docstring(node)
+                if docstring:
+                    name = node.name
+                    doc_lower = docstring.lower().strip()
+                    
+                    # Pattern 1: Docstring is just the name
+                    if doc_lower.replace('_', ' ') == name.replace('_', ' ').lower():
+                        issues.append(self._create_cargo_cult_issue(
+                            "redundant_docstring",
+                            f"Docstring just repeats function name '{name}'",
+                            filepath, node.lineno, name,
+                            "Write meaningful docstrings that explain purpose and behavior"
+                        ))
+                    
+                    # Pattern 2: Generic placeholder docstrings
+                    generic_patterns = [
+                        r'^(this|the) (function|method|class)',
+                        r'^(does|performs) .+ing\.$',
+                        r'^todo:?\s*$',
+                        r'^placeholder',
+                        r'^function to ',
+                        r'^method (that|to) '
+                    ]
+                    
+                    if any(re.match(pattern, doc_lower) for pattern in generic_patterns):
+                        issues.append(self._create_cargo_cult_issue(
+                            "generic_docstring",
+                            f"Generic placeholder docstring in '{name}'",
+                            filepath, node.lineno, name,
+                            "Replace with specific documentation or remove if obvious"
+                        ))
+                    
+                    # Pattern 3: Docstring doesn't match function
+                    if isinstance(node, ast.FunctionDef):
+                        doc_params = re.findall(r':param\s+(\w+):', docstring)
+                        actual_params = [arg.arg for arg in node.args.args]
+                        phantom_params = set(doc_params) - set(actual_params)
+                        if phantom_params:
+                            issues.append(self._create_cargo_cult_issue(
+                                "mismatched_docstring",
+                                f"Docstring references non-existent parameters: {phantom_params}",
+                                filepath, node.lineno, name,
+                                "Update docstring to match actual function signature"
+                            ))
+        
+        return issues
+    
+    def _check_copy_paste_comments(self, filepath: str, tree: ast.AST) -> List[Issue]:
+        """Check for comments that don't match the code."""
+        issues = []
+        
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+        except:
+            return issues
+        
+        comment_patterns = [
+            (r'#\s*TODO:\s*implement\s+(\w+)', 'todo_already_implemented'),
+            (r'#\s*FIXME:\s*(\w+)', 'fixme_not_applicable'),
+            (r'#\s*(\w+)\s+returns\s+(\w+)', 'comment_wrong_return'),
+            (r'#\s*[Hh]andle[s]?\s+(\w+)', 'comment_wrong_handling')
+        ]
+        
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            if line_stripped.startswith('#'):
+                for pattern, issue_type in comment_patterns:
+                    match = re.search(pattern, line_stripped)
+                    if match:
+                        if issue_type == 'todo_already_implemented':
+                            func_name = match.group(1)
+                            if self._function_exists_nearby(lines, i, func_name):
+                                issues.append(Issue(
+                                    kind="outdated_todo_comment",
+                                    message=f"TODO comment for already implemented '{func_name}'",
+                                    severity=1,
+                                    file=filepath,
+                                    line=i + 1,
+                                    evidence={'pattern': 'cargo_cult', 'comment': line_stripped},
+                                    suggestions=["Remove outdated TODO comment"]
+                                ))
+        
+        return issues
+    
+    def _check_unnecessary_abstractions(self, filepath: str, tree: ast.AST) -> List[Issue]:
+        """Check for over-engineered simple functionality."""
+        issues = []
+        
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                # Pattern: Factory for single concrete class
+                if 'factory' in node.name.lower():
+                    methods = [m for m in node.body if isinstance(m, ast.FunctionDef)]
+                    create_methods = [m for m in methods if 'create' in m.name.lower()]
+                    
+                    if create_methods:
+                        created_types = set()
+                        for method in create_methods:
+                            for subnode in ast.walk(method):
+                                if isinstance(subnode, ast.Call) and isinstance(subnode.func, ast.Name):
+                                    created_types.add(subnode.func.id)
+                        
+                        if len(created_types) == 1:
+                            issues.append(self._create_cargo_cult_issue(
+                                "unnecessary_factory",
+                                f"Factory class {node.name} only creates one type",
+                                filepath, node.lineno, node.name,
+                                "Consider direct instantiation instead of factory pattern"
+                            ))
+        
+        # Check for getter/setter overuse
+        getters_setters = defaultdict(list)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                if node.name.startswith('get_') or node.name.startswith('set_'):
+                    prop_name = node.name[4:]
+                    getters_setters[prop_name].append(node)
+        
+        for prop_name, methods in getters_setters.items():
+            if len(methods) >= 2:
+                all_trivial = all(self._is_trivial_accessor(m) for m in methods)
+                if all_trivial:
+                    issues.append(Issue(
+                        kind="unnecessary_getters_setters",
+                        message=f"Trivial getters/setters for '{prop_name}' add no value",
+                        severity=2,
+                        file=filepath,
+                        line=methods[0].lineno,
+                        evidence={'property': prop_name, 'pattern': 'cargo_cult'},
+                        suggestions=[
+                            "Use direct attribute access or @property decorator",
+                            "Only add getters/setters when they provide validation or transformation"
+                        ]
+                    ))
+        
+        return issues
+    
+    def _check_misused_patterns(self, filepath: str, tree: ast.AST) -> List[Issue]:
+        """Check for incorrectly applied design patterns."""
+        issues = []
+        
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                # Pattern: Singleton with __new__ but allows multiple instances
+                has_new = any(
+                    isinstance(m, ast.FunctionDef) and m.name == '__new__'
+                    for m in node.body
+                )
+                
+                if has_new and 'singleton' in node.name.lower():
+                    new_method = next(
+                        m for m in node.body 
+                        if isinstance(m, ast.FunctionDef) and m.name == '__new__'
+                    )
+                    
+                    has_instance_check = any(
+                        isinstance(n, ast.If) for n in ast.walk(new_method)
+                    )
+                    
+                    if not has_instance_check:
+                        issues.append(self._create_cargo_cult_issue(
+                            "broken_singleton",
+                            f"Singleton pattern in {node.name} doesn't prevent multiple instances",
+                            filepath, node.lineno, node.name,
+                            "Implement proper instance caching in __new__ or use a decorator"
+                        ))
+                
+                # Pattern: Observer without proper notification mechanism
+                if 'observer' in node.name.lower():
+                    methods = {m.name for m in node.body if isinstance(m, ast.FunctionDef)}
+                    has_update = any('update' in m or 'notify' in m for m in methods)
+                    has_attach = any('attach' in m or 'subscribe' in m or 'register' in m for m in methods)
+                    
+                    if has_attach and not has_update:
+                        issues.append(self._create_cargo_cult_issue(
+                            "incomplete_observer",
+                            f"Observer pattern in {node.name} missing notification mechanism",
+                            filepath, node.lineno, node.name,
+                            "Add update/notify method to complete observer pattern"
+                        ))
+        
+        return issues
+    
+    def _check_boilerplate_overuse(self, filepath: str, tree: ast.AST) -> List[Issue]:
+        """Check for excessive boilerplate code."""
+        issues = []
+        
+        boilerplate_count = 0
+        total_functions = 0
+        
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                total_functions += 1
+                if self._is_boilerplate_function(node):
+                    boilerplate_count += 1
+        
+        if total_functions > 5 and boilerplate_count / total_functions > 0.5:
+            issues.append(Issue(
+                kind="excessive_boilerplate",
+                message=f"File contains {boilerplate_count}/{total_functions} boilerplate functions",
+                severity=2,
+                file=filepath,
+                line=1,
+                evidence={
+                    'boilerplate_ratio': boilerplate_count / total_functions,
+                    'pattern': 'cargo_cult'
+                },
+                suggestions=[
+                    "Remove unnecessary boilerplate code",
+                    "Focus on implementing actual functionality",
+                    "Avoid copying patterns without understanding their purpose"
+                ]
+            ))
+        
+        return issues
+    
+    def _is_trivial_accessor(self, method: ast.FunctionDef) -> bool:
+        """Check if method is a trivial getter/setter."""
+        return self._is_trivial_getter(method) or self._is_trivial_setter(method)
+    
+    def _is_boilerplate_function(self, func: ast.FunctionDef) -> bool:
+        """Check if function is likely boilerplate."""
+        # Empty function
+        if len(func.body) == 1 and isinstance(func.body[0], ast.Pass):
+            return True
+        
+        # Only raises NotImplementedError
+        if len(func.body) == 1 and isinstance(func.body[0], ast.Raise):
+            return True
+        
+        # Only has docstring
+        if len(func.body) == 1 and isinstance(func.body[0], ast.Expr):
+            if isinstance(func.body[0].value, (ast.Constant, ast.Str)):
+                return True
+        
+        return False
+    
+    def _function_exists_nearby(self, lines: List[str], comment_line: int, func_name: str) -> bool:
+        """Check if function exists near the comment."""
+        start = max(0, comment_line - 5)
+        end = min(len(lines), comment_line + 10)
+        
+        for i in range(start, end):
+            if f'def {func_name}' in lines[i]:
+                return True
+        return False
+    
+    def _create_cargo_cult_issue(self, kind: str, message: str, filepath: str, 
+                                line: int, symbol: str, suggestion: str) -> Issue:
+        """Create a cargo cult pattern issue."""
+        return Issue(
+            kind=f"cargo_cult_{kind}",
+            message=message,
+            severity=self.boilerplate_patterns.get(kind, {}).get('severity', 2),
+            file=filepath,
+            line=line,
+            symbol=symbol,
+            evidence={'pattern': 'cargo_cult', 'type': kind},
+            suggestions=[suggestion, "Understand the purpose before copying patterns"]
+        )

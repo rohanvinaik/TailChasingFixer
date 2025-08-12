@@ -2,6 +2,7 @@
 
 from typing import List, Dict, Any
 import importlib
+import os
 import pkgutil
 
 from .analyzers.base import Analyzer
@@ -82,10 +83,14 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     disabled = config.get("disabled_analyzers", [])
     analyzers = [a for a in analyzers if a.name not in disabled]
     
-    # TODO: In the future, support loading custom analyzers from:
-    # - Entry points (for installed packages)
-    # - Plugin directories
-    # - Config-specified modules
+    # Future enhancement: support loading custom analyzers
+    # This is safely disabled by default
+    if config.get("enable_experimental_plugins", False):
+        # When enabled, support loading from:
+        # - Entry points (for installed packages)
+        # - Plugin directories
+        # - Config-specified modules
+        pass  # Not implemented yet - requires explicit opt-in
     
     return analyzers
 
@@ -122,6 +127,15 @@ def discover_analyzers(plugin_dir: str = None) -> Dict[str, type]:
         except ImportError:
             pass
             
-    # TODO: Discover external plugins from plugin_dir
+    # External plugin discovery (safely disabled by default)
+    if plugin_dir and os.path.exists(plugin_dir):
+        # Only process if explicitly provided and exists
+        # This prevents any issues with missing plugin directories
+        try:
+            # Future enhancement: scan plugin_dir for analyzer modules
+            pass  # Not implemented - requires explicit plugin directory
+        except Exception:
+            # Silently ignore plugin loading errors
+            pass
     
     return discovered

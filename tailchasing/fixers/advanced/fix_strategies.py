@@ -10,7 +10,7 @@ import re
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Protocol, Tuple, Set
+from typing import List, Dict, Any, Optional, Protocol, Tuple, Set, Union
 from enum import Enum
 import logging
 
@@ -27,6 +27,51 @@ class RiskLevel(Enum):
 
 
 @dataclass
+class FixOutcome:
+    """Represents the outcome of applying a fix."""
+    success: bool
+    confidence: float
+    message: Optional[str] = None
+    execution_time: Optional[float] = None
+    validation_passed: Optional[bool] = None
+    error_message: Optional[str] = None
+    rollback_performed: bool = False
+
+
+@dataclass
+class StrategyRanking:
+    """Represents a ranking for a strategy for a given issue."""
+    primary_strategy: Any  # BaseFixStrategy
+    confidence: float
+    risk_level: RiskLevel
+    estimated_time: float
+    success_rate: float
+    alternatives: List[Any] = field(default_factory=list)  # List[BaseFixStrategy]
+    dependencies_satisfied: bool = True
+    
+    @property
+    def confidence_score(self) -> float:
+        """Alias for confidence (for test compatibility)."""
+        return self.confidence
+    
+    @property
+    def estimated_risk(self) -> RiskLevel:
+        """Alias for risk_level (for test compatibility)."""
+        return self.risk_level
+
+
+@dataclass
+class FixAttempt:
+    """Represents an attempt to fix an issue."""
+    issue: Issue
+    strategy: Any  # FixStrategy
+    proposed_patch: "Patch"
+    timestamp: float
+    outcome: Optional[FixOutcome] = None
+    duration: Optional[float] = None
+
+
+@dataclass
 class Action:
     """Represents a single action in a fix or rollback plan."""
     type: str  # "modify_file", "create_file", "delete_lines", etc.
@@ -38,8 +83,17 @@ class Action:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass 
+@dataclass
 class Patch:
+    """Simple patch representation for compatibility."""
+    file_path: str
+    content: str
+    line_number: Optional[int] = None
+    description: Optional[str] = None
+
+
+@dataclass 
+class ComplexPatch:
     """Represents a proposed fix with metadata."""
     actions: List[Action]
     description: str
@@ -74,7 +128,7 @@ class FixStrategy(Protocol):
         """Check if this strategy can handle the given issue."""
         ...
     
-    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Patch]:
+    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Union[Patch, ComplexPatch]]:
         """Propose a fix for the issue with full metadata."""
         ...
     
@@ -86,7 +140,7 @@ class FixStrategy(Protocol):
         """Get list of other issue types that should be fixed first."""
         ...
     
-    def learn_from_outcome(self, issue: Issue, patch: Patch, success: bool, feedback: str) -> None:
+    def learn_from_outcome(self, issue: Issue, patch: ComplexPatch, success: bool, feedback: str) -> None:
         """Learn from the outcome of applying this strategy."""
         ...
 
@@ -111,7 +165,7 @@ class BaseFixStrategy(ABC):
         """Generate the specific actions needed to fix the issue."""
         pass
     
-    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Patch]:
+    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Union[Patch, ComplexPatch]]:
         """Propose a fix for the issue."""
         if not self.can_handle(issue):
             return None
@@ -126,7 +180,7 @@ class BaseFixStrategy(ABC):
             rollback_plan = self._generate_rollback_plan(actions)
             validation_tests = self._generate_validation_tests(issue)
             
-            return Patch(
+            return ComplexPatch(
                 actions=actions,
                 description=f"{self.name} fix for {issue.kind}",
                 confidence=confidence,
@@ -148,14 +202,14 @@ class BaseFixStrategy(ABC):
         
         # Adjust based on issue severity
         if issue.severity >= 4:
-            base_risk = min(RiskLevel.CRITICAL, RiskLevel(base_risk.value + 1))
+            base_risk = RiskLevel(min(RiskLevel.CRITICAL.value, base_risk.value + 1))
         elif issue.severity <= 1:
-            base_risk = max(RiskLevel.LOW, RiskLevel(base_risk.value - 1))
+            base_risk = RiskLevel(max(RiskLevel.LOW.value, base_risk.value - 1))
         
         # Adjust based on success history
         recent_failures = len([h for h in self.failure_history[-10:] if h.get('issue_kind') == issue.kind])
         if recent_failures > 3:
-            base_risk = min(RiskLevel.CRITICAL, RiskLevel(base_risk.value + 1))
+            base_risk = RiskLevel(min(RiskLevel.CRITICAL.value, base_risk.value + 1))
         
         return base_risk
     
@@ -163,7 +217,7 @@ class BaseFixStrategy(ABC):
         """Get dependencies - override in subclasses."""
         return []
     
-    def learn_from_outcome(self, issue: Issue, patch: Patch, success: bool, feedback: str) -> None:
+    def learn_from_outcome(self, issue: Issue, patch: ComplexPatch, success: bool, feedback: str) -> None:
         """Learn from the outcome of applying this strategy."""
         outcome = {
             "timestamp": time.time(),
@@ -270,7 +324,7 @@ class BaseFixStrategy(ABC):
         
         return side_effects
     
-    def _update_learned_patterns(self, issue: Issue, patch: Patch, success: bool) -> None:
+    def _update_learned_patterns(self, issue: Issue, patch: ComplexPatch, success: bool) -> None:
         """Update learned patterns from outcomes."""
         pattern_key = f"{issue.kind}_{patch.risk_level.name}"
         
@@ -302,6 +356,7 @@ class ImportResolutionStrategy(BaseFixStrategy):
         """Handle missing imports, import errors, and related issues."""
         return issue.kind in [
             "missing_symbol",
+            "missing_import",
             "import_anxiety", 
             "unused_import",
             "import_error"
@@ -310,11 +365,52 @@ class ImportResolutionStrategy(BaseFixStrategy):
     def _get_base_risk_level(self) -> RiskLevel:
         return RiskLevel.LOW  # Import fixes are generally low risk
     
+    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Patch]:
+        """Propose a fix for import issues - returns simple Patch for compatibility."""
+        if not self.can_handle(issue):
+            return None
+        
+        # For simple import fixes, return a Patch instead of ComplexPatch
+        if issue.kind in ["missing_symbol", "missing_import"]:
+            symbol = issue.symbol or issue.evidence.get('used_symbols', ['unknown'])[0] if issue.evidence else 'unknown'
+            
+            # Determine the import statement
+            if 'numpy' in symbol.lower():
+                import_statement = "import numpy"
+            elif 'pandas' in symbol.lower():
+                import_statement = "import pandas"
+            else:
+                import_statement = f"import {symbol.split('.')[0]}"
+            
+            return Patch(
+                file_path=issue.file,
+                content=import_statement,
+                line_number=1,
+                description=f"Add missing import for {symbol}"
+            )
+        
+        # For other cases, use the base implementation
+        return super().propose_fix(issue, context)
+    
+    def get_rollback_plan(self, patch: Patch, issue: Issue) -> str:
+        """Generate rollback plan for an import fix."""
+        if patch and patch.content:
+            return f"Remove {patch.content} from {patch.file_path}"
+        return "Revert the import changes"
+    
+    def get_validation_tests(self, patch: Patch, issue: Issue) -> List[str]:
+        """Generate validation tests for import fixes."""
+        tests = []
+        if patch and patch.file_path:
+            tests.append(f"python -m py_compile {patch.file_path}")
+            tests.append(f"python -c 'import {patch.file_path.replace('/', '.').replace('.py', '')}'")
+        return tests
+    
     def _generate_fix_actions(self, issue: Issue, context: Optional[Dict[str, Any]]) -> List[Action]:
         """Generate actions to fix import issues."""
         actions = []
         
-        if issue.kind == "missing_symbol":
+        if issue.kind in ["missing_symbol", "missing_import"]:
             actions.extend(self._fix_missing_symbol(issue, context))
         elif issue.kind == "import_anxiety":
             actions.extend(self._fix_import_anxiety(issue, context))
@@ -1230,17 +1326,6 @@ class AsyncSyncMismatchFixer(BaseFixStrategy):
         return ["missing_symbol", "import_error"]
 
 
-@dataclass
-class StrategyRanking:
-    """Ranking information for a strategy-issue pair."""
-    strategy: BaseFixStrategy
-    confidence: float
-    risk_level: RiskLevel
-    estimated_time: float
-    success_rate: float
-    dependencies_satisfied: bool
-
-
 class StrategySelector:
     """
     Selects the best fix strategies for issues based on various criteria.
@@ -1286,6 +1371,11 @@ class StrategySelector:
         
         return sorted_rankings
     
+    def _calculate_ranking(self, strategy: BaseFixStrategy, issue: Issue, 
+                          context: Optional[Dict[str, Any]] = None) -> StrategyRanking:
+        """Calculate ranking for a strategy on a specific issue (alias for tests)."""
+        return self._rank_strategy_for_issue(strategy, issue, context)
+    
     def _rank_strategy_for_issue(self, 
                                 strategy: BaseFixStrategy, 
                                 issue: Issue, 
@@ -1305,11 +1395,12 @@ class StrategySelector:
         dependencies_satisfied = self._check_dependencies_satisfied(strategy, issue, context)
         
         return StrategyRanking(
-            strategy=strategy,
+            primary_strategy=strategy,
             confidence=confidence,
             risk_level=risk_level,
             estimated_time=estimated_time,
             success_rate=success_rate,
+            alternatives=[],
             dependencies_satisfied=dependencies_satisfied
         )
     
@@ -1365,7 +1456,7 @@ class StrategySelector:
     def record_application_outcome(self, 
                                   issue: Issue, 
                                   strategy: BaseFixStrategy,
-                                  patch: Patch,
+                                  patch: ComplexPatch,
                                   success: bool, 
                                   feedback: str) -> None:
         """Record the outcome of applying a strategy."""
