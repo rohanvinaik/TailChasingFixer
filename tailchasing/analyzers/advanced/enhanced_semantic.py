@@ -36,5 +36,9 @@ class EnhancedSemanticAnalyzer(SemanticAwareAnalyzer):
         if len(functions) < 2:
             return []  # Need at least 2 functions to compare
         
+        # Set the threshold on the enhancer if needed
+        if hasattr(self.enhancer, 'similarity_threshold'):
+            self.enhancer.similarity_threshold = self.similarity_threshold
+        
         # Find semantic duplicates using multimodal analysis
-        return self.enhancer.find_semantic_duplicates(functions, self.similarity_threshold)
+        return self.enhancer.find_semantic_duplicates(functions)
