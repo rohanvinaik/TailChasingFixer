@@ -133,11 +133,17 @@ class SemanticIndex:
         self.entries: Dict[str, FunctionEntry] = {}
         self.hypervector_matrix: Optional[np.ndarray] = None
         self.function_ids: List[str] = []
+        self.id_to_index: Dict[str, int] = {}  # Map from function ID to index
+        self._incremental_updates: List = []  # Incremental updates queue
         
         # Background statistics
         self.background_mean: Optional[float] = None
         self.background_std: Optional[float] = None
         self.background_samples: List[float] = []
+        self._background_stats: Optional[Tuple[float, float]] = None
+        self._stats_sample_size: int = 0
+        self._search_stats: Dict[str, int] = {'cache_hits': 0, 'cache_misses': 0}
+        self._similarity_cache: Dict[str, Any] = {}
         
         # Configuration
         self.min_similarity_threshold = self.config.get('min_similarity_threshold', 0.5)
