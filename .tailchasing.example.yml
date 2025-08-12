@@ -1,0 +1,95 @@
+# Example configuration for genomevault project with canonical policy
+paths:
+  include:
+    - genomevault
+    - zk_proofs
+  exclude:
+    - tests
+    - build
+    - dist
+    - "*.egg-info"
+
+# Risk thresholds
+risk_thresholds:
+  warn: 15
+  fail: 30
+
+# Canonical module policy configuration
+canonical_policy:
+  # Define canonical implementation roots (highest priority)
+  canonical_roots:
+    - "genomevault/pir/advanced"
+    - "genomevault/crypto/core"
+    - "zk_proofs/core"
+    - "genomevault/hsm"
+    - "genomevault/pqc/core"
+  
+  # Define shadow/experimental roots (lower priority)
+  shadow_roots:
+    - "genomevault/experimental"
+    - "genomevault/proto"
+    - "genomevault/temp"
+    - "tests"
+  
+  # Pattern-based priority adjustments
+  priority_patterns:
+    # Deprioritize test files
+    ".*test.*": -10
+    ".*_test\.py": -15
+    
+    # Heavily deprioritize experimental
+    ".*experimental.*": -30
+    ".*proto.*": -25
+    
+    # Boost main implementations  
+    ".*/core/.*": 10
+    ".*/advanced/.*": 15
+    ".*/__init__\.py": 5
+    
+    # Special patterns for genomevault
+    ".*it_pir.*": -20  # Experimental PIR implementations
+    ".*crypto.*__init__.*": -5  # Circular import hotspot
+  
+  # Policy behaviors
+  auto_suppress_shadows: true
+  generate_forwarders: true
+  codemod_output: "./fix_shadows_codemod.py"
+
+# Customize scoring weights for this domain
+scoring_weights:
+  circular_import: 4           # Critical for crypto code
+  missing_symbol: 3           # Important for stubs (HSM, PQC, STARK)
+  phantom_function: 2         # Catch incomplete implementations
+  duplicate_function: 2
+  semantic_duplicate_function: 3
+  shadow_implementation_detected: 1
+  shadow_implementation_suppressed: 0  # Info only
+  hallucination_cascade: 4
+  context_window_thrashing: 3
+  cargo_cult_pattern: 2
+  import_anxiety: 1
+
+# Smart filtering to reduce false positives
+semantic:
+  enable: true
+  hv_dim: 8192
+  min_functions: 20
+  z_threshold: 2.5
+  smart_filter: true
+
+# Report configuration
+report:
+  formats:
+    - text
+    - html
+    - json
+  output_dir: ./reports
+  include_suggestions: true
+  include_examples: true
+
+# Fix generation
+fixes:
+  auto_fix: false
+  require_confirmation: true
+  generate_rollback: true
+  risk_limit: MEDIUM

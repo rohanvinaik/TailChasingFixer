@@ -250,6 +250,43 @@ class FixPlaybook:
                 'Document utility usage'
             ],
             'risk': 'LOW'
+        },
+        'canonical_policy_violation': {
+            'id': 'CANON_001',
+            'name': 'Enforce Canonical Policy',
+            'description': 'Shadow implementations violating canonical module policy',
+            'steps': [
+                'Identify canonical vs shadow implementations',
+                'Generate import forwarders for shadows',
+                'Apply codemod to replace shadows',
+                'Add deprecation warnings',
+                'Update documentation to reference canonical paths'
+            ],
+            'risk': 'LOW'
+        },
+        'crypto_scc_break': {
+            'id': 'SCC_001',
+            'name': 'Break Circular Import SCC',
+            'description': 'Break strongly connected component in crypto/zk modules',
+            'steps': [
+                'Create shared abstraction module (*_shared.py)',
+                'Move common interfaces to shared module',
+                'Localize imports to break cycles',
+                'Update all references to use shared interfaces'
+            ],
+            'risk': 'HIGH'
+        },
+        'stub_implementation': {
+            'id': 'STUB_001',
+            'name': 'Implement Critical Stubs',
+            'description': 'Implement missing HSM/PQC/STARK stubs with proper guards',
+            'steps': [
+                'Implement stub with proper interface',
+                'Add comprehensive test coverage',
+                'Add runtime availability checks',
+                'Document implementation status and requirements'
+            ],
+            'risk': 'CRITICAL'
         }
     }
     
@@ -266,16 +303,34 @@ class FixPlaybook:
         """Suggest appropriate playbook based on cluster characteristics."""
         # Analyze cluster to determine best playbook
         issue_kinds = {issue.kind for issue in cluster.members}
+        root_cause = cluster.root_cause_guess.lower()
+        
+        # Check for canonical policy violations
+        if 'shadow_implementation' in issue_kinds or 'canonical policy violation' in root_cause:
+            return 'canonical_policy_violation'
+        
+        # Check for specific genomevault patterns
+        if 'crypto' in root_cause and 'scc' in root_cause:
+            return 'crypto_scc_break'
+        
+        if 'hsm' in root_cause or 'pqc' in root_cause or 'stark' in root_cause:
+            return 'stub_implementation'
         
         if 'duplicate_function' in issue_kinds or 'semantic_duplicate' in issue_kinds:
-            if 'experimental' in cluster.root_cause_guess.lower():
+            if 'experimental' in root_cause or 'shadow' in root_cause:
                 return 'shadow_module'
+            elif 'it_pir' in root_cause:
+                return 'canonical_policy_violation'  # PIR shadows should use canonical policy
             return 'duplicate_implementation'
         
         if 'circular_import' in issue_kinds:
+            if 'crypto' in root_cause or 'zk_proofs' in root_cause:
+                return 'crypto_scc_break'
             return 'circular_pattern'
         
         if 'phantom_function' in issue_kinds or 'missing_symbol' in issue_kinds:
+            if 'cryptographic stubs' in root_cause:
+                return 'stub_implementation'
             return 'missing_abstraction'
         
         if len(cluster.members) > 10:  # Many similar issues
@@ -498,6 +553,10 @@ class RootCauseClusterer:
         issue_kinds = [issue.kind for issue in issues]
         files = [issue.file for issue in issues if issue.file]
         
+        # Check for canonical policy issues
+        if any('shadow_implementation' in kind for kind in issue_kinds):
+            return "Canonical policy violation: shadow implementations detected"
+            
         # Common patterns
         if len(set(issue_kinds)) == 1:
             kind = issue_kinds[0]
@@ -506,15 +565,25 @@ class RootCauseClusterer:
                     return "Test utilities duplicated across test files"
                 elif any('experimental' in f or 'v2' in f for f in files):
                     return "Experimental shadow of canonical module"
+                elif any('it_pir' in f for f in files):
+                    return "PIR implementation shadows (genomevault hotspot)"
                 else:
                     return "Missing shared utility module"
                     
             elif kind == 'circular_import':
-                return "Tight coupling between modules requiring refactoring"
-                
+                if any('crypto' in f and '__init__' in f for f in files):
+                    return "Crypto module circular imports (SCC hotspot)"
+                elif any('zk_proofs' in f and 'core' in f for f in files):
+                    return "ZK proofs core circular imports (SCC hotspot)"
+                else:
+                    return "Tight coupling between modules requiring refactoring"
+                    
             elif kind == 'phantom_function':
-                return "Incomplete refactoring leaving stub implementations"
-                
+                if any('hsm' in f or 'pqc' in f or 'stark' in f for f in files):
+                    return "Missing critical cryptographic stubs (HSM/PQC/STARK)"
+                else:
+                    return "Incomplete refactoring leaving stub implementations"
+                    
         # Mixed issue types in same cluster
         if 'duplicate_function' in issue_kinds and 'semantic_duplicate' in issue_kinds:
             return "Progressive code evolution without cleanup"
@@ -523,8 +592,11 @@ class RootCauseClusterer:
         if len(set(files)) == 1:
             return f"Localized code quality issues in {files[0]}"
             
-        # Default
-        return f"Systematic {', '.join(set(issue_kinds))} pattern across {len(set(files))} files"
+        # Default with domain-specific context
+        if any('genomevault' in f for f in files):
+            return f"GenomeVault systematic {', '.join(set(issue_kinds))} pattern"
+        else:
+            return f"Systematic {', '.join(set(issue_kinds))} pattern across {len(set(files))} files"
     
     def _calculate_confidence(self, issues: List[Issue]) -> float:
         """Calculate confidence score for cluster quality."""

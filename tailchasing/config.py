@@ -47,6 +47,19 @@ class Config:
         "fix": {
             "enable": False,
             "auto_rename_single_suggestion": True
+        },
+        "canonical_policy": {
+            "canonical_roots": [],
+            "shadow_roots": [],
+            "priority_patterns": {
+                r".*test.*": -10,
+                r".*experimental.*": -20,
+                r".*_test\.py": -15,
+                r".*/__init__\.py": 5
+            },
+            "auto_suppress_shadows": True,
+            "generate_forwarders": True,
+            "codemod_output": "./canonical_codemod.py"
         }
     }
     

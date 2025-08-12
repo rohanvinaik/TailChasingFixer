@@ -276,6 +276,49 @@ report:
   include_examples: true
 ```
 
+### Canonical Module Policy
+
+The tool includes a powerful canonical module policy system that identifies and manages canonical vs shadow implementations:
+
+```bash
+# Analyze with canonical policy (requires configuration)
+tailchasing . --generate-canonical-codemod
+
+# Root cause clustering with canonical awareness
+tailchasing . --cluster-root-causes
+```
+
+**Example Configuration:**
+```yaml
+canonical_policy:
+  # Define canonical implementation roots (highest priority)
+  canonical_roots:
+    - "src/core"
+    - "mypackage/advanced"
+  
+  # Define shadow/experimental roots (lower priority)  
+  shadow_roots:
+    - "experimental"
+    - "prototypes"
+    - "temp"
+  
+  # Pattern-based priority adjustments
+  priority_patterns:
+    ".*experimental.*": -30    # Heavily deprioritize experimental
+    ".*test.*": -10            # Deprioritize test files
+    ".*/core/.*": 10           # Boost core implementations
+  
+  auto_suppress_shadows: true  # Auto-suppress shadow issues
+  generate_forwarders: true    # Generate import forwarders
+```
+
+**Features:**
+- **Automatic Shadow Detection**: Identifies duplicate implementations in experimental/shadow paths
+- **Priority-Based Canonical Selection**: Uses configurable rules to determine canonical vs shadow
+- **Codemod Generation**: Automatically generates scripts to replace shadows with import forwarders
+- **Deprecation Warnings**: Adds proper deprecation warnings to maintain backward compatibility
+- **Integration with Root Cause Clustering**: Provides enhanced analysis of systemic patterns
+
 ## 🎯 Issue Types Detected
 
 ### Core Issues
@@ -301,6 +344,13 @@ report:
 | `context_window_thrashing` | Reimplementation due to forgotten context | HIGH |
 | `import_anxiety` | Defensive over-importing | LOW |
 | `cargo_cult_pattern` | Copied boilerplate without understanding | MEDIUM |
+
+### Canonical Policy Issues
+| Issue Type | Description | Risk |
+|------------|-------------|------|
+| `shadow_implementation_detected` | Non-canonical duplicate implementation | MEDIUM |
+| `shadow_implementation_suppressed` | Auto-suppressed shadow (informational) | LOW |
+| `canonical_policy_codemod` | Generated codemod suggestions available | LOW |
 
 ## 📊 Example Output
 

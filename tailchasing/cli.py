@@ -114,6 +114,12 @@ def main():
     )
     
     parser.add_argument(
+        "--generate-canonical-codemod",
+        action="store_true",
+        help="Generate codemod script for canonical policy violations"
+    )
+    
+    parser.add_argument(
         "--include",
         action="append",
         help="Paths to include (can be specified multiple times)"
@@ -291,6 +297,40 @@ def main():
                 cluster_path = args.output / "root_cause_clusters.txt"
                 cluster_path.write_text(cluster_report)
                 sys.stdout.write(f"\nDetailed cluster report saved to: {cluster_path}\n")
+    
+    # Generate canonical codemod if requested
+    if args.generate_canonical_codemod:
+        sys.stdout.write(f"\n{'=' * 60}\n")
+        sys.stdout.write("CANONICAL POLICY CODEMOD GENERATION\n")
+        sys.stdout.write(f"{'=' * 60}\n")
+        
+        # Find canonical policy analyzer in loaded analyzers
+        canonical_analyzer = None
+        for analyzer in analyzers:
+            if hasattr(analyzer, 'name') and analyzer.name == 'canonical_policy':
+                canonical_analyzer = analyzer
+                break
+        
+        if canonical_analyzer:
+            try:
+                codemod_path = config.get("canonical_policy", {}).get("codemod_output", "./canonical_codemod.py")
+                script = canonical_analyzer.generate_codemod_script(ast_index, codemod_path)
+                
+                if "No shadow implementations detected" not in script:
+                    Path(codemod_path).write_text(script)
+                    sys.stdout.write(f"Generated canonical codemod script: {codemod_path}\n")
+                    sys.stdout.write("Review the script carefully before executing!\n")
+                    sys.stdout.write(f"To apply: python {codemod_path}\n")
+                else:
+                    sys.stdout.write("No shadow implementations detected - no codemod needed\n")
+                    
+            except Exception as e:
+                sys.stderr.write(f"Error generating codemod: {e}\n")
+        else:
+            if not config.get("canonical_policy", {}).get("canonical_roots"):
+                sys.stdout.write("Canonical policy not configured. Add canonical_roots to config.\n")
+            else:
+                sys.stdout.write("Canonical policy analyzer not available\n")
     
     # Generate reports
     reporter = Reporter(config.to_dict())

@@ -33,6 +33,13 @@ try:
 except ImportError:
     ADVANCED_ANALYZERS_AVAILABLE = False
 
+# Import canonical policy analyzer
+try:
+    from .analyzers.canonical_policy import CanonicalPolicyAnalyzer
+    CANONICAL_POLICY_AVAILABLE = True
+except ImportError:
+    CANONICAL_POLICY_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -78,6 +85,11 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     # Add advanced analyzers if enabled
     if config.get("enable_advanced_analyzers", False) and ADVANCED_ANALYZERS_AVAILABLE:
         analyzers.extend(ADVANCED_ANALYZERS)
+    
+    # Add canonical policy analyzer if configured
+    canonical_config = config.get("canonical_policy", {})
+    if (canonical_config.get("canonical_roots") or canonical_config.get("shadow_roots")) and CANONICAL_POLICY_AVAILABLE:
+        analyzers.append(CanonicalPolicyAnalyzer(config))
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])
