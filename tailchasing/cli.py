@@ -19,6 +19,7 @@ from .analyzers.base import AnalysisContext
 from .analyzers.root_cause_clustering import RootCauseClusterer
 from .core.issue_provenance import IssueProvenanceTracker
 from .plugins import load_analyzers
+from .core.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
 
 
 # Setup module logger
@@ -214,7 +215,28 @@ def main():
         "--analyzer-timeout",
         type=int,
         metavar="SECONDS",
-        help="Timeout for each analyzer in seconds (default: 120)"
+        default=30,
+        help="Timeout for each analyzer in seconds (default: 30)"
+    )
+    
+    parser.add_argument(
+        "--heartbeat-interval",
+        type=float,
+        metavar="SECONDS",
+        default=2.0,
+        help="Heartbeat interval for analyzer monitoring in seconds (default: 2.0)"
+    )
+    
+    parser.add_argument(
+        "--watchdog-verbose",
+        action="store_true",
+        help="Enable verbose watchdog reporting"
+    )
+    
+    parser.add_argument(
+        "--disable-fallback",
+        action="store_true",
+        help="Disable fallback to TF-IDF when semantic analysis times out"
     )
     
     parser.add_argument(
@@ -511,6 +533,17 @@ def main():
     
     issue_collection = IssueCollection()
     
+    # Initialize watchdog
+    watchdog_config = WatchdogConfig(
+        analyzer_timeout=args.analyzer_timeout,
+        heartbeat_interval=args.heartbeat_interval,
+        heartbeat_timeout_multiplier=3.0,
+        enable_fallback=not args.disable_fallback,
+        verbose=args.watchdog_verbose
+    )
+    watchdog = AnalyzerWatchdog(watchdog_config)
+    watchdog.start()
+    
     # Check for bail-out conditions for semantic analysis
     file_count = len(files)
     resource_limits = config.get("resource_limits", {})
@@ -560,41 +593,25 @@ def main():
             continue
             
         logger.info(f"Running {analyzer.name} analyzer")
+        
+        # Set up fallback for semantic analyzers
+        fallback_func = None
+        if analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
+            fallback_func = lambda *args, **kwargs: SemanticAnalysisFallback.tfidf_fallback(*args, **kwargs)
+        
+        # Wrap analyzer with watchdog
+        wrapped_analyzer = watchdog.wrap_analyzer(
+            analyzer.name,
+            analyzer.run,
+            fallback_func
+        )
+        
+        # Execute analyzer with monitoring
         try:
-            import time
-            import signal
-            import threading
-            
-            # Set up timeout for analyzer
-            timeout_seconds = config.get("resource_limits.analyzer_timeout_seconds", 120)
-            start_time = time.time()
-            
-            # Function to run analyzer with timeout
-            def run_with_timeout():
-                try:
-                    for issue in analyzer.run(ctx):
-                        if not ctx.should_ignore_issue(issue.kind):
-                            issue_collection.add(issue)
-                except Exception as e:
-                    logger.error(f"Analyzer {analyzer.name} failed: {e}")
-            
-            # Create and start thread
-            thread = threading.Thread(target=run_with_timeout)
-            thread.daemon = True
-            thread.start()
-            thread.join(timeout=timeout_seconds)
-            
-            if thread.is_alive():
-                logger.warning(f"Analyzer {analyzer.name} timed out after {timeout_seconds}s")
-                # Thread will continue running but we move on
-            else:
-                elapsed = time.time() - start_time
-                logger.info(f"Analyzer {analyzer.name} completed in {elapsed:.2f}s")
-                
-                # Warn if approaching timeout
-                if elapsed > timeout_seconds * 0.8:
-                    logger.warning(f"Analyzer {analyzer.name} took {elapsed:.2f}s, approaching timeout of {timeout_seconds}s")
-                    
+            issues = wrapped_analyzer(ctx)
+            for issue in issues:
+                if not ctx.should_ignore_issue(issue.kind):
+                    issue_collection.add(issue)
         except Exception as e:
             logger.error(f"Analyzer {analyzer.name} failed: {e}")
             
@@ -962,6 +979,34 @@ def main():
         sys.stdout.write(f"Cache size: {stats['cache_size_mb']:.2f} MB\n")
         sys.stdout.write(f"Cached files: {stats['cached_files']}\n")
         sys.stdout.write(f"Parse time saved: {stats['bytes_saved_mb']:.2f} MB processed\n")
+    
+    # Show watchdog report if verbose
+    if args.watchdog_verbose:
+        watchdog_report = watchdog.get_execution_report()
+        sys.stdout.write("\nWatchdog Execution Report:\n")
+        sys.stdout.write("-" * 40 + "\n")
+        sys.stdout.write(f"Total executions: {watchdog_report['total_executions']}\n")
+        sys.stdout.write(f"Total duration: {watchdog_report['total_duration']:.2f}s\n")
+        sys.stdout.write(f"Timeouts: {watchdog_report['timeout_count']}\n")
+        sys.stdout.write(f"Errors: {watchdog_report['error_count']}\n")
+        
+        if watchdog_report['slowest_analyzers']:
+            sys.stdout.write("\nSlowest Analyzers:\n")
+            for slow in watchdog_report['slowest_analyzers']:
+                status = " (TIMEOUT)" if slow['timed_out'] else ""
+                sys.stdout.write(f"  - {slow['analyzer']}: {slow['duration']:.2f}s{status}\n")
+                if slow['file']:
+                    sys.stdout.write(f"    File: {slow['file']}\n")
+                if slow['function']:
+                    sys.stdout.write(f"    Function: {slow['function']}\n")
+        
+        if watchdog_report['most_problematic']:
+            sys.stdout.write("\nMost Problematic Analyzers:\n")
+            for prob in watchdog_report['most_problematic']:
+                sys.stdout.write(f"  - {prob['analyzer']}: {prob['problem_count']} issues\n")
+    
+    # Stop watchdog
+    watchdog.stop()
     
     # Flush cache before exiting
     if cache_enabled:
