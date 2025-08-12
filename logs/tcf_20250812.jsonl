@@ -310,3 +310,6 @@
 {"timestamp": "2025-08-12T14:00:16.846001Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
 {"timestamp": "2025-08-12T14:01:08.984311Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
 {"timestamp": "2025-08-12T14:01:52.836678Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T14:02:09.917894Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T14:05:29.413999Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T14:05:36.355224Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}

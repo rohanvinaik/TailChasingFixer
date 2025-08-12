@@ -22,7 +22,8 @@ from .plugins import load_analyzers
 from .core.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
 from .core.batch_processor import BatchProcessor, ProcessingStats
 from .core.resource_monitor import MemoryMonitor, AdaptiveConfig, AdaptiveProcessor
-from .cli import OutputManager, VerbosityLevel, OutputFormat, PerformanceProfiler
+from .cli.output_manager import OutputManager, VerbosityLevel, OutputFormat
+from .cli.profiler import PerformanceProfiler
 
 
 # Setup module logger
