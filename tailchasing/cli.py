@@ -438,6 +438,47 @@ def main():
         help="Disable batch processing progress bars"
     )
     
+    # Fix planner arguments
+    parser.add_argument(
+        "--generate-fix-plan",
+        action="store_true",
+        help="Generate a detailed fix plan for detected issues"
+    )
+    
+    parser.add_argument(
+        "--fix-plan-output",
+        type=Path,
+        default=Path("fix_plan.py"),
+        help="Output file for fix plan script (default: fix_plan.py)"
+    )
+    
+    parser.add_argument(
+        "--interactive-fixes",
+        action="store_true",
+        help="Interactively review each fix before approving"
+    )
+    
+    parser.add_argument(
+        "--fix-confidence-threshold",
+        type=float,
+        default=0.5,
+        metavar="THRESHOLD",
+        help="Minimum confidence threshold for auto-approving fixes (0.0-1.0, default: 0.5)"
+    )
+    
+    parser.add_argument(
+        "--backup-dir",
+        type=Path,
+        default=Path(".tailchasing_backups"),
+        help="Directory for backups before applying fixes (default: .tailchasing_backups)"
+    )
+    
+    parser.add_argument(
+        "--dry-run-fixes",
+        action="store_true",
+        help="Generate fix plan without executing (dry run mode)"
+    )
+    
     args = parser.parse_args()
     
     # Determine verbosity level
@@ -1119,6 +1160,83 @@ def main():
         except Exception as e:
             logger.error(f"Failed to generate fix script: {e}")
             
+    # Generate fix plan if requested
+    if args.generate_fix_plan and issue_collection.issues:
+        sys.stdout.write("\nGenerating Fix Plan:\n")
+        sys.stdout.write("-" * 40 + "\n")
+        
+        try:
+            from .core.fix_planner import FixPlanner, InteractiveFixReviewer
+            
+            # Create fix planner
+            fix_planner = FixPlanner(
+                root_dir=root_path,
+                backup_dir=args.backup_dir,
+                interactive=args.interactive_fixes,
+                dry_run=args.dry_run_fixes
+            )
+            
+            # Create fix plan
+            fix_plan = fix_planner.create_fix_plan(issue_collection.issues)
+            
+            # Show plan summary
+            sys.stdout.write(fix_plan.get_summary())
+            sys.stdout.write("\n")
+            
+            # Interactive review if requested
+            if args.interactive_fixes:
+                reviewer = InteractiveFixReviewer(fix_plan)
+                approved_actions, rejected_actions = reviewer.review()
+                
+                # Update plan with only approved actions
+                fix_plan.actions = approved_actions
+                sys.stdout.write(f"\nProceeding with {len(approved_actions)} approved actions\n")
+            else:
+                # Auto-approve based on confidence threshold
+                approved_actions = [
+                    action for action in fix_plan.actions
+                    if action.confidence >= args.fix_confidence_threshold
+                ]
+                rejected_actions = [
+                    action for action in fix_plan.actions
+                    if action.confidence < args.fix_confidence_threshold
+                ]
+                
+                if rejected_actions:
+                    sys.stdout.write(f"\nAuto-rejected {len(rejected_actions)} low-confidence actions\n")
+                    sys.stdout.write(f"(below threshold {args.fix_confidence_threshold:.1%})\n")
+                
+                fix_plan.actions = approved_actions
+            
+            # Generate fix script if we have actions
+            if fix_plan.actions:
+                # Generate executable script
+                fix_script = fix_plan.get_executable_script()
+                
+                # Write to file
+                args.fix_plan_output.write_text(fix_script)
+                args.fix_plan_output.chmod(0o755)  # Make executable
+                
+                sys.stdout.write(f"\nGenerated fix script: {args.fix_plan_output}\n")
+                
+                if args.dry_run_fixes:
+                    sys.stdout.write("DRY RUN MODE - Script will preview changes without applying\n")
+                    sys.stdout.write(f"To preview: python {args.fix_plan_output}\n")
+                else:
+                    sys.stdout.write(f"To review: cat {args.fix_plan_output}\n")
+                    sys.stdout.write(f"To apply fixes: python {args.fix_plan_output}\n")
+                    sys.stdout.write(f"\n⚠️  WARNING: Review the script carefully before executing!\n")
+                    sys.stdout.write(f"Backups will be saved to: {fix_plan.backup_dir}\n")
+            else:
+                sys.stdout.write("\nNo actions to perform after filtering\n")
+                
+        except ImportError:
+            logger.warning("Fix planner module not available")
+            sys.stdout.write("\nNote: Fix planner module not available.\n")
+        except Exception as e:
+            logger.error(f"Failed to generate fix plan: {e}")
+            sys.stderr.write(f"\nError generating fix plan: {e}\n")
+    
     # Generate missing symbol stubs if requested
     if args.generate_missing_stubs:
         sys.stdout.write("\nGenerating Missing Symbol Stubs:\n")
