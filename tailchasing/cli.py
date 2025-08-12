@@ -16,6 +16,7 @@ from .core.issues import IssueCollection
 from .core.reporting import Reporter
 from .core.scoring import RiskScorer
 from .analyzers.base import AnalysisContext
+from .analyzers.root_cause_clustering import RootCauseClusterer
 from .plugins import load_analyzers
 
 
@@ -96,6 +97,20 @@ def main():
         "--exclude",
         action="append",
         help="Additional paths to exclude (can be specified multiple times)"
+    )
+    
+    parser.add_argument(
+        "--cluster-root-causes",
+        action="store_true",
+        help="Cluster issues by root cause using AST analysis"
+    )
+    
+    parser.add_argument(
+        "--cluster-threshold",
+        type=float,
+        default=0.7,
+        metavar="THRESHOLD",
+        help="Similarity threshold for clustering (0.0-1.0, default: 0.7)"
     )
     
     parser.add_argument(
@@ -238,6 +253,44 @@ def main():
             
     # Deduplicate issues
     issue_collection.deduplicate()
+    
+    # Perform root cause clustering if requested
+    if args.cluster_root_causes and issue_collection.issues:
+        logger.info("Performing root cause clustering analysis")
+        clusterer = RootCauseClusterer(
+            similarity_threshold=args.cluster_threshold,
+            min_cluster_size=2
+        )
+        clusters = clusterer.cluster(issue_collection.issues)
+        
+        if clusters:
+            sys.stdout.write(f"\n{'=' * 60}\n")
+            sys.stdout.write("ROOT CAUSE CLUSTERING ANALYSIS\n")
+            sys.stdout.write(f"{'=' * 60}\n")
+            sys.stdout.write(f"Found {len(clusters)} root cause clusters\n")
+            sys.stdout.write(f"Clustered {sum(c.size for c in clusters)} of {len(issue_collection.issues)} issues\n\n")
+            
+            # Show top clusters
+            sorted_clusters = sorted(clusters, key=lambda c: (c.severity, c.size), reverse=True)
+            for cluster in sorted_clusters[:5]:
+                sys.stdout.write(f"Cluster {cluster.cluster_id}: {cluster.size} issues (severity {cluster.severity})\n")
+                sys.stdout.write(f"  Root Cause: {cluster.root_cause_guess}\n")
+                sys.stdout.write(f"  Confidence: {cluster.confidence:.1%}\n")
+                sys.stdout.write(f"  Fix Playbook: {cluster.fix_playbook_id}\n")
+                sys.stdout.write(f"  Locations: {', '.join(f'{f}:{l}' for f, l in cluster.locations[:3])}")
+                if len(cluster.locations) > 3:
+                    sys.stdout.write(f" ... +{len(cluster.locations) - 3} more")
+                sys.stdout.write("\n\n")
+            
+            if len(clusters) > 5:
+                sys.stdout.write(f"... and {len(clusters) - 5} more clusters\n")
+            
+            # Generate detailed cluster report if output directory specified
+            if args.output:
+                cluster_report = clusterer.generate_report(clusters)
+                cluster_path = args.output / "root_cause_clusters.txt"
+                cluster_path.write_text(cluster_report)
+                sys.stdout.write(f"\nDetailed cluster report saved to: {cluster_path}\n")
     
     # Generate reports
     reporter = Reporter(config.to_dict())
