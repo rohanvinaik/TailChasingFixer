@@ -8,7 +8,7 @@ import ast
 import tempfile
 import logging
 from pathlib import Path
-from typing import List, Dict, Optional, Any, Set
+from typing import List, Dict, Optional, Any, Set, Tuple
 from collections import defaultdict
 
 from ..analyzers.base import Analyzer, AnalysisContext
