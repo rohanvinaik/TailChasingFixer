@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-08-12 07:17:49.871714",
+  "stage_name": "quarantine_check",
+  "completed_stages": [],
+  "completed_batches": {},
+  "issues_found": {},
+  "processing_stats": {
+    "start_time": 1754997469.8704078,
+    "end_time": null,
+    "total_files": 3,
+    "processed_files": 0,
+    "skipped_files": 0,
+    "quarantined_files": 0,
+    "total_batches": 2,
+    "processed_batches": 0,
+    "issues_by_stage": {},
+    "stage_timings": {},
+    "current_stage": "quarantine_check",
+    "current_batch": 0,
+    "estimated_remaining": null
+  },
+  "total_files": 3,
+  "processed_files": 0
+}

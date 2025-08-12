@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-08-12 07:17:49.893653",
+  "stage_name": "completed",
+  "completed_stages": [
+    "quarantine_check",
+    "duplicate_detection",
+    "placeholders",
+    "missing_symbols",
+    "circular_imports"
+  ],
+  "completed_batches": {},
+  "issues_found": {
+    "quarantine_check": [],
+    "duplicate_detection": [],
+    "missing_symbols": [],
+    "circular_imports": [],
+    "placeholders": []
+  },
+  "processing_stats": {
+    "start_time": 1754997469.8933089,
+    "end_time": 1754997469.893652,
+    "total_files": 0,
+    "processed_files": 0,
+    "skipped_files": 0,
+    "quarantined_files": 0,
+    "total_batches": 0,
+    "processed_batches": 0,
+    "issues_by_stage": {
+      "quarantine_check": 0
+    },
+    "stage_timings": {
+      "quarantine_check": 0.0
+    },
+    "current_stage": "placeholders",
+    "current_batch": null,
+    "estimated_remaining": null
+  },
+  "total_files": 0,
+  "processed_files": 0
+}

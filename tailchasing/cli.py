@@ -20,6 +20,7 @@ from .analyzers.root_cause_clustering import RootCauseClusterer
 from .core.issue_provenance import IssueProvenanceTracker
 from .plugins import load_analyzers
 from .core.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
+from .core.batch_processor import BatchProcessor, ProcessingStats
 
 
 # Setup module logger
@@ -338,6 +339,55 @@ def main():
         help="Output file for missing symbol stubs (default: missing_symbols.py)"
     )
     
+    # Batch processing arguments
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=50,
+        metavar="N",
+        help="Number of files per batch (default: 50)"
+    )
+    
+    parser.add_argument(
+        "--use-batching",
+        action="store_true",
+        help="Enable batch processing for large codebases"
+    )
+    
+    parser.add_argument(
+        "--resume-from",
+        type=str,
+        metavar="STAGE",
+        help="Resume processing from a specific stage"
+    )
+    
+    parser.add_argument(
+        "--skip-stages",
+        nargs="+",
+        help="Skip specific processing stages"
+    )
+    
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        default=Path(".tailchasing_checkpoints"),
+        help="Directory for checkpoint files (default: .tailchasing_checkpoints)"
+    )
+    
+    parser.add_argument(
+        "--show-batch-progress",
+        action="store_true",
+        default=True,
+        help="Show progress bars during batch processing (default: enabled)"
+    )
+    
+    parser.add_argument(
+        "--no-batch-progress",
+        action="store_false",
+        dest="show_batch_progress",
+        help="Disable batch processing progress bars"
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -533,87 +583,122 @@ def main():
     
     issue_collection = IssueCollection()
     
-    # Initialize watchdog
-    watchdog_config = WatchdogConfig(
-        analyzer_timeout=args.analyzer_timeout,
-        heartbeat_interval=args.heartbeat_interval,
-        heartbeat_timeout_multiplier=3.0,
-        enable_fallback=not args.disable_fallback,
-        verbose=args.watchdog_verbose
-    )
-    watchdog = AnalyzerWatchdog(watchdog_config)
-    watchdog.start()
+    # Check if batch processing is enabled for large codebases
+    use_batching = args.use_batching or len(files) > 500  # Auto-enable for large codebases
     
-    # Check for bail-out conditions for semantic analysis
-    file_count = len(files)
-    resource_limits = config.get("resource_limits", {})
-    semantic_file_limit = resource_limits.get("semantic_analysis_file_limit", 1000)
-    semantic_duplicate_limit = resource_limits.get("semantic_analysis_duplicate_limit", 500)
-    
-    skip_semantic = False
-    duplicate_count = 0
-    
-    if not args.force_semantic:
-        # Count duplicates if needed
-        for analyzer in analyzers:
-            if analyzer.name == 'duplicates':
-                try:
-                    temp_issues = list(analyzer.run(ctx))
-                    duplicate_count = len(temp_issues)
-                    # Add issues to collection
-                    for issue in temp_issues:
-                        if not ctx.should_ignore_issue(issue.kind):
-                            issue_collection.add(issue)
-                except Exception as e:
-                    logger.error(f"Failed to count duplicates: {e}")
-                break
+    if use_batching:
+        logger.info(f"Using batch processing for {len(files)} files")
         
-        # Check bail-out conditions
-        if file_count > semantic_file_limit:
-            logger.warning(
-                f"Skipping semantic analysis: {file_count} files exceeds limit of {semantic_file_limit}. "
-                f"Use --force-semantic to override."
-            )
-            skip_semantic = True
-        elif duplicate_count > semantic_duplicate_limit:
-            logger.warning(
-                f"Skipping semantic analysis: {duplicate_count} duplicates exceeds limit of {semantic_duplicate_limit}. "
-                f"Use --force-semantic to override."
-            )
-            skip_semantic = True
-    
-    for analyzer in analyzers:
-        # Skip semantic analyzers if bail-out triggered
-        if skip_semantic and analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
-            logger.info(f"Skipping {analyzer.name} analyzer due to resource limits")
-            continue
-            
-        # Skip duplicates analyzer if already run
-        if analyzer.name == 'duplicates' and duplicate_count > 0:
-            continue
-            
-        logger.info(f"Running {analyzer.name} analyzer")
-        
-        # Set up fallback for semantic analyzers
-        fallback_func = None
-        if analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
-            fallback_func = lambda *args, **kwargs: SemanticAnalysisFallback.tfidf_fallback(*args, **kwargs)
-        
-        # Wrap analyzer with watchdog
-        wrapped_analyzer = watchdog.wrap_analyzer(
-            analyzer.name,
-            analyzer.run,
-            fallback_func
+        # Create batch processor
+        batch_processor = BatchProcessor(
+            batch_size=args.batch_size,
+            checkpoint_dir=args.checkpoint_dir if args.resume_from else None,
+            show_progress=args.show_batch_progress
         )
         
-        # Execute analyzer with monitoring
-        try:
-            issues = wrapped_analyzer(ctx)
-            for issue in issues:
-                if not ctx.should_ignore_issue(issue.kind):
-                    issue_collection.add(issue)
-        except Exception as e:
-            logger.error(f"Analyzer {analyzer.name} failed: {e}")
+        # Convert file paths to Path objects
+        file_paths = [Path(f) for f in files]
+        
+        # Process in batches
+        issue_collection = batch_processor.process(
+            files=file_paths,
+            context=ctx,
+            analyzers=analyzers,
+            resume_from=args.resume_from,
+            skip_stages=args.skip_stages
+        )
+        
+        # Get statistics for reporting
+        batch_stats = batch_processor.get_statistics()
+        
+        # Skip normal processing
+        skip_normal_processing = True
+    else:
+        skip_normal_processing = False
+        
+        # Initialize watchdog for normal processing
+        watchdog_config = WatchdogConfig(
+            analyzer_timeout=args.analyzer_timeout,
+            heartbeat_interval=args.heartbeat_interval,
+            heartbeat_timeout_multiplier=3.0,
+            enable_fallback=not args.disable_fallback,
+            verbose=args.watchdog_verbose
+        )
+        watchdog = AnalyzerWatchdog(watchdog_config)
+        watchdog.start()
+    
+    # Normal processing (non-batch mode)
+    if not skip_normal_processing:
+        # Check for bail-out conditions for semantic analysis
+        file_count = len(files)
+        resource_limits = config.get("resource_limits", {})
+        semantic_file_limit = resource_limits.get("semantic_analysis_file_limit", 1000)
+        semantic_duplicate_limit = resource_limits.get("semantic_analysis_duplicate_limit", 500)
+        
+        skip_semantic = False
+        duplicate_count = 0
+    
+        if not args.force_semantic:
+            # Count duplicates if needed
+            for analyzer in analyzers:
+                if analyzer.name == 'duplicates':
+                    try:
+                        temp_issues = list(analyzer.run(ctx))
+                        duplicate_count = len(temp_issues)
+                        # Add issues to collection
+                        for issue in temp_issues:
+                            if not ctx.should_ignore_issue(issue.kind):
+                                issue_collection.add(issue)
+                    except Exception as e:
+                        logger.error(f"Failed to count duplicates: {e}")
+                    break
+            
+            # Check bail-out conditions
+            if file_count > semantic_file_limit:
+                logger.warning(
+                    f"Skipping semantic analysis: {file_count} files exceeds limit of {semantic_file_limit}. "
+                    f"Use --force-semantic to override."
+                )
+                skip_semantic = True
+            elif duplicate_count > semantic_duplicate_limit:
+                logger.warning(
+                    f"Skipping semantic analysis: {duplicate_count} duplicates exceeds limit of {semantic_duplicate_limit}. "
+                    f"Use --force-semantic to override."
+                )
+                skip_semantic = True
+        
+        for analyzer in analyzers:
+            # Skip semantic analyzers if bail-out triggered
+            if skip_semantic and analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
+                logger.info(f"Skipping {analyzer.name} analyzer due to resource limits")
+                continue
+                
+            # Skip duplicates analyzer if already run
+            if analyzer.name == 'duplicates' and duplicate_count > 0:
+                continue
+                
+            logger.info(f"Running {analyzer.name} analyzer")
+            
+            # Set up fallback for semantic analyzers
+            fallback_func = None
+            if analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
+                fallback_func = lambda *args, **kwargs: SemanticAnalysisFallback.tfidf_fallback(*args, **kwargs)
+            
+            # Wrap analyzer with watchdog
+            wrapped_analyzer = watchdog.wrap_analyzer(
+                analyzer.name,
+                analyzer.run,
+                fallback_func
+            )
+            
+            # Execute analyzer with monitoring
+            try:
+                issues = wrapped_analyzer(ctx)
+                for issue in issues:
+                    if not ctx.should_ignore_issue(issue.kind):
+                        issue_collection.add(issue)
+            except Exception as e:
+                logger.error(f"Analyzer {analyzer.name} failed: {e}")
             
     # Deduplicate issues
     issue_collection.deduplicate()
@@ -980,8 +1065,8 @@ def main():
         sys.stdout.write(f"Cached files: {stats['cached_files']}\n")
         sys.stdout.write(f"Parse time saved: {stats['bytes_saved_mb']:.2f} MB processed\n")
     
-    # Show watchdog report if verbose
-    if args.watchdog_verbose:
+    # Show watchdog report if verbose (for non-batch mode)
+    if args.watchdog_verbose and not use_batching:
         watchdog_report = watchdog.get_execution_report()
         sys.stdout.write("\nWatchdog Execution Report:\n")
         sys.stdout.write("-" * 40 + "\n")
@@ -1005,8 +1090,14 @@ def main():
             for prob in watchdog_report['most_problematic']:
                 sys.stdout.write(f"  - {prob['analyzer']}: {prob['problem_count']} issues\n")
     
-    # Stop watchdog
-    watchdog.stop()
+    # Show batch processing report if used
+    if use_batching and args.show_batch_progress:
+        report = batch_processor.generate_report()
+        sys.stdout.write("\n" + report + "\n")
+    
+    # Stop watchdog (for non-batch mode)
+    if not use_batching:
+        watchdog.stop()
     
     # Flush cache before exiting
     if cache_enabled:
