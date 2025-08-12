@@ -29,6 +29,7 @@ except ImportError:
 
 from ..base import BaseAnalyzer, AnalysisContext
 from ...core.issues import Issue
+from ...core.utils import safe_get_lineno, safe_get_end_lineno
 from .pattern_types import TailChasingPattern, PatternEvidence, PatternSeverity
 
 logger = logging.getLogger(__name__)
@@ -306,8 +307,8 @@ class HallucinationCascadeDetector(BaseAnalyzer):
                 name=name,
                 file_path=file_path,
                 component_type=component_type,
-                line_number=node.lineno,
-                end_line_number=getattr(node, 'end_lineno', node.lineno)
+                line_number=safe_get_lineno(node),
+                end_line_number=safe_get_end_lineno(node, safe_get_lineno(node))
             )
             
             # Analyze the component for additional information
@@ -431,7 +432,7 @@ class HallucinationCascadeDetector(BaseAnalyzer):
             target_node = None
             for node in ast.walk(tree):
                 if isinstance(node, (ast.ClassDef, ast.FunctionDef)):
-                    if node.name in component.name and node.lineno == component.line_number:
+                    if node.name in component.name and safe_get_lineno(node) == component.line_number:
                         target_node = node
                         break
             

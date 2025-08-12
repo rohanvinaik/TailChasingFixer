@@ -9,6 +9,7 @@ import re
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno, safe_get_col_offset
 
 
 class MissingSymbolAnalyzer(BaseAnalyzer):
@@ -159,7 +160,7 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
                             message=f"Import from non-existent module '{node.module}'",
                             severity=3,
                             file=file,
-                            line=node.lineno,
+                            line=safe_get_lineno(node),
                             symbol=node.module,
                             evidence={
                                 "imported_names": [alias.name for alias in node.names],
@@ -251,7 +252,7 @@ class SymbolCollector(ast.NodeVisitor):
         self.symbols[node.name].append({
             "file": self.file,
             "kind": "function",
-            "line": node.lineno,
+            "line": safe_get_lineno(node, 0),
             "full_name": name
         })
         
@@ -266,7 +267,7 @@ class SymbolCollector(ast.NodeVisitor):
         self.symbols[node.name].append({
             "file": self.file,
             "kind": "class",
-            "line": node.lineno
+            "line": safe_get_lineno(node)
         })
         
         old_class = self.current_class
@@ -281,7 +282,7 @@ class SymbolCollector(ast.NodeVisitor):
                 self.symbols[target.id].append({
                     "file": self.file,
                     "kind": "variable",
-                    "line": node.lineno
+                    "line": safe_get_lineno(node)
                 })
                 
         self.generic_visit(node)
@@ -365,8 +366,8 @@ class ReferenceVisitor(ast.NodeVisitor):
             if not name_defined:
                 self.missing_references.append({
                     "name": node.id,
-                    "line": node.lineno,
-                    "column": node.col_offset,
+                    "line": safe_get_lineno(node, 0),
+                    "column": safe_get_col_offset(node),
                     "node_type": "name",
                     "context": self.current_function or "<module>",
                     "file": self.file
@@ -397,8 +398,8 @@ class ReferenceVisitor(ast.NodeVisitor):
             if not func_defined:
                 self.missing_references.append({
                     "name": node.func.id,
-                    "line": node.lineno,
-                    "column": node.col_offset,
+                    "line": safe_get_lineno(node, 0),
+                    "column": safe_get_col_offset(node),
                     "node_type": "call",
                     "context": self.current_function or "<module>",
                     "file": self.file

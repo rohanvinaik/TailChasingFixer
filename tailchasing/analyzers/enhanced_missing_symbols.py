@@ -15,6 +15,7 @@ import difflib
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 
 
 @dataclass
@@ -625,7 +626,7 @@ class EnhancedReferenceVisitor(ast.NodeVisitor):
             if not func_defined:
                 call_info = {
                     "name": node.func.id,
-                    "line": node.lineno,
+                    "line": safe_get_lineno(node),
                     "column": node.col_offset,
                     "file": self.file,
                     "context": self.current_function or "<module>",
@@ -642,7 +643,7 @@ class EnhancedReferenceVisitor(ast.NodeVisitor):
                 # Also add to missing references
                 self.missing_references.append({
                     "name": node.func.id,
-                    "line": node.lineno,
+                    "line": safe_get_lineno(node),
                     "column": node.col_offset,
                     "node_type": "call",
                     "context": self.current_function or "<module>",
@@ -661,7 +662,7 @@ class EnhancedReferenceVisitor(ast.NodeVisitor):
             if not self._is_defined(node.id):
                 self.missing_references.append({
                     "name": node.id,
-                    "line": node.lineno,
+                    "line": safe_get_lineno(node),
                     "column": node.col_offset,
                     "node_type": "name",
                     "context": self.current_function or "<module>",
@@ -696,7 +697,7 @@ class SymbolCollector(ast.NodeVisitor):
         self.symbols[node.name].append({
             "file": self.file,
             "kind": "function",
-            "line": node.lineno
+            "line": safe_get_lineno(node)
         })
         self.generic_visit(node)
         
@@ -709,7 +710,7 @@ class SymbolCollector(ast.NodeVisitor):
         self.symbols[node.name].append({
             "file": self.file,
             "kind": "class",
-            "line": node.lineno
+            "line": safe_get_lineno(node)
         })
         
         old_class = self.current_class

@@ -12,6 +12,7 @@ from enum import Enum
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 
 
 class PlaceholderSeverity(Enum):
@@ -544,7 +545,7 @@ class EnhancedPlaceholderVisitor(ast.NodeVisitor):
             message=f"{pattern.description} in {symbol}",
             severity=severity_int,
             file=self.file,
-            line=node.lineno,
+            line=safe_get_lineno(node),
             end_line=node.end_lineno,
             symbol=symbol,
             evidence=evidence,

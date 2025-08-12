@@ -185,9 +185,17 @@ class SemanticHVAnalyzer(Analyzer):
         """Find semantically similar functions."""
         issues = []
         
-        # Get all similar pairs with a reasonable limit to prevent hanging
+        # Get all similar pairs with a very strict limit to prevent hanging
         config = getattr(self, '_config', {})
-        max_pairs = config.get('max_pairs_to_analyze', 50)
+        max_pairs = min(config.get('max_pairs_to_analyze', 20), 20)  # Hard limit of 20
+        
+        # Also limit the number of functions we even consider
+        num_functions = len(self.index.entries)
+        if num_functions > 500:
+            self.logger.warning(f"Large codebase ({num_functions} functions), skipping semantic analysis to prevent timeout")
+            return issues
+        
+        self.logger.info(f"Finding semantic duplicates for {num_functions} functions (max {max_pairs} pairs)")
         pairs = self.index.find_all_similar_pairs(limit=max_pairs)
         
         # Apply FDR correction

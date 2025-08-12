@@ -405,7 +405,7 @@ class SemanticAnalysisFallback:
         logger.info("Falling back to TF-IDF analysis")
         
         try:
-            from ..analyzers.semantic_duplicate import SemanticDuplicateAnalyzer
+            from ..analyzers.advanced.enhanced_semantic import EnhancedSemanticAnalyzer as SemanticDuplicateAnalyzer
             from sklearn.feature_extraction.text import TfidfVectorizer
             import numpy as np
             
@@ -424,7 +424,7 @@ class SemanticAnalysisFallback:
                             functions.append({
                                 'name': node.name,
                                 'file': file_path,
-                                'line': node.lineno,
+                                'line': getattr(node, 'lineno', 1),
                                 'text': func_text
                             })
                         except:

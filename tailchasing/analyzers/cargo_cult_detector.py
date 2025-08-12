@@ -12,6 +12,7 @@ from pathlib import Path
 from collections import defaultdict
 
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 from .base import Analyzer, AnalysisContext
 
 
@@ -96,7 +97,7 @@ class CargoCultDetector(Analyzer):
                     isinstance(stmt.func.value.func, ast.Name) and
                     stmt.func.value.func.id == "super"):
                     has_super_init = True
-                    super_line = stmt.lineno
+                    super_line = safe_get_lineno(stmt)
                     break
         
         if not has_super_init:
@@ -338,7 +339,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                     message=f"Class {cls.name} explicitly inherits from 'object' (not needed in Python 3)",
                     severity=1,
                     file=filepath,
-                    line=cls.lineno,
+                    line=safe_get_lineno(cls),
                     symbol=cls.name,
                     evidence={
                         "pattern": "cargo_cult",
@@ -381,7 +382,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                         message=f"Trivial getter/setter for '{prop_name}' in {cls.name}",
                         severity=2,
                         file=filepath,
-                        line=methods["getter"].lineno,
+                        line=safe_get_lineno(methods["getter"]),
                         symbol=f"{cls.name}.{prop_name}",
                         evidence={
                             "pattern": "cargo_cult",
@@ -420,7 +421,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                 message=f"Class {cls.name} has single method '{methods[0].name}' that doesn't use self",
                 severity=2,
                 file=filepath,
-                line=cls.lineno,
+                line=safe_get_lineno(cls),
                 symbol=cls.name,
                 evidence={
                     "pattern": "cargo_cult",
@@ -496,7 +497,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                         issues.append(self._create_cargo_cult_issue(
                             "redundant_docstring",
                             f"Docstring just repeats function name '{name}'",
-                            filepath, node.lineno, name,
+                            filepath, safe_get_lineno(node), name,
                             "Write meaningful docstrings that explain purpose and behavior"
                         ))
                     
@@ -514,7 +515,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                         issues.append(self._create_cargo_cult_issue(
                             "generic_docstring",
                             f"Generic placeholder docstring in '{name}'",
-                            filepath, node.lineno, name,
+                            filepath, safe_get_lineno(node), name,
                             "Replace with specific documentation or remove if obvious"
                         ))
                     
@@ -527,7 +528,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                             issues.append(self._create_cargo_cult_issue(
                                 "mismatched_docstring",
                                 f"Docstring references non-existent parameters: {phantom_params}",
-                                filepath, node.lineno, name,
+                                filepath, safe_get_lineno(node), name,
                                 "Update docstring to match actual function signature"
                             ))
         
@@ -593,7 +594,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                             issues.append(self._create_cargo_cult_issue(
                                 "unnecessary_factory",
                                 f"Factory class {node.name} only creates one type",
-                                filepath, node.lineno, node.name,
+                                filepath, safe_get_lineno(node), node.name,
                                 "Consider direct instantiation instead of factory pattern"
                             ))
         
@@ -614,7 +615,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                         message=f"Trivial getters/setters for '{prop_name}' add no value",
                         severity=2,
                         file=filepath,
-                        line=methods[0].lineno,
+                        line=safe_get_lineno(methods[0]),
                         evidence={'property': prop_name, 'pattern': 'cargo_cult'},
                         suggestions=[
                             "Use direct attribute access or @property decorator",
@@ -650,7 +651,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                         issues.append(self._create_cargo_cult_issue(
                             "broken_singleton",
                             f"Singleton pattern in {node.name} doesn't prevent multiple instances",
-                            filepath, node.lineno, node.name,
+                            filepath, safe_get_lineno(node), node.name,
                             "Implement proper instance caching in __new__ or use a decorator"
                         ))
                 
@@ -664,7 +665,7 @@ class EnhancedCargoCultDetector(CargoCultDetector):
                         issues.append(self._create_cargo_cult_issue(
                             "incomplete_observer",
                             f"Observer pattern in {node.name} missing notification mechanism",
-                            filepath, node.lineno, node.name,
+                            filepath, safe_get_lineno(node), node.name,
                             "Add update/notify method to complete observer pattern"
                         ))
         

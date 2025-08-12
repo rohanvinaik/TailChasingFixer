@@ -11,6 +11,7 @@ Features:
 - Advanced comparison and analysis tools
 """
 
+import ast
 import typer
 import sys
 import json

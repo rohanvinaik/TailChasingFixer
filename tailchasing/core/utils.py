@@ -1,5 +1,6 @@
 """Utility functions for the tail-chasing detector."""
 
+import ast
 import os
 from pathlib import Path
 from typing import Optional, Union
@@ -143,3 +144,55 @@ def normalize_module_name(name: str) -> str:
     name = name.replace("-", "_")
     
     return name.lower()
+
+
+def safe_get_lineno(node: ast.AST, default: int = 1) -> int:
+    """Safely get line number from AST node.
+    
+    Args:
+        node: AST node
+        default: Default value if lineno is not available
+        
+    Returns:
+        Line number or default value
+    """
+    return getattr(node, 'lineno', default)
+
+
+def safe_get_end_lineno(node: ast.AST, default: Optional[int] = None) -> Optional[int]:
+    """Safely get end line number from AST node.
+    
+    Args:
+        node: AST node
+        default: Default value if end_lineno is not available
+        
+    Returns:
+        End line number or default value
+    """
+    return getattr(node, 'end_lineno', default)
+
+
+def safe_get_col_offset(node: ast.AST, default: int = 0) -> int:
+    """Safely get column offset from AST node.
+    
+    Args:
+        node: AST node
+        default: Default value if col_offset is not available
+        
+    Returns:
+        Column offset or default value
+    """
+    return getattr(node, 'col_offset', default)
+
+
+def safe_get_end_col_offset(node: ast.AST, default: Optional[int] = None) -> Optional[int]:
+    """Safely get end column offset from AST node.
+    
+    Args:
+        node: AST node
+        default: Default value if end_col_offset is not available
+        
+    Returns:
+        End column offset or default value
+    """
+    return getattr(node, 'end_col_offset', default)

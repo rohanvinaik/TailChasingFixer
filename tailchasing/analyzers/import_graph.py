@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 
 
 class ImportGraphAnalyzer(BaseAnalyzer):
@@ -201,7 +202,7 @@ class ImportGraphAnalyzer(BaseAnalyzer):
                                 if alias.name == next_module:
                                     locations.append({
                                         "file": file,
-                                        "line": node.lineno,
+                                        "line": safe_get_lineno(node),
                                         "from_module": module,
                                         "to_module": next_module
                                     })
@@ -210,7 +211,7 @@ class ImportGraphAnalyzer(BaseAnalyzer):
                             if node.module == next_module:
                                 locations.append({
                                     "file": file,
-                                    "line": node.lineno,
+                                    "line": safe_get_lineno(node),
                                     "from_module": module,
                                     "to_module": next_module
                                 })

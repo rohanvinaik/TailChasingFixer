@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple, Set, Optional
 from collections import defaultdict
 import os
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 from .base import AnalysisContext
 from ..semantic.encoder import encode_function
 from ..semantic.similarity import compute_similarity
@@ -62,7 +63,7 @@ class CrossFileDuplicationAnalyzer:
                     # Store function metadata
                     self.function_index[func_id] = {
                         'file': file,
-                        'line': node.lineno,
+                        'line': safe_get_lineno(node),
                         'name': node.name,
                         'module': module_name,
                         'ast': node,

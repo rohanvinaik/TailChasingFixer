@@ -5,6 +5,7 @@ from typing import List, Optional, Iterable
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 
 
 class PlaceholderAnalyzer(BaseAnalyzer):
@@ -201,7 +202,7 @@ class PlaceholderVisitor(ast.NodeVisitor):
             message=f"{description}: {symbol}",
             severity=severity,
             file=self.file,
-            line=node.lineno,
+            line=safe_get_lineno(node),
             end_line=node.end_lineno,
             symbol=symbol,
             evidence={

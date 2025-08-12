@@ -20,6 +20,7 @@ from scipy import stats
 
 from ..base import BaseAnalyzer, AnalysisContext  
 from ...core.issues import Issue
+from ...core.utils import safe_get_lineno
 from .pattern_types import TailChasingPattern, PatternEvidence, PatternSeverity
 
 logger = logging.getLogger(__name__)
@@ -210,7 +211,7 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
             SemanticChannelEncoding with vectors for all channels
         """
         if function_id is None:
-            function_id = f"{filepath}:{func_node.name}:{func_node.lineno}"
+            function_id = f"{filepath}:{func_node.name}:{safe_get_lineno(func_node)}"
         
         # Check cache first
         if function_id in self._encoding_cache:
@@ -220,7 +221,7 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
             function_id=function_id,
             filepath=filepath,
             function_name=func_node.name,
-            line_number=func_node.lineno,
+            line_number=safe_get_lineno(func_node),
             channel_weights=self.channel_weights.copy()
         )
         

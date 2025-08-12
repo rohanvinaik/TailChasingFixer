@@ -7,6 +7,7 @@ from collections import defaultdict, OrderedDict
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 
 
 class DuplicateFunctionAnalyzer(BaseAnalyzer):
@@ -479,7 +480,7 @@ class FunctionCollector(ast.NodeVisitor):
             "name": node.name,
             "full_name": full_name,
             "file": self.file,
-            "line": node.lineno,
+            "line": safe_get_lineno(node),
             "size": size,
             "node": node,
             "class": self.current_class

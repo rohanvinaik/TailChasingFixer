@@ -2,14 +2,19 @@
 Base classes and common functionality for fix strategies.
 
 This module contains the base classes, protocols, and data structures
-used by all fix strategies.
+used by all fix strategies. Consolidates duplicate patterns from fix_strategies.py:
+- 5 duplicate __init__ method patterns
+- 6 duplicate get_dependencies implementations  
+- Duplicate validation test generation functions
+- Common time estimation and risk assessment utilities
 """
 
 import ast
 import re
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Protocol, Tuple, Set
+from typing import List, Dict, Any, Optional, Protocol, Tuple, Set, Union
 from enum import Enum
 import logging
 
@@ -35,6 +40,60 @@ class Action:
     line_end: Optional[int] = None
     backup_content: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class FixOutcome:
+    """Represents the outcome of applying a fix."""
+    success: bool
+    confidence: float
+    message: Optional[str] = None
+    execution_time: Optional[float] = None
+    validation_passed: Optional[bool] = None
+    error_message: Optional[str] = None
+    rollback_performed: bool = False
+
+
+@dataclass
+class StrategyRanking:
+    """Represents a ranking for a strategy for a given issue."""
+    primary_strategy: Any  # BaseFixStrategy
+    confidence: float
+    risk_level: RiskLevel
+    estimated_time: float
+    success_rate: float
+    alternatives: List[Any] = field(default_factory=list)  # List[BaseFixStrategy]
+    dependencies_satisfied: bool = True
+    
+    @property
+    def confidence_score(self) -> float:
+        """Alias for confidence (for test compatibility)."""
+        return self.confidence
+    
+    @property
+    def estimated_risk(self) -> RiskLevel:
+        """Alias for risk_level (for test compatibility)."""
+        return self.risk_level
+
+
+@dataclass
+class FixAttempt:
+    """Represents an attempt to fix an issue."""
+    issue: Issue
+    strategy: Any  # FixStrategy
+    proposed_patch: "Patch"
+    timestamp: float
+    outcome: Optional[FixOutcome] = None
+    duration: Optional[float] = None
+
+
+@dataclass
+class SimplePatch:
+    """Simple patch representation for compatibility."""
+    file_path: str
+    content: str
+    line_number: Optional[int] = None
+    description: Optional[str] = None
 
 
 @dataclass 
@@ -64,6 +123,10 @@ class Patch:
         }
 
 
+# Alias for backward compatibility
+ComplexPatch = Patch
+
+
 class FixStrategy(Protocol):
     """Protocol defining the interface for fix strategies."""
     
@@ -73,7 +136,7 @@ class FixStrategy(Protocol):
         """Check if this strategy can handle the given issue."""
         ...
     
-    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Patch]:
+    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Union[Patch, SimplePatch]]:
         """Propose a fix for the issue with full metadata."""
         ...
     
@@ -90,8 +153,204 @@ class FixStrategy(Protocol):
         ...
 
 
-class BaseFixStrategy(ABC):
-    """Base implementation of FixStrategy with common functionality."""
+class StrategyConfigMixin:
+    """
+    Mixin consolidating duplicate __init__ patterns from strategy classes.
+    
+    Eliminates the repeated pattern of:
+    - Setting up logger with strategy name
+    - Initializing success/failure history
+    - Setting up learned patterns dict
+    
+    This pattern was found duplicated across 5 strategy classes.
+    """
+    
+    def __init__(self, name: str):
+        """Initialize common strategy attributes."""
+        self.name = name
+        self.logger = get_logger(f"strategy.{name}")
+        self.success_history: List[Dict[str, Any]] = []
+        self.failure_history: List[Dict[str, Any]] = []
+        self.learned_patterns: Dict[str, Any] = {}
+
+
+class ValidationUtilsMixin:
+    """
+    Mixin providing shared validation test generation utilities.
+    
+    Consolidates the duplicate _generate_validation_tests implementations
+    found across multiple strategy classes.
+    """
+    
+    def _generate_validation_tests(self, issue: Issue) -> List[str]:
+        """Generate basic validation test commands."""
+        tests = []
+        
+        if issue.file:
+            # Basic syntax check
+            tests.append(f"python -m py_compile {issue.file}")
+            
+            # Import check if it's a Python file
+            if issue.file.endswith('.py'):
+                module_name = issue.file.replace('.py', '').replace('/', '.')
+                tests.append(f"python -c \"import {module_name}\"")
+        
+        return tests
+    
+    def _extend_validation_for_symbol(self, tests: List[str], issue: Issue) -> List[str]:
+        """Extend validation tests for symbol-specific checks."""
+        if issue.symbol:
+            tests.extend([
+                f"# Test that {issue.symbol} can be called without errors",
+                f"# python -c \"from {issue.file.replace('.py', '')} import {issue.symbol}; print('Import successful')\"",
+                f"# TODO: Add unit tests for generated implementation of {issue.symbol}"
+            ])
+        return tests
+    
+    def _extend_validation_for_cycle(self, tests: List[str], issue: Issue) -> List[str]:
+        """Extend validation tests for circular dependency checks."""
+        if issue.evidence and 'cycle' in issue.evidence:
+            cycle = issue.evidence['cycle']
+            for module in cycle:
+                tests.append(f"python -c \"import {module.replace('.py', '')}\"")
+        return tests
+
+
+class EstimationUtilsMixin:
+    """
+    Mixin providing shared time estimation utilities.
+    """
+    
+    def _estimate_time(self, actions: List[Action]) -> float:
+        """Estimate time to apply actions in seconds."""
+        time_per_action = {
+            "modify_file": 2.0,
+            "create_file": 3.0,
+            "delete_file": 1.0,
+            "move_file": 2.5,
+            "delete_lines": 1.5,
+            "insert_lines": 2.0
+        }
+        
+        total_time = sum(time_per_action.get(action.type, 2.0) for action in actions)
+        return total_time
+    
+    def _calculate_complexity_score(self, actions: List[Action]) -> float:
+        """Calculate complexity score based on actions."""
+        base_score = len(actions)
+        
+        # Add complexity for different action types
+        complexity_weights = {
+            "modify_file": 1.0,
+            "create_file": 1.5,
+            "delete_file": 0.8,
+            "move_file": 2.0,
+            "delete_lines": 0.5,
+            "insert_lines": 1.2
+        }
+        
+        weighted_score = sum(complexity_weights.get(action.type, 1.0) for action in actions)
+        return weighted_score / max(len(actions), 1)
+
+
+class DependencyUtilsMixin:
+    """
+    Mixin providing shared dependency management utilities.
+    
+    Consolidates the 6 duplicate get_dependencies implementations found
+    across different strategy classes.
+    """
+    
+    def get_issue_dependencies(self, issue: Issue) -> List[str]:
+        """Get dependencies specific to issue type - override in subclasses."""
+        # Default dependencies based on common patterns
+        dependency_map = {
+            # Import-related issues have no dependencies (foundational)
+            "missing_symbol": [],
+            "missing_import": [],
+            "import_anxiety": [],
+            "unused_import": [],
+            "import_error": [],
+            
+            # Circular dependencies have no prerequisites
+            "circular_import": [],
+            
+            # Duplicate merging depends on imports being fixed
+            "semantic_duplicate_function": ["missing_symbol", "import_error"],
+            "duplicate_function": ["missing_symbol", "import_error"],
+            "duplicate_class": ["missing_symbol", "import_error"],
+            
+            # Implementation depends on imports and merging
+            "phantom_function": ["missing_symbol", "import_error", "semantic_duplicate_function"],
+            "placeholder": ["missing_symbol", "import_error", "semantic_duplicate_function"],
+            "todo_implementation": ["missing_symbol", "import_error", "semantic_duplicate_function"],
+            "stub_function": ["missing_symbol", "import_error", "semantic_duplicate_function"],
+            
+            # Async fixes depend on imports
+            "async_sync_mismatch": ["missing_symbol", "import_error"],
+            "missing_await": ["missing_symbol", "import_error"],
+            "unnecessary_await": ["missing_symbol", "import_error"],
+            "async_in_sync_context": ["missing_symbol", "import_error"]
+        }
+        
+        return dependency_map.get(issue.kind, [])
+
+
+class LearningUtilsMixin:
+    """
+    Mixin providing shared learning and feedback utilities.
+    """
+    
+    def learn_from_outcome(self, issue: Issue, patch: Patch, success: bool, feedback: str) -> None:
+        """Learn from the outcome of applying this strategy."""
+        outcome = {
+            "timestamp": time.time(),
+            "issue_kind": issue.kind,
+            "confidence": patch.confidence,
+            "risk_level": patch.risk_level.name,
+            "success": success,
+            "feedback": feedback,
+            "actions_count": len(patch.actions)
+        }
+        
+        if success:
+            self.success_history.append(outcome)
+            # Learn successful patterns
+            pattern_key = f"{issue.kind}_{patch.risk_level.name}"
+            if pattern_key not in self.learned_patterns:
+                self.learned_patterns[pattern_key] = {
+                    "success_count": 0,
+                    "avg_confidence": 0.0,
+                    "common_actions": []
+                }
+            
+            pattern = self.learned_patterns[pattern_key]
+            pattern["success_count"] += 1
+            pattern["avg_confidence"] = (
+                (pattern["avg_confidence"] * (pattern["success_count"] - 1) + patch.confidence) /
+                pattern["success_count"]
+            )
+        else:
+            self.failure_history.append(outcome)
+        
+        # Keep history bounded
+        if len(self.success_history) > 100:
+            self.success_history = self.success_history[-50:]
+        if len(self.failure_history) > 100:
+            self.failure_history = self.failure_history[-50:]
+
+
+class BaseFixStrategy(ABC, StrategyConfigMixin, ValidationUtilsMixin, 
+                     EstimationUtilsMixin, DependencyUtilsMixin, LearningUtilsMixin):
+    """
+    Base implementation of FixStrategy with common functionality.
+    
+    Consolidates duplicate patterns from fix_strategies.py:
+    - 5 duplicate __init__ method patterns now use StrategyConfigMixin
+    - 6 duplicate get_dependencies implementations now use DependencyUtilsMixin
+    - Duplicate validation test generation now use ValidationUtilsMixin
+    - Common time estimation and risk assessment use utility mixins
+    """
     
     # Dependency declarations - override in subclasses
     REQUIRES_ANALYZERS: Tuple[str, ...] = ()
@@ -99,10 +358,8 @@ class BaseFixStrategy(ABC):
     REQUIRES_MODELS: Tuple[str, ...] = ()
     
     def __init__(self, name: str):
-        self.name = name
-        self.logger = get_logger(f"strategy.{name}")
-        self.success_history: List[Dict[str, Any]] = []
-        self.failure_history: List[Dict[str, Any]] = []
+        """Initialize strategy using the consolidated mixin pattern."""
+        StrategyConfigMixin.__init__(self, name)
         
     @abstractmethod
     def can_handle(self, issue: Issue) -> bool:
@@ -110,7 +367,7 @@ class BaseFixStrategy(ABC):
         pass
     
     @abstractmethod
-    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Patch]:
+    def propose_fix(self, issue: Issue, context: Optional[Dict[str, Any]] = None) -> Optional[Union[Patch, SimplePatch]]:
         """Propose a fix for the issue."""
         pass
     
@@ -139,24 +396,6 @@ class BaseFixStrategy(ABC):
         out = sorted(set(deps))
         logging.debug("Strategy %s deps: %s", type(self).__name__, out)
         return out
-    
-    def learn_from_outcome(self, issue: Issue, patch: Patch, success: bool, feedback: str) -> None:
-        """Learn from the outcome of applying this strategy."""
-        outcome = {
-            "issue_kind": issue.kind,
-            "patch_description": patch.description,
-            "success": success,
-            "feedback": feedback,
-            "confidence": patch.confidence,
-            "risk_level": patch.risk_level.name
-        }
-        
-        if success:
-            self.success_history.append(outcome)
-            self.logger.info(f"Strategy {self.name} succeeded for {issue.kind}")
-        else:
-            self.failure_history.append(outcome)
-            self.logger.warning(f"Strategy {self.name} failed for {issue.kind}: {feedback}")
     
     def get_success_rate(self) -> float:
         """Calculate the success rate of this strategy."""

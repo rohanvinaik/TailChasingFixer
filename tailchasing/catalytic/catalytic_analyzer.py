@@ -108,48 +108,73 @@ class CatalyticDuplicateAnalyzer(Analyzer):
         Args:
             ctx: Analysis context
         """
+        import time
+        start_time = time.time()
         total_functions = 0
+        skipped_functions = 0
         
         # Get symbol table
         functions = ctx.symbol_table.functions
+        total_to_process = sum(len(entries) for entries in functions.values())
         
-        for func_name, entries in functions.items():
-            for entry in entries:
-                file_path = entry['file']
-                line_number = entry['lineno']
-                node = entry['node']
-                
-                if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    continue
-                
-                # Build context with imports extracted from AST
-                imports = self._extract_file_imports(ctx.ast_index.get(file_path))
-                context = {
-                    'imports': imports,
-                    'class_name': entry.get('class_name', None)
-                }
-                
-                try:
-                    # Add to index
-                    self.pipeline.update_index(
-                        func_ast=node,
-                        file_path=file_path,
-                        function_name=func_name,
-                        line_number=line_number,
-                        context=context
-                    )
-                    total_functions += 1
+        self.logger.info(f"Building catalytic index for {total_to_process} function entries")
+        
+        try:
+            for func_name, entries in functions.items():
+                for entry in entries:
+                    file_path = entry.get('file', '')
+                    line_number = entry.get('lineno', 0)
+                    node = entry.get('node')
                     
-                    # Log progress periodically
-                    if total_functions % 100 == 0:
-                        self.logger.debug(f"Indexed {total_functions} functions")
+                    if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        skipped_functions += 1
+                        continue
+                    
+                    # Build context with imports extracted from AST
+                    try:
+                        imports = self._extract_file_imports(ctx.ast_index.get(file_path))
+                        context = {
+                            'imports': imports,
+                            'class_name': entry.get('class_name', None)
+                        }
                         
-                except Exception as e:
-                    self.logger.warning(
-                        f"Failed to index {func_name} at {file_path}:{line_number}: {e}"
-                    )
-        
-        self.logger.info(f"Indexed {total_functions} functions")
+                        # Add to index with timeout protection
+                        self.pipeline.update_index(
+                            func_ast=node,
+                            file_path=file_path,
+                            function_name=func_name,
+                            line_number=line_number,
+                            context=context
+                        )
+                        total_functions += 1
+                        
+                        # More frequent progress updates and timeout check
+                        if total_functions % 50 == 0:
+                            elapsed = time.time() - start_time
+                            self.logger.info(f"Indexed {total_functions}/{total_to_process} functions ({elapsed:.1f}s elapsed)")
+                            
+                            # Timeout protection - abort if taking too long
+                            if elapsed > 25:  # Give 25 seconds for indexing
+                                self.logger.warning(f"Indexing timeout after {elapsed:.1f}s, stopping at {total_functions} functions")
+                                break
+                                
+                    except Exception as e:
+                        self.logger.warning(
+                            f"Failed to index {func_name} at {file_path}:{line_number}: {e}"
+                        )
+                        skipped_functions += 1
+                        
+                # Check overall timeout
+                if time.time() - start_time > 25:
+                    break
+            
+            elapsed = time.time() - start_time
+            self.logger.info(f"Index build complete: {total_functions} indexed, {skipped_functions} skipped in {elapsed:.1f}s")
+            
+        except Exception as e:
+            elapsed = time.time() - start_time
+            self.logger.error(f"Index building failed after {elapsed:.1f}s: {e}")
+            raise
     
     def _extract_file_imports(self, tree: Optional[ast.AST]) -> List[str]:
         """Extract import names from AST tree."""

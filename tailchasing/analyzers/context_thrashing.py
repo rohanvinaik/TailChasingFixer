@@ -9,6 +9,7 @@ import re
 
 from .base import Analyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno, safe_get_end_lineno
 
 
 @dataclass(frozen=True)
@@ -75,8 +76,8 @@ class FunctionSimilarityAnalyzer:
         signature = self._extract_signature(node)
         
         # Get function body
-        start_line = node.lineno
-        end_line = node.end_lineno or start_line
+        start_line = safe_get_lineno(node, 1)
+        end_line = safe_get_end_lineno(node) or start_line
         
         # Extract raw body text
         if start_line <= len(source_lines):

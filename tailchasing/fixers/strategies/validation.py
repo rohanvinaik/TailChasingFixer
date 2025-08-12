@@ -6,6 +6,7 @@ Extracted from fix_strategies.py to reduce context window thrashing.
 """
 
 import ast
+import inspect
 import re
 from typing import List, Dict, Any, Optional
 

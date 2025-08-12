@@ -6,6 +6,7 @@ import ast
 from typing import List, Dict, Set, Optional
 from dataclasses import dataclass
 from ..core.issues import Issue
+from ..core.utils import safe_get_lineno
 from .base import AnalysisContext
 
 
@@ -112,7 +113,7 @@ class TDDAntipatternAnalyzer:
                 message=f"Test '{test_node.name}' appears to mirror implementation of '{tested_func}' rather than validating behavior",
                 severity=2,
                 file=file,
-                line=test_node.lineno,
+                line=safe_get_lineno(test_node),
                 symbol=test_node.name,
                 evidence={
                     'tested_function': tested_func,
@@ -159,7 +160,7 @@ class TDDAntipatternAnalyzer:
                 message=f"Test '{test_node.name}' contains brittle assertions that may break easily",
                 severity=2,
                 file=file,
-                line=test_node.lineno,
+                line=safe_get_lineno(test_node),
                 symbol=test_node.name,
                 evidence={'patterns': list(set(brittle_patterns))},
                 suggestions=[
@@ -195,7 +196,7 @@ class TDDAntipatternAnalyzer:
                 message=f"Test '{test_node.name}' appears redundant with existing tests",
                 severity=1,
                 file=file,
-                line=test_node.lineno,
+                line=safe_get_lineno(test_node),
                 symbol=test_node.name,
                 evidence={'similar_tests': similar_tests},
                 suggestions=[
@@ -245,7 +246,7 @@ class TDDAntipatternAnalyzer:
                 message=f"Test '{test_node.name}' lacks edge case coverage",
                 severity=2,
                 file=file,
-                line=test_node.lineno,
+                line=safe_get_lineno(test_node),
                 symbol=test_node.name,
                 evidence={'missing': missing_coverage},
                 suggestions=[
