@@ -5,12 +5,12 @@ CLI utilities for TailChasingFixer.
 from .output_manager import OutputManager, VerbosityLevel, OutputFormat
 from .profiler import PerformanceProfiler, ComponentTimer, profile_analyzer
 
-# Import main function from the parent cli module
+# Import main function from the cli_main module
 def main():
-    """Main CLI entry point - imports from parent cli module."""
-    # Import the actual CLI module (cli.py) directly
-    from .. import cli
-    return cli.main()
+    """Main CLI entry point - imports from cli_main module."""
+    # Import directly from the renamed cli_main module
+    from .. import cli_main
+    return cli_main.main()
 
 __all__ = [
     'OutputManager',
