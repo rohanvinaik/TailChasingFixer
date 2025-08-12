@@ -13,7 +13,7 @@ from typing import List, Tuple
 import ast
 
 from tailchasing.semantic.hv_space import HVSpace
-from tailchasing.semantic.encoder import FunctionEncoder
+from tailchasing.semantic.encoder import FunctionFeatureExtractor as FunctionEncoder
 from tailchasing.semantic.index import SemanticIndex
 from tailchasing.core.issues import Issue
 
