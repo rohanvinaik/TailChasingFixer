@@ -97,7 +97,7 @@ class SemanticHVAnalyzer(Analyzer):
         
         # Initialize HVSpace
         dimensions = config.get('dimensions', 8192)
-        self.space = HVSpace(config={'dimensions': dimensions})
+        self.space = HVSpace(dim=dimensions)
         
         # Initialize index
         if 'semantic_index' in ctx.cache:
