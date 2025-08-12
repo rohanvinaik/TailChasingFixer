@@ -149,7 +149,7 @@ class IgnoreManager:
             use_defaults: Whether to include default patterns
             ignore_file: Path to ignore file (default: .tcdignore in root)
         """
-        self.root_path = Path(root_path).resolve()
+        self.root_path = Path(root_path).absolute()
         self.patterns: List[str] = []
         self.spec: Optional[pathspec.PathSpec] = None
         
@@ -287,7 +287,7 @@ class IgnoreManager:
                 except ValueError:
                     # Try with resolved paths
                     try:
-                        rel_path = path.resolve().relative_to(self.root_path.resolve())
+                        rel_path = path.absolute().relative_to(self.root_path.absolute())
                     except ValueError:
                         # Path is not under root, don't ignore
                         return False

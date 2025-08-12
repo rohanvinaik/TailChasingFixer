@@ -569,7 +569,7 @@ def main():
                 output_manager.log("Memory monitoring disabled (psutil not available)", VerbosityLevel.VERBOSE)
     
     # Find project root
-    root_path = Path(args.path).resolve()
+    root_path = Path(args.path).absolute()
     if not root_path.exists():
         logger.error(f"Path does not exist: {root_path}")
         sys.stderr.write(f"Error: Path does not exist: {root_path}\n")
