@@ -115,12 +115,14 @@ def parse_file(path: Path, robust_parser: Optional[RobustParser] = None) -> Opti
             return None
 
 
-def parse_files(paths: List[Path], robust_parser: Optional[RobustParser] = None) -> Tuple[Dict[str, ast.AST], Dict[str, ParseResult]]:
-    """Parse multiple Python files.
+def parse_files(paths: List[Path], robust_parser: Optional[RobustParser] = None, 
+                cache_manager: Optional['CacheManager'] = None) -> Tuple[Dict[str, ast.AST], Dict[str, ParseResult]]:
+    """Parse multiple Python files with optional caching.
     
     Args:
         paths: List of file paths
         robust_parser: Optional RobustParser instance for resilient parsing
+        cache_manager: Optional CacheManager for caching ASTs
         
     Returns:
         Tuple of (ast_dict, parse_results)
@@ -129,21 +131,42 @@ def parse_files(paths: List[Path], robust_parser: Optional[RobustParser] = None)
     """
     ast_dict = {}
     parse_results = {}
+    cached_count = 0
     
     for p in paths:
+        file_path_str = str(p)
+        
+        # Try to get from cache first
+        if cache_manager:
+            cached_ast = cache_manager.get_cached_ast(file_path_str)
+            if cached_ast is not None:
+                ast_dict[file_path_str] = cached_ast
+                cached_count += 1
+                continue
+        
+        # Parse the file
         if robust_parser:
             result = robust_parser.parse_file(p)
-            parse_results[str(p)] = result
+            parse_results[file_path_str] = result
             
             if result.is_valid:
-                ast_dict[str(p)] = result.ast_tree
+                ast_dict[file_path_str] = result.ast_tree
+                # Cache the AST
+                if cache_manager:
+                    cache_manager.cache_ast(file_path_str, result.ast_tree)
             elif result.partial_ast:
-                ast_dict[str(p)] = result.partial_ast
+                ast_dict[file_path_str] = result.partial_ast
                 logger.warning(f"Using partial AST for {p}")
         else:
             tree = parse_file(p)
             if tree is not None:
-                ast_dict[str(p)] = tree
+                ast_dict[file_path_str] = tree
+                # Cache the AST
+                if cache_manager:
+                    cache_manager.cache_ast(file_path_str, tree)
+    
+    if cached_count > 0:
+        logger.info(f"Used cached ASTs for {cached_count}/{len(paths)} files")
     
     if robust_parser:
         # Log statistics

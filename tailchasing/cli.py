@@ -285,6 +285,24 @@ def main():
         help="Number of rows per band for LSH (default: 16)"
     )
     
+    parser.add_argument(
+        "--clear-cache",
+        action="store_true",
+        help="Clear all cached analysis data and force full reanalysis"
+    )
+    
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable caching for this run"
+    )
+    
+    parser.add_argument(
+        "--cache-stats",
+        action="store_true",
+        help="Show cache statistics after analysis"
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -296,6 +314,17 @@ def main():
         logger.error(f"Path does not exist: {root_path}")
         sys.stderr.write(f"Error: Path does not exist: {root_path}\n")
         sys.exit(1)
+    
+    # Initialize cache manager
+    from .core.cache import CacheManager
+    cache_enabled = not args.no_cache
+    cache_manager = CacheManager(root_path, enabled=cache_enabled)
+    
+    # Clear cache if requested
+    if args.clear_cache:
+        logger.info("Clearing cache...")
+        cache_manager.clear_cache()
+        sys.stdout.write("Cache cleared successfully\n")
     
     # Guard mode - fast stub/TODO checking
     if args.guard:
@@ -414,7 +443,7 @@ def main():
     
     # Parse files with appropriate method
     if robust_parser:
-        ast_index, parse_results = parse_files(files, robust_parser)
+        ast_index, parse_results = parse_files(files, robust_parser, cache_manager)
         
         # Show parsing statistics
         stats = robust_parser.get_statistics()
@@ -428,7 +457,7 @@ def main():
                     if result.is_quarantined:
                         sys.stderr.write(f"  - {file_path}: {', '.join(result.warnings[:2])}\n")
     else:
-        ast_index, _ = parse_files(files)
+        ast_index, _ = parse_files(files, cache_manager=cache_manager)
     
     if not ast_index:
         logger.error("No valid Python files could be parsed")
@@ -459,7 +488,8 @@ def main():
         symbol_table=symbol_table,
         source_cache=source_cache,
         cache={},  # Initialize empty cache for analyzers
-        parse_results=parse_results  # Add parse results for quarantine checking
+        parse_results=parse_results,  # Add parse results for quarantine checking
+        cache_manager=cache_manager  # Pass cache manager to context
     )
     
     # Load and run analyzers
@@ -872,6 +902,22 @@ def main():
         except Exception as e:
             logger.error(f"Failed to generate fix script: {e}")
             
+    # Show cache statistics if requested
+    if args.cache_stats and cache_enabled:
+        stats = cache_manager.get_statistics()
+        sys.stdout.write("\nCache Statistics:\n")
+        sys.stdout.write("-" * 40 + "\n")
+        sys.stdout.write(f"Cache hits: {stats['hits']}\n")
+        sys.stdout.write(f"Cache misses: {stats['misses']}\n")
+        sys.stdout.write(f"Hit rate: {stats['hit_rate']:.1%}\n")
+        sys.stdout.write(f"Cache size: {stats['cache_size_mb']:.2f} MB\n")
+        sys.stdout.write(f"Cached files: {stats['cached_files']}\n")
+        sys.stdout.write(f"Parse time saved: {stats['bytes_saved_mb']:.2f} MB processed\n")
+    
+    # Flush cache before exiting
+    if cache_enabled:
+        cache_manager.flush()
+    
     # Check fail threshold
     if args.fail_on is not None:
         if global_score >= args.fail_on:

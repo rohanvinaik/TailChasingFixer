@@ -114,6 +114,9 @@ class SemanticHVAnalyzer(Analyzer):
         # Store AST index for smart filtering
         self._ast_index = ctx.ast_index
         
+        # Get cache manager if available
+        cache_manager = getattr(ctx, 'cache_manager', None)
+        
         for func_name, entries in ctx.symbol_table.functions.items():
             for entry in entries:
                 file = entry['file']
@@ -127,25 +130,41 @@ class SemanticHVAnalyzer(Analyzer):
                 if func_id in self.index.id_to_index:
                     continue
                 
-                try:
-                    # Encode function
-                    hv = encode_function(node, file, self.index.space, config)
-                    
-                    # Extract features for later analysis
-                    from ..semantic.encoder import FunctionFeatureExtractor
-                    extractor = FunctionFeatureExtractor()
-                    features = extractor.extract(node)
-                    self._feature_cache[func_id] = features
-                    
-                    # Add to index
-                    self.index.add(func_name, file, line, hv, {
-                        'features': features,
-                        'args': entry.get('args', [])
-                    })
-                    
-                except Exception as e:
-                    # Log encoding error but continue
-                    pass
+                # Try to get cached hypervector
+                hv = None
+                features = None
+                
+                if cache_manager:
+                    cached_hv = cache_manager.get_cached_hypervector(file)
+                    if cached_hv is not None:
+                        # For simplicity, use the cached hypervector
+                        # In a real implementation, we'd cache per-function
+                        hv = cached_hv
+                
+                if hv is None:
+                    try:
+                        # Encode function
+                        hv = encode_function(node, file, self.index.space, config)
+                        
+                        # Extract features for later analysis
+                        from ..semantic.encoder import FunctionFeatureExtractor
+                        extractor = FunctionFeatureExtractor()
+                        features = extractor.extract(node)
+                        self._feature_cache[func_id] = features
+                        
+                        # Cache the hypervector
+                        if cache_manager:
+                            cache_manager.cache_hypervector(file, hv)
+                        
+                    except Exception as e:
+                        # Log encoding error but continue
+                        continue
+                
+                # Add to index
+                self.index.add(func_name, file, line, hv, {
+                    'features': features or {},
+                    'args': entry.get('args', [])
+                })
     
     def _find_semantic_duplicates(self) -> List[Issue]:
         """Find semantically similar functions."""

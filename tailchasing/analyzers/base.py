@@ -36,6 +36,7 @@ class AnalysisContext:
     source_cache: Dict[str, List[str]]
     cache: Dict[str, Any]  # General purpose cache for analyzers
     parse_results: Dict[str, Any] = None  # Optional parse results from robust parser
+    cache_manager: Any = None  # Optional cache manager for persistent caching
     
     def is_excluded(self, path: str) -> bool:
         """Check if a path should be excluded based on config."""

@@ -209,6 +209,9 @@ class FastDuplicateAnalyzer(Analyzer):
     
     def _compute_all_hashes(self, ctx: AnalysisContext) -> None:
         """Compute all hash layers for files."""
+        # Get cache manager if available
+        cache_manager = getattr(ctx, 'cache_manager', None)
+        
         for file_path in ctx.ast_index:
             self.stats['files_processed'] += 1
             
@@ -216,16 +219,38 @@ class FastDuplicateAnalyzer(Analyzer):
             if ctx.is_quarantined(file_path):
                 continue
             
-            # Layer 1: Content hash
-            self.content_hashes[file_path] = self._compute_content_hash(file_path)
+            # Try to get cached signatures
+            cached_sigs = None
+            if cache_manager:
+                cached_sigs = cache_manager.get_cached_signatures(file_path)
             
-            # Layer 2: Shingle hashes
-            self.shingle_hashes[file_path] = self._compute_shingle_hashes(file_path)
-            
-            # Layer 3: AST MinHash signature
-            ast_tree = ctx.ast_index.get(file_path)
-            if ast_tree:
-                self.minhash_signatures[file_path] = self._compute_ast_minhash(ast_tree)
+            if cached_sigs:
+                # Use cached signatures
+                self.content_hashes[file_path] = cached_sigs.get('content_hash', '')
+                self.shingle_hashes[file_path] = set(cached_sigs.get('shingle_hashes', []))
+                if 'minhash_signature' in cached_sigs:
+                    self.minhash_signatures[file_path] = np.array(cached_sigs['minhash_signature'], dtype=np.uint32)
+            else:
+                # Compute signatures
+                # Layer 1: Content hash
+                self.content_hashes[file_path] = self._compute_content_hash(file_path)
+                
+                # Layer 2: Shingle hashes
+                self.shingle_hashes[file_path] = self._compute_shingle_hashes(file_path)
+                
+                # Layer 3: AST MinHash signature
+                ast_tree = ctx.ast_index.get(file_path)
+                if ast_tree:
+                    self.minhash_signatures[file_path] = self._compute_ast_minhash(ast_tree)
+                
+                # Cache the signatures
+                if cache_manager:
+                    signatures = {
+                        'content_hash': self.content_hashes[file_path],
+                        'shingle_hashes': list(self.shingle_hashes[file_path]),
+                        'minhash_signature': self.minhash_signatures.get(file_path, np.array([])).tolist()
+                    }
+                    cache_manager.cache_signatures(file_path, signatures)
     
     def _compute_content_hash(self, file_path: str, max_bytes: int = 1024 * 1024) -> str:
         """
