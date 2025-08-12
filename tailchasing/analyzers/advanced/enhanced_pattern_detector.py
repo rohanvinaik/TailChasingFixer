@@ -89,8 +89,10 @@ class EnhancedPatternDetector(PatternDetectionAnalyzer):
                         )
                         
                         if external_refs < len(component) * 0.2:  # Less than 20% external refs
-                            main_file = dep_graph.nodes[list(component)[0]]['file']
-                            main_line = dep_graph.nodes[list(component)[0]]['line']
+                            first_node = list(component)[0]
+                            node_data = dep_graph.nodes.get(first_node, {})
+                            main_file = node_data.get('file', 'unknown')
+                            main_line = node_data.get('line', 0)
                             
                             issues.append(Issue(
                                 kind="hallucination_cascade",
@@ -289,3 +291,31 @@ class EnhancedPatternDetector(PatternDetectionAnalyzer):
             return "import_everything"
         else:
             return "mixed_imports"
+    
+    def run(self, ctx) -> List[Issue]:
+        """Run the enhanced pattern detection analyzer.
+        
+        Args:
+            ctx: Analysis context containing parsed AST and other data
+            
+        Returns:
+            List of detected issues
+        """
+        all_issues = []
+        
+        # Run hallucination cascade detection if we have codebase AST
+        if hasattr(ctx, 'codebase_ast') and ctx.codebase_ast:
+            git_history = getattr(ctx, 'git_history', None)
+            all_issues.extend(self.detect_hallucination_cascade(ctx.codebase_ast, git_history))
+        
+        # Run context window thrashing detection if we have parsed files
+        if hasattr(ctx, 'parsed_files') and ctx.parsed_files:
+            for filepath, tree in ctx.parsed_files.items():
+                all_issues.extend(self.detect_context_window_thrashing(tree, filepath))
+        
+        # Run import anxiety detection if we have imports analysis
+        if hasattr(ctx, 'imports_analysis') and ctx.imports_analysis:
+            for filepath, imports_data in ctx.imports_analysis.items():
+                all_issues.extend(self.detect_import_anxiety(imports_data, filepath))
+        
+        return all_issues

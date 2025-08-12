@@ -12,7 +12,7 @@ from .utils.logging_setup import get_logger, log_operation, log_retry
 from .core.loader import collect_files, parse_files
 from .core.symbols import SymbolTable
 from .core.issues import Issue
-from .core.reporting import render_text, render_json
+from .core.reporting import Reporter
 from .analyzers.base import AnalysisContext
 from .analyzers.explainer import TailChasingExplainer
 from .analyzers.advanced.enhanced_pattern_detector import EnhancedPatternDetector
@@ -20,7 +20,7 @@ from .analyzers.advanced.multimodal_semantic import SemanticDuplicateEnhancer
 from .fixers.advanced.intelligent_fixer import IntelligentAutoFixer
 from .visualization import TailChasingVisualizer
 from .plugins import load_analyzers
-from .config import load_config
+from .config import Config
 
 
 class EnhancedCLI:
@@ -100,7 +100,10 @@ class EnhancedCLI:
         try:
             # Load configuration
             root = Path(parsed_args.root).resolve()
-            config = load_config(root, parsed_args.config)
+            if parsed_args.config:
+                config = Config.from_file(Path(parsed_args.config)).to_dict()
+            else:
+                config = Config.find_and_load(root).to_dict()
             
             # Collect and parse files
             files = collect_files(root, 
@@ -127,7 +130,16 @@ class EnhancedCLI:
             
             # Set up analysis context
             cache = {}
-            ctx = AnalysisContext(config, files, ast_index, symbol_table, cache)
+            source_cache = {}
+            ctx = AnalysisContext(
+                config=config,
+                root_dir=root,
+                file_paths=files,
+                ast_index=ast_index,
+                symbol_table=symbol_table,
+                source_cache=source_cache,
+                cache=cache
+            )
             
             # Run standard analyzers
             issues = []
@@ -175,8 +187,9 @@ class EnhancedCLI:
             sys.stdout.write(f"\n📊 Analysis complete: {len(issues)} total issues found\n")
             
             # Generate outputs
+            reporter = Reporter(config)
             if parsed_args.json:
-                sys.stdout.write(render_json(issues))
+                sys.stdout.write(reporter.render_json(issues))
             elif parsed_args.html:
                 self._generate_html_report(issues, files, parsed_args.html)
                 self.logger.info(f"HTML report generated: {parsed_args.html}")
@@ -184,7 +197,7 @@ class EnhancedCLI:
             elif parsed_args.explain:
                 self._generate_explanations(issues)
             else:
-                sys.stdout.write(render_text(issues, config))
+                sys.stdout.write(reporter.render_text(issues))
             
             # Handle auto-fix options
             if parsed_args.auto_fix or parsed_args.fix_plan:
