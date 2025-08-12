@@ -576,6 +576,10 @@ class Config:
         # Set the final key
         config[keys[-1]] = value
     
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return self.config.copy()
+    
     def _merge_configs(self, base: Dict, override: Dict) -> Dict:
         """Recursively merge configuration dictionaries."""
         result = base.copy()
