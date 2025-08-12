@@ -1087,6 +1087,33 @@ class ChromatinContactAnalyzer(Analyzer):
         
         return anchors
     
+    def safe_unparse(self, node: ast.AST, source_text: str = "") -> str:
+        """Safely unparse an AST node with fallback strategies.
+        
+        Args:
+            node: AST node to unparse
+            source_text: Optional source text for fallback extraction
+            
+        Returns:
+            String representation of the node
+        """
+        try:
+            return ast.unparse(ast.fix_missing_locations(node))
+        except (ValueError, TypeError, AttributeError) as e:
+            # Try to recover from source text if available
+            if source_text:
+                try:
+                    seg = ast.get_source_segment(source_text, node)
+                    if seg:
+                        return seg
+                except Exception:
+                    pass
+            # Last resort: dump AST structure
+            try:
+                return ast.dump(node, include_attributes=False)
+            except Exception:
+                return ""  # Ultimate fallback
+    
     def _find_call_anchors(self) -> List[LoopAnchor]:
         """Find function call-based loop anchors."""
         anchors = []
@@ -1100,9 +1127,9 @@ class ChromatinContactAnalyzer(Analyzer):
                     continue
                 
                 # Heuristic: functions with similar names might call each other
-                # Get function bodies as strings
-                elem1_body = ast.unparse(elem1.ast_node) if elem1.ast_node else ""
-                elem2_body = ast.unparse(elem2.ast_node) if elem2.ast_node else ""
+                # Get function bodies as strings (safely)
+                elem1_body = self.safe_unparse(elem1.ast_node) if elem1.ast_node else ""
+                elem2_body = self.safe_unparse(elem2.ast_node) if elem2.ast_node else ""
                 
                 if (elem1.name in elem2_body or elem2.name in elem1_body):
                     elem1_tad = self._find_module_tad(elem1.module_path, self._tads)
