@@ -122,9 +122,10 @@ class CatalyticDuplicateAnalyzer(Analyzer):
                 if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     continue
                 
-                # Build context
+                # Build context with imports extracted from AST
+                imports = self._extract_file_imports(ctx.ast_index.get(file_path))
                 context = {
-                    'imports': ctx.import_graph.get(file_path, {}).get('imports', []),
+                    'imports': imports,
                     'class_name': entry.get('class_name', None)
                 }
                 
@@ -149,6 +150,24 @@ class CatalyticDuplicateAnalyzer(Analyzer):
                     )
         
         self.logger.info(f"Indexed {total_functions} functions")
+    
+    def _extract_file_imports(self, tree: Optional[ast.AST]) -> List[str]:
+        """Extract import names from AST tree."""
+        if not tree:
+            return []
+        
+        imports = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    imports.append(alias.name)
+            elif isinstance(node, ast.ImportFrom):
+                if node.module:
+                    imports.append(node.module)
+                for alias in node.names:
+                    imports.append(alias.name)
+        
+        return imports
     
     def _find_duplicates(self, ctx: AnalysisContext) -> List[Issue]:
         """
