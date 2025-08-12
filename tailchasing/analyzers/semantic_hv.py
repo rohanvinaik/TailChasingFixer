@@ -11,6 +11,7 @@ from pathlib import Path
 from datetime import datetime
 import ast
 import hashlib
+import logging
 from difflib import SequenceMatcher
 import numpy as np
 
@@ -39,6 +40,7 @@ class SemanticHVAnalyzer(Analyzer):
     name = "semantic_hv"
     
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
         self.index: Optional[SemanticIndex] = None
         self.similarity_analyzer: Optional[SimilarityAnalyzer] = None
         self.prototype_detector: Optional[PrototypeDetector] = None
