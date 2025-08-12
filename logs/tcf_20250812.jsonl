@@ -377,3 +377,4 @@
 {"timestamp": "2025-08-12T16:36:23.767325Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 894, "message": "Running import_anxiety analyzer"}
 {"timestamp": "2025-08-12T16:36:24.142540Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 894, "message": "Running enhanced_semantic analyzer"}
 {"timestamp": "2025-08-12T16:36:24.145806Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 894, "message": "Running circular_import_resolver analyzer"}
+{"timestamp": "2025-08-12T17:03:47.429124Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}

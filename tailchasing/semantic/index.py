@@ -147,7 +147,12 @@ class SemanticIndex:
         self.background_samples: List[float] = []
         self._background_stats: Optional[Tuple[float, float]] = None
         self._stats_sample_size: int = 0
-        self._search_stats: Dict[str, int] = {'cache_hits': 0, 'cache_misses': 0}
+        self._search_stats: Dict[str, int] = {
+            'cache_hits': 0, 
+            'cache_misses': 0,
+            'matrix_rebuilds': 0,
+            'incremental_updates': 0
+        }
         self._similarity_cache: Dict[str, Any] = {}
         
         # Configuration
