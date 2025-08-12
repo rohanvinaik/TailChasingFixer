@@ -514,6 +514,13 @@ class Config:
             "lsh_bucket_cap": 2000,
             "semantic_analysis_file_limit": 1000,
             "semantic_analysis_duplicate_limit": 500
+        },
+        "duplicates": {
+            "enabled": True,
+            "use_fast_detection": True,
+            "lsh_bands": 8,
+            "lsh_rows": 16,
+            "generate_plan": True
         }
     }
     

@@ -82,6 +82,7 @@ setup(
             "numba>=0.57",
             "ray>=2.0",
             "dask>=2023.1",
+            "xxhash>=3.0",  # For fast content hashing
         ],
         "cli": [
             "prompt-toolkit>=3.0",

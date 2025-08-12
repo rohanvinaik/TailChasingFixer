@@ -257,6 +257,34 @@ def main():
         help="Disable robust parsing and use simple AST parser only"
     )
     
+    parser.add_argument(
+        "--fast-duplicates",
+        action="store_true",
+        default=True,
+        help="Use fast LSH-based duplicate detection (default: enabled)"
+    )
+    
+    parser.add_argument(
+        "--no-fast-duplicates",
+        action="store_false",
+        dest="fast_duplicates",
+        help="Use traditional O(n²) duplicate detection"
+    )
+    
+    parser.add_argument(
+        "--lsh-bands",
+        type=int,
+        metavar="N",
+        help="Number of bands for LSH (default: 8)"
+    )
+    
+    parser.add_argument(
+        "--lsh-rows",
+        type=int,
+        metavar="N",
+        help="Number of rows per band for LSH (default: 16)"
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -340,6 +368,13 @@ def main():
         
     if args.lsh_bucket_cap:
         config.set("resource_limits.lsh_bucket_cap", args.lsh_bucket_cap)
+        
+    # Apply duplicate detection settings
+    config.set("duplicates.use_fast_detection", args.fast_duplicates)
+    if args.lsh_bands:
+        config.set("duplicates.lsh_bands", args.lsh_bands)
+    if args.lsh_rows:
+        config.set("duplicates.lsh_rows", args.lsh_rows)
         
     # Collect files with IgnoreManager support
     logger.info(f"Collecting Python files from {root_path}")

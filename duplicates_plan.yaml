@@ -1,0 +1,33 @@
+duplicate_consolidation_plan:
+  summary:
+    total_files_analyzed: 118
+    redundant_files: 5
+    estimated_loc_saved: 0
+    clusters_found: 5
+  clusters:
+  - id: near_14ad638b
+    type: near
+    canonical: /Users/rohanvinaik/TailChasingFixer/tailchasing/core/__init__.py
+    duplicates: []
+    action: consolidate
+  - id: near_05b5e3eb
+    type: near
+    canonical: /Users/rohanvinaik/TailChasingFixer/tailchasing/fixers/__init__.py
+    duplicates: []
+    action: consolidate
+  - id: near_57750c8d
+    type: near
+    canonical: /Users/rohanvinaik/TailChasingFixer/tailchasing/semantic/__init__.py
+    duplicates: []
+    action: consolidate
+  - id: near_7df04d26
+    type: near
+    canonical: /Users/rohanvinaik/TailChasingFixer/tailchasing/utils/__init__.py
+    duplicates: []
+    action: consolidate
+  - id: near_590e27a2
+    type: near
+    canonical: /Users/rohanvinaik/TailChasingFixer/tailchasing/version.py
+    duplicates: []
+    action: consolidate
+  actions: []

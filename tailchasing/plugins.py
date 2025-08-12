@@ -13,6 +13,13 @@ from .analyzers.missing_symbols import MissingSymbolAnalyzer
 from .analyzers.git_chains import GitChainAnalyzer
 from .analyzers.semantic_hv import SemanticHVAnalyzer
 
+# Import fast duplicate analyzer
+try:
+    from .analyzers.fast_duplicates import FastDuplicateAnalyzer
+    FAST_DUPLICATES_AVAILABLE = True
+except ImportError:
+    FAST_DUPLICATES_AVAILABLE = False
+
 # Import new analyzers
 try:
     from .analyzers.tdd_antipatterns import TDDAntipatternAnalyzer
@@ -109,6 +116,14 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     """
     # Start with default analyzers
     analyzers = DEFAULT_ANALYZERS.copy()
+    
+    # Replace regular duplicate analyzer with fast version if configured
+    duplicates_config = config.get("duplicates", {})
+    if duplicates_config.get("use_fast_detection", True) and FAST_DUPLICATES_AVAILABLE:
+        # Remove regular duplicate analyzer
+        analyzers = [a for a in analyzers if a.name != "duplicates"]
+        # Add fast duplicate analyzer
+        analyzers.insert(1, FastDuplicateAnalyzer())  # Insert after import_graph
     
     # Add advanced analyzers if enabled
     if config.get("enable_advanced_analyzers", False) and ADVANCED_ANALYZERS_AVAILABLE:
