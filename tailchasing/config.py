@@ -6,6 +6,7 @@ including contact decay parameters, distance weights, and TAD patterns.
 """
 
 import os
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -426,3 +427,149 @@ def save_config(
     """Save polymer physics configuration."""
     manager = get_config_manager()
     manager.save_config(config, config_path)
+
+
+# Backward compatibility wrapper for CLI
+class Config:
+    """Configuration manager for tail-chasing detector (backward compatibility wrapper)."""
+    
+    DEFAULT_CONFIG = {
+        "paths": {
+            "include": ["."],
+            "exclude": ["tests", "test", "build", "dist", "venv", ".venv", "__pycache__"]
+        },
+        "risk_thresholds": {
+            "warn": 15,
+            "fail": 30
+        },
+        "placeholders": {
+            "allow": [],
+            "block": [],
+            "triage_enabled": True,
+            "security_patterns": {
+                "crypto": ["*verify*", "*authenticate*", "*sign*", "*encrypt*", "*decrypt*"],
+                "hsm": ["*hsm*", "*hardware*security*", "*secure*element*"],
+                "post_quantum": ["*dilithium*", "*kyber*", "*falcon*", "*sphincs*"]
+            }
+        },
+        "ignore_issue_types": [],
+        "scoring_weights": {
+            "missing_symbol": 2,
+            "phantom_function": 2,
+            "duplicate_function": 2,
+            "circular_import": 3,
+            "hallucinated_import": 3,
+            "wrapper_abstraction": 1,
+            "tail_chasing_chain": 4
+        },
+        "git": {
+            "enable": True
+        },
+        "report": {
+            "formats": ["text"],
+            "output_dir": "."
+        },
+        "fix": {
+            "enable": False,
+            "auto_rename_single_suggestion": True
+        },
+        "canonical_policy": {
+            "canonical_roots": [],
+            "shadow_roots": [],
+            "priority_patterns": {
+                r".*test.*": -10,
+                r".*experimental.*": -20,
+                r".*_test\.py": -15,
+                r".*/__init__\.py": 5
+            },
+            "auto_suppress_shadows": True,
+            "generate_forwarders": True,
+            "codemod_output": "./canonical_codemod.py"
+        },
+        "circular_import_resolver": {
+            "enabled": True,
+            "min_scc_size": 2,
+            "generate_fixes": True,
+            "fix_script_output": "./circular_import_fixes.py"
+        },
+        "issue_provenance": {
+            "enabled": True,
+            "db_path": ".tailchasing_history.db",
+            "track_regressions": True,
+            "git_integration": True
+        },
+        "playbooks": {
+            "enabled": True,
+            "auto_generate": True,
+            "require_review_for_high_risk": True,
+            "backup_before_execution": True,
+            "rollback_on_failure": True,
+            "output_dir": "./playbooks"
+        }
+    }
+    
+    def __init__(self, config_dict: Optional[Dict] = None):
+        """Initialize with optional config dictionary."""
+        self.config = self._merge_configs(self.DEFAULT_CONFIG, config_dict or {})
+        # Also initialize polymer config
+        self._polymer_config = PolymerConfig()
+        
+    @classmethod
+    def from_file(cls, path: Union[str, Path]) -> "Config":
+        """Load configuration from a file."""
+        path = Path(path)
+        if not path.exists():
+            return cls()
+            
+        with open(path, "r") as f:
+            if path.suffix in [".yaml", ".yml"]:
+                data = yaml.safe_load(f) or {}
+            elif path.suffix == ".json":
+                data = json.load(f)
+            else:
+                raise ValueError(f"Unsupported config format: {path.suffix}")
+                
+        return cls(data)
+    
+    @classmethod
+    def find_and_load(cls, start_path: Path) -> "Config":
+        """Find and load configuration from standard locations."""
+        # Look for .tailchasing.yml in current and parent directories
+        current = Path(start_path).resolve()
+        
+        while current != current.parent:
+            for name in [".tailchasing.yml", ".tailchasing.yaml", "tailchasing.yml", "tailchasing.yaml"]:
+                config_path = current / name
+                if config_path.exists():
+                    return cls.from_file(config_path)
+            current = current.parent
+            
+        # Return default config if no file found
+        return cls()
+    
+    def get(self, key: str, default=None):
+        """Get configuration value by dot-separated key."""
+        keys = key.split(".")
+        value = self.config
+        
+        for k in keys:
+            if isinstance(value, dict):
+                value = value.get(k)
+                if value is None:
+                    return default
+            else:
+                return default
+                
+        return value
+    
+    def _merge_configs(self, base: Dict, override: Dict) -> Dict:
+        """Recursively merge configuration dictionaries."""
+        result = base.copy()
+        
+        for key, value in override.items():
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = self._merge_configs(result[key], value)
+            else:
+                result[key] = value
+                
+        return result
