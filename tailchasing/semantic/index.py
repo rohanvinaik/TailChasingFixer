@@ -661,7 +661,8 @@ class SemanticIndex:
         # Find pairs above threshold
         pairs = []
         pair_count = 0
-        max_pairs = min(self.max_duplicate_pairs, limit) if limit else self.max_duplicate_pairs
+        # Use the provided limit or fall back to config max_duplicate_pairs
+        max_pairs = limit if limit is not None else self.max_duplicate_pairs
         
         # Log warning if we have many potential pairs
         total_pairs = n * (n - 1) // 2

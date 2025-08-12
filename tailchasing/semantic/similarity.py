@@ -201,9 +201,17 @@ class SimilarityAnalyzer:
             if is_sig:
                 # Add p-value to analysis
                 id1, id2, dist, z, analysis = pair
-                analysis['p_value'] = p_values[i]
-                analysis['fdr_significant'] = True
-                filtered.append((id1, id2, dist, z, analysis))
+                # Convert dataclass to dict if needed, or create new dict
+                if hasattr(analysis, '__dict__'):
+                    # It's a dataclass or object, convert to dict
+                    analysis_dict = vars(analysis).copy()
+                elif isinstance(analysis, dict):
+                    analysis_dict = analysis.copy()
+                else:
+                    analysis_dict = {}
+                analysis_dict['p_value'] = p_values[i]
+                analysis_dict['fdr_significant'] = True
+                filtered.append((id1, id2, dist, z, analysis_dict))
         
         return filtered
     
