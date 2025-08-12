@@ -156,7 +156,7 @@ class SemanticIndex:
             self._load_cache()
         
         logger = logging.getLogger(__name__)
-        logger.debug(f"SemanticIndex initialized: dim={space.dim}, "
+        logger.debug(f"SemanticIndex initialized: dim={self.space.dim}, "
                     f"z_threshold={self.z_score_threshold}")
     
     def add_function(

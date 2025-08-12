@@ -17,6 +17,7 @@ import numpy as np
 from ..core.issues import Issue
 from ..analyzers.base import Analyzer, AnalysisContext
 from ..semantic.encoder import encode_function
+from ..semantic.hv_space import HVSpace
 from ..semantic.index import SemanticIndex
 from ..semantic.similarity import SimilarityAnalyzer
 from ..semantic.prototypes import PrototypeDetector
@@ -94,17 +95,21 @@ class SemanticHVAnalyzer(Analyzer):
         resource_limits = ctx.config.get('resource_limits', {})
         config['resource_limits'] = resource_limits
         
+        # Initialize HVSpace
+        dimensions = config.get('dimensions', 8192)
+        self.space = HVSpace(config={'dimensions': dimensions})
+        
         # Initialize index
         if 'semantic_index' in ctx.cache:
             self.index = ctx.cache['semantic_index']
         else:
-            self.index = SemanticIndex(config, cache_dir)
+            self.index = SemanticIndex(self.space, cache_dir, config)
             ctx.cache['semantic_index'] = self.index
         
         # Initialize analyzers
         self.similarity_analyzer = SimilarityAnalyzer(config)
-        self.prototype_detector = PrototypeDetector(self.index.space, config)
-        self.drift_analyzer = SemanticDriftAnalyzer(self.index.space, config)
+        self.prototype_detector = PrototypeDetector(self.space, config)
+        self.drift_analyzer = SemanticDriftAnalyzer(self.space, config)
         self.smart_filter = SemanticDuplicateFilter()
     
     def _encode_functions(self, ctx: AnalysisContext) -> None:
