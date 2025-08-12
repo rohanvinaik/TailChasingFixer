@@ -562,6 +562,20 @@ class Config:
                 
         return value
     
+    def set(self, key: str, value):
+        """Set configuration value by dot-separated key."""
+        keys = key.split(".")
+        config = self.config
+        
+        # Navigate to the parent of the target key
+        for k in keys[:-1]:
+            if k not in config:
+                config[k] = {}
+            config = config[k]
+            
+        # Set the final key
+        config[keys[-1]] = value
+    
     def _merge_configs(self, base: Dict, override: Dict) -> Dict:
         """Recursively merge configuration dictionaries."""
         result = base.copy()
