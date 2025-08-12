@@ -26,7 +26,7 @@ ignore_issue_types:
   - missing_symbol  # Some analyzers import from base but aren't used directly
 
 # Disabled analyzers (optional)
-disabled_analyzers: []
+disabled_analyzers: []  # All analyzers enabled but optimized for performance
 
 # Scoring weights
 scoring_weights:
@@ -53,8 +53,10 @@ semantic:
   bipolar: true
   random_seed: 42
   min_functions: 30  # Lower threshold for our own codebase
-  z_threshold: 2.5
-  fdr_q: 0.05
+  z_threshold: 3.0  # Increase to reduce false positives
+  fdr_q: 0.01  # More conservative FDR
+  max_pairs_to_analyze: 50  # Limit pairs to prevent timeout
+  max_pairwise_comparisons: 10000  # Limit comparisons
   
   channel_weights:
     NAME_TOKENS: 1.0
@@ -127,10 +129,13 @@ explanations:
 
 # Performance settings
 performance:
-  parallel_processing: false
+  parallel_processing: true  # Enable parallel processing for speed
   cache_results: true
   max_file_size_mb: 10
   timeout_seconds: 300
+  analyzer_timeout: 60  # Give analyzers more time
+  heartbeat_interval: 2  # More frequent heartbeats
+  max_memory_mb: 4096  # Memory limit
 
 # Report settings
 report:

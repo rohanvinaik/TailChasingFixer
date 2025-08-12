@@ -666,6 +666,16 @@ class SemanticIndex:
         
         # Log warning if we have many potential pairs
         total_pairs = n * (n - 1) // 2
+        max_comparisons = self.config.get('max_pairwise_comparisons', 10000)
+        
+        # Limit total comparisons to prevent timeout
+        if total_pairs > max_comparisons:
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"Large number of potential pairs ({total_pairs}), limiting comparisons to {max_comparisons}. "
+                f"Consider using stricter thresholds or sampling."
+            )
+        
         if total_pairs > max_pairs * 2:
             logger = logging.getLogger(__name__)
             logger.warning(
@@ -673,8 +683,29 @@ class SemanticIndex:
                 f"Consider increasing max_duplicate_pairs or using stricter thresholds."
             )
         
-        for i in range(n):
-            for j in range(i + 1, n):
+        # For very large datasets, use sampling to limit comparisons
+        comparisons_made = 0
+        max_comparisons = self.config.get('max_pairwise_comparisons', 10000)
+        
+        # Use sampling if needed
+        if total_pairs > max_comparisons:
+            # Random sampling approach
+            import random
+            indices = list(range(n))
+            random.shuffle(indices)
+            # Take a subset that will give us approximately max_comparisons
+            sample_size = int(np.sqrt(max_comparisons * 2))
+            sample_size = min(sample_size, n)
+            sampled_indices = indices[:sample_size]
+        else:
+            sampled_indices = list(range(n))
+        
+        for idx_i, i in enumerate(sampled_indices):
+            for j in sampled_indices[idx_i + 1:]:
+                if comparisons_made >= max_comparisons:
+                    break
+                comparisons_made += 1
+                
                 if z_scores[i, j] >= z_threshold:
                     # Check if we've reached the limit
                     if pair_count >= max_pairs:
@@ -702,7 +733,7 @@ class SemanticIndex:
                     pair_count += 1
             
             # Break outer loop if limit reached
-            if pair_count >= max_pairs:
+            if pair_count >= max_pairs or comparisons_made >= max_comparisons:
                 break
         
         # Sort by z-score (descending)

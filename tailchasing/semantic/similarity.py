@@ -229,9 +229,17 @@ class SimilarityAnalyzer:
         Returns:
             List of cluster dictionaries
         """
-        # Filter valid entries
-        valid_entries = [(id, hv, meta) for id, hv, meta in entries
-                        if hv is not None and not meta.get("removed", False)]
+        # Filter valid entries - entries is Dict[str, FunctionEntry]
+        valid_entries = []
+        if isinstance(entries, dict):
+            # entries is a dict of FunctionEntry objects
+            for id, entry in entries.items():
+                if hasattr(entry, 'hypervector') and entry.hypervector is not None:
+                    valid_entries.append((id, entry.hypervector, entry))
+        else:
+            # Legacy format - list of tuples
+            valid_entries = [(id, hv, meta) for id, hv, meta in entries
+                            if hv is not None and not meta.get("removed", False)]
         
         if len(valid_entries) < min_cluster_size:
             return []

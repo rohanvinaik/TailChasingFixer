@@ -86,6 +86,9 @@ class SemanticHVAnalyzer(Analyzer):
     
     def _initialize_components(self, ctx: AnalysisContext, config: Dict) -> None:
         """Initialize semantic analysis components."""
+        # Store config for later use
+        self._config = config
+        
         # Get cache directory
         cache_dir = None
         if config.get('incremental_cache'):
@@ -183,7 +186,9 @@ class SemanticHVAnalyzer(Analyzer):
         issues = []
         
         # Get all similar pairs with a reasonable limit to prevent hanging
-        pairs = self.index.find_all_similar_pairs(limit=100)
+        config = getattr(self, '_config', {})
+        max_pairs = config.get('max_pairs_to_analyze', 50)
+        pairs = self.index.find_all_similar_pairs(limit=max_pairs)
         
         # Apply FDR correction
         significant_pairs = self.similarity_analyzer.filter_significant_pairs(pairs)
