@@ -1,0 +1,1 @@
+{"timestamp": "2025-08-12T04:27:39.429411Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}

@@ -129,6 +129,17 @@ repos:
   # Custom hooks for project-specific rules
   - repo: local
     hooks:
+      # TailChasing Stub Guard - Check for incomplete implementations
+      - id: stub-guard
+        name: Stub Guard - Check for incomplete implementations
+        description: Detect stubs, TODOs, and incomplete code in critical paths
+        entry: python -m tailchasing.guards.stub_guard
+        language: system
+        files: '\.py$'
+        pass_filenames: false
+        args: [--critical-paths, tailchasing, --max-critical, 0, --max-high, 5]
+        stages: [commit]
+      
       # Block new TODO comments (encourage proper issue tracking)
       - id: no-todos
         name: Block new TODO comments
@@ -136,7 +147,7 @@ repos:
         entry: bash -c 'if git diff --cached --name-only | grep -E "\\.py$" | xargs grep -l "TODO\|FIXME\|XXX" > /dev/null; then echo "❌ Found TODO/FIXME/XXX comments. Use GitHub issues instead!"; exit 1; fi'
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [manual]  # Changed to manual since stub-guard handles this better
         
       # Block new print statements (use logging instead)
       - id: no-print-statements

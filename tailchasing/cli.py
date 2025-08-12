@@ -94,6 +94,27 @@ def main():
         help="Enable verbose logging"
     )
     
+    # Stub Guard mode
+    parser.add_argument(
+        "--guard",
+        action="store_true",
+        help="Run in guard mode - fail fast on stubs/TODOs in critical paths"
+    )
+    
+    parser.add_argument(
+        "--guard-critical-paths",
+        nargs="+",
+        default=["src", "lib", "core"],
+        help="Critical paths for guard mode (default: src lib core)"
+    )
+    
+    parser.add_argument(
+        "--guard-format",
+        choices=["text", "json", "junit"],
+        default="text",
+        help="Output format for guard mode (default: text)"
+    )
+    
     parser.add_argument(
         "--exclude",
         action="append",
@@ -192,6 +213,32 @@ def main():
         logger.error(f"Path does not exist: {root_path}")
         sys.stderr.write(f"Error: Path does not exist: {root_path}\n")
         sys.exit(1)
+    
+    # Guard mode - fast stub/TODO checking
+    if args.guard:
+        from .guards.stub_guard import StubGuard, GuardConfig
+        
+        config = GuardConfig(
+            critical_paths=args.guard_critical_paths,
+            output_format=args.guard_format,
+            verbose=args.verbose,
+            max_critical_violations=0,
+            max_high_violations=0,
+            fail_on_critical=True
+        )
+        
+        guard = StubGuard(config)
+        violations = guard.scan_directory(root_path)
+        
+        # Output report
+        print(guard.generate_report(args.guard_format))
+        
+        # Check violations
+        passed, message = guard.check_violations()
+        if not passed:
+            print(f"\n{message}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
         
     # Load configuration
     if args.config:
