@@ -1087,32 +1087,64 @@ class ChromatinContactAnalyzer(Analyzer):
         
         return anchors
     
-    def safe_unparse(self, node: ast.AST, source_text: str = "") -> str:
-        """Safely unparse an AST node with fallback strategies.
+    def get_source_for(self, module_path: str) -> str:
+        """Best-effort retrieval of module source for get_source_segment fallback.
+        
+        Args:
+            module_path: Path to the module file
+            
+        Returns:
+            Module source text or empty string on error
+        """
+        try:
+            with open(module_path, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+        except Exception:
+            return ""
+    
+    def safe_unparse(self, node: ast.AST, *, source_text: str = "", max_len: int = 20000) -> str:
+        """Safely convert an AST node to a string.
+        
+        Order: unparse -> get_source_segment -> dump -> "".
+        Also avoids CPython unparser edge-cases for f-strings (JoinedStr).
         
         Args:
             node: AST node to unparse
             source_text: Optional source text for fallback extraction
+            max_len: Maximum length of returned string
             
         Returns:
-            String representation of the node
+            String representation of the node (truncated if too long)
         """
+        if node is None:
+            return ""
+        
+        # Avoid the JoinedStr edge-case that can raise ValueError in CPython's unparser
+        if isinstance(node, ast.JoinedStr):
+            return ""
+        
         try:
-            return ast.unparse(ast.fix_missing_locations(node))
-        except (ValueError, TypeError, AttributeError) as e:
-            # Try to recover from source text if available
+            s = ast.unparse(ast.fix_missing_locations(node))
+        except (ValueError, TypeError, AttributeError):
             if source_text:
                 try:
                     seg = ast.get_source_segment(source_text, node)
                     if seg:
-                        return seg
+                        s = seg
+                    else:
+                        s = ast.dump(node, include_attributes=False)
                 except Exception:
-                    pass
-            # Last resort: dump AST structure
-            try:
-                return ast.dump(node, include_attributes=False)
-            except Exception:
-                return ""  # Ultimate fallback
+                    s = ast.dump(node, include_attributes=False)
+            else:
+                try:
+                    s = ast.dump(node, include_attributes=False)
+                except Exception:
+                    s = ""
+        
+        # Keep memory/logs sane
+        if isinstance(s, str) and len(s) > max_len:
+            return s[:max_len] + " …<truncated>…"
+        return s
     
     def _find_call_anchors(self) -> List[LoopAnchor]:
         """Find function call-based loop anchors."""
@@ -1128,8 +1160,10 @@ class ChromatinContactAnalyzer(Analyzer):
                 
                 # Heuristic: functions with similar names might call each other
                 # Get function bodies as strings (safely)
-                elem1_body = self.safe_unparse(elem1.ast_node) if elem1.ast_node else ""
-                elem2_body = self.safe_unparse(elem2.ast_node) if elem2.ast_node else ""
+                src1 = self.get_source_for(elem1.module_path) if getattr(elem1, "module_path", None) else ""
+                src2 = self.get_source_for(elem2.module_path) if getattr(elem2, "module_path", None) else ""
+                elem1_body = self.safe_unparse(elem1.ast_node, source_text=src1) if getattr(elem1, "ast_node", None) else ""
+                elem2_body = self.safe_unparse(elem2.ast_node, source_text=src2) if getattr(elem2, "ast_node", None) else ""
                 
                 if (elem1.name in elem2_body or elem2.name in elem1_body):
                     elem1_tad = self._find_module_tad(elem1.module_path, self._tads)
