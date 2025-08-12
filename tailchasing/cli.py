@@ -21,6 +21,7 @@ from .core.issue_provenance import IssueProvenanceTracker
 from .plugins import load_analyzers
 from .core.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
 from .core.batch_processor import BatchProcessor, ProcessingStats
+from .core.resource_monitor import MemoryMonitor, AdaptiveConfig, AdaptiveProcessor
 from .cli import OutputManager, VerbosityLevel, OutputFormat, PerformanceProfiler
 
 
@@ -479,6 +480,36 @@ def main():
         help="Generate fix plan without executing (dry run mode)"
     )
     
+    # Memory monitoring arguments
+    parser.add_argument(
+        "--mem-ceiling-mb",
+        type=int,
+        metavar="MB",
+        help="Set hard memory ceiling in MB (default: 80% of system memory)"
+    )
+    
+    parser.add_argument(
+        "--disable-memory-monitor",
+        action="store_true",
+        help="Disable memory monitoring and adaptive processing"
+    )
+    
+    parser.add_argument(
+        "--memory-gc-threshold",
+        type=float,
+        default=80.0,
+        metavar="PERCENT",
+        help="Memory usage percentage to trigger garbage collection (default: 80.0)"
+    )
+    
+    parser.add_argument(
+        "--memory-streaming-threshold",
+        type=float,
+        default=90.0,
+        metavar="PERCENT",
+        help="Memory usage percentage to trigger streaming mode (default: 90.0)"
+    )
+    
     args = parser.parse_args()
     
     # Determine verbosity level
@@ -513,6 +544,25 @@ def main():
     
     # Initialize profiler if requested
     profiler = PerformanceProfiler(enabled=args.profile) if args.profile else None
+    
+    # Initialize memory monitor if requested
+    memory_monitor = None
+    if not args.disable_memory_monitor:
+        memory_config = AdaptiveConfig(
+            gc_threshold_percent=args.memory_gc_threshold,
+            streaming_threshold_percent=args.memory_streaming_threshold,
+            enable_monitoring=True
+        )
+        memory_monitor = MemoryMonitor(
+            memory_limit_mb=args.mem_ceiling_mb,
+            config=memory_config,
+            verbose=verbosity in [VerbosityLevel.VERBOSE, VerbosityLevel.DEBUG]
+        )
+        
+        if verbosity in [VerbosityLevel.VERBOSE, VerbosityLevel.DEBUG]:
+            output_manager.log("Initialized memory monitor", VerbosityLevel.VERBOSE)
+            stats = memory_monitor.get_stats()
+            output_manager.log(f"Memory limit: {stats.limit_mb:.0f}MB", VerbosityLevel.VERBOSE)
     
     # Find project root
     root_path = Path(args.path).resolve()
@@ -694,6 +744,16 @@ def main():
         
     logger.info(f"Successfully parsed {len(ast_index)} files")
     
+    # Check memory usage after parsing and adjust strategy if needed
+    if memory_monitor:
+        stats = memory_monitor.get_stats()
+        output_manager.log(f"Memory after parsing: {stats.current_mb:.1f}MB ({stats.usage_percent:.1f}%)", VerbosityLevel.VERBOSE)
+        
+        # Force GC if memory usage is high
+        if stats.usage_percent > 70:
+            memory_monitor.force_gc()
+            output_manager.log("Triggered GC after parsing", VerbosityLevel.VERBOSE)
+    
     # Build symbol table
     logger.info("Building symbol table")
     symbol_table = SymbolTable()
@@ -728,6 +788,13 @@ def main():
     
     # Check if batch processing is enabled for large codebases
     use_batching = args.use_batching or len(files) > 500  # Auto-enable for large codebases
+    
+    # Also enable batching if memory monitor suggests it
+    if memory_monitor and not use_batching:
+        should_stream = memory_monitor.should_use_streaming(len(files))
+        if should_stream:
+            use_batching = True
+            output_manager.log("Enabling batch processing due to memory constraints", VerbosityLevel.NORMAL)
     
     if use_batching:
         logger.info(f"Using batch processing for {len(files)} files")
@@ -822,6 +889,19 @@ def main():
                 
             logger.info(f"Running {analyzer.name} analyzer")
             
+            # Configure memory-aware settings for semantic analyzers
+            if memory_monitor and analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
+                # Get optimal hypervector dimensions based on memory
+                optimal_dims = memory_monitor.get_hypervector_dimensions()
+                
+                # Apply to analyzer if it supports dimension configuration
+                if hasattr(analyzer, 'set_dimensions'):
+                    analyzer.set_dimensions(optimal_dims)
+                    output_manager.log(f"Set {analyzer.name} dimensions to {optimal_dims}", VerbosityLevel.VERBOSE)
+                elif hasattr(analyzer, 'config') and hasattr(analyzer.config, 'dimensions'):
+                    analyzer.config.dimensions = optimal_dims
+                    output_manager.log(f"Set {analyzer.name} dimensions to {optimal_dims}", VerbosityLevel.VERBOSE)
+            
             # Set up fallback for semantic analyzers
             fallback_func = None
             if analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
@@ -840,6 +920,12 @@ def main():
                 for issue in issues:
                     if not ctx.should_ignore_issue(issue.kind):
                         issue_collection.add(issue)
+                        
+                # Check memory after each analyzer
+                if memory_monitor:
+                    stats = memory_monitor.get_stats()
+                    output_manager.log(f"{analyzer.name} completed - Memory: {stats.current_mb:.1f}MB ({stats.usage_percent:.1f}%)", VerbosityLevel.VERBOSE)
+                    
             except Exception as e:
                 logger.error(f"Analyzer {analyzer.name} failed: {e}")
             
@@ -1324,6 +1410,15 @@ def main():
         profile_report = profiler.get_report()
         output_manager.show_performance_profile(profile_report)
         profiler.stop()
+    
+    # Show memory statistics if requested
+    if memory_monitor:
+        if verbosity in [VerbosityLevel.VERBOSE, VerbosityLevel.DEBUG]:
+            output_manager.log("Memory Usage Summary:", VerbosityLevel.VERBOSE)
+            memory_monitor.log_memory_summary()
+        
+        # Clean up memory monitor
+        memory_monitor.cleanup()
     
     # Flush cache before exiting
     if cache_enabled:

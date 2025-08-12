@@ -211,3 +211,85 @@
 {"timestamp": "2025-08-12T11:01:41.035195Z", "level": "INFO", "module": "cli", "function": "main", "line": 562, "message": "Running enhanced_missing_symbols analyzer"}
 {"timestamp": "2025-08-12T11:01:41.037946Z", "level": "INFO", "module": "cli", "function": "main", "line": 592, "message": "Analyzer enhanced_missing_symbols completed in 0.00s"}
 {"timestamp": "2025-08-12T11:01:41.077979Z", "level": "INFO", "module": "cli", "function": "main", "line": 773, "message": "Analysis complete: 9 issues, risk score 1.8"}
+{"timestamp": "2025-08-12T13:56:06.579631Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:07.583760Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 382, "message": "Memory Usage Summary:"}
+{"timestamp": "2025-08-12T13:56:07.583911Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 383, "message": "  Current: 67.7MB (6.8%)"}
+{"timestamp": "2025-08-12T13:56:07.584010Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 384, "message": "  Peak: 67.7MB"}
+{"timestamp": "2025-08-12T13:56:07.584105Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 385, "message": "  Limit: 1000MB"}
+{"timestamp": "2025-08-12T13:56:07.584454Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 386, "message": "  Available: 932.3MB"}
+{"timestamp": "2025-08-12T13:56:07.584569Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 387, "message": "  GC Collections: 0"}
+{"timestamp": "2025-08-12T13:56:07.584684Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 388, "message": "  Streaming Activations: 0"}
+{"timestamp": "2025-08-12T13:56:07.584770Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 389, "message": "  Dimension Reductions: 0"}
+{"timestamp": "2025-08-12T13:56:07.584852Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 390, "message": "  Current HV Dims: 1024"}
+{"timestamp": "2025-08-12T13:56:07.584994Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 395, "message": "  System Memory: 61.8% used"}
+{"timestamp": "2025-08-12T13:56:07.586026Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 2000MB limit"}
+{"timestamp": "2025-08-12T13:56:07.586977Z", "level": "WARNING", "module": "resource_monitor", "function": "__init__", "line": 105, "message": "psutil not available - memory monitoring will be limited"}
+{"timestamp": "2025-08-12T13:56:07.587060Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:07.588045Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:08.601495Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:08.601972Z", "level": "INFO", "module": "resource_monitor", "function": "force_gc", "line": 313, "message": "Forcing garbage collection"}
+{"timestamp": "2025-08-12T13:56:08.627666Z", "level": "INFO", "module": "resource_monitor", "function": "force_gc", "line": 323, "message": "Forced GC freed 0.0MB"}
+{"timestamp": "2025-08-12T13:56:09.607478Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 382, "message": "Memory Usage Summary:"}
+{"timestamp": "2025-08-12T13:56:09.608002Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 383, "message": "  Current: 67.9MB (6.8%)"}
+{"timestamp": "2025-08-12T13:56:09.608647Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 384, "message": "  Peak: 67.9MB"}
+{"timestamp": "2025-08-12T13:56:09.608961Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 385, "message": "  Limit: 1000MB"}
+{"timestamp": "2025-08-12T13:56:09.609187Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 386, "message": "  Available: 932.1MB"}
+{"timestamp": "2025-08-12T13:56:09.609511Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 387, "message": "  GC Collections: 1"}
+{"timestamp": "2025-08-12T13:56:09.609728Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 388, "message": "  Streaming Activations: 0"}
+{"timestamp": "2025-08-12T13:56:09.609926Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 389, "message": "  Dimension Reductions: 0"}
+{"timestamp": "2025-08-12T13:56:09.610129Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 390, "message": "  Current HV Dims: 1024"}
+{"timestamp": "2025-08-12T13:56:09.610584Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 395, "message": "  System Memory: 61.9% used"}
+{"timestamp": "2025-08-12T13:56:09.612056Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:10.623409Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:11.629817Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:12.638768Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:13.643464Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:14.653626Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:15.666648Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:16.676465Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:17.680697Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:18.691196Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:19.700615Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 10000MB limit"}
+{"timestamp": "2025-08-12T13:56:20.708227Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 100MB limit"}
+{"timestamp": "2025-08-12T13:56:21.717427Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 10000MB limit"}
+{"timestamp": "2025-08-12T13:56:22.724885Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 100MB limit"}
+{"timestamp": "2025-08-12T13:56:22.725208Z", "level": "WARNING", "module": "resource_monitor", "function": "with_memory_limit", "line": 498, "message": "Insufficient memory for operation (need 10000.0MB)"}
+{"timestamp": "2025-08-12T13:56:23.730512Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 2000MB limit"}
+{"timestamp": "2025-08-12T13:56:24.738037Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 382, "message": "Memory Usage Summary:"}
+{"timestamp": "2025-08-12T13:56:24.738436Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 383, "message": "  Current: 68.0MB (3.4%)"}
+{"timestamp": "2025-08-12T13:56:24.738611Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 384, "message": "  Peak: 68.1MB"}
+{"timestamp": "2025-08-12T13:56:24.738771Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 385, "message": "  Limit: 2000MB"}
+{"timestamp": "2025-08-12T13:56:24.738931Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 386, "message": "  Available: 1932.0MB"}
+{"timestamp": "2025-08-12T13:56:24.739103Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 387, "message": "  GC Collections: 0"}
+{"timestamp": "2025-08-12T13:56:24.739259Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 388, "message": "  Streaming Activations: 0"}
+{"timestamp": "2025-08-12T13:56:24.739419Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 389, "message": "  Dimension Reductions: 0"}
+{"timestamp": "2025-08-12T13:56:24.739582Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 390, "message": "  Current HV Dims: 1024"}
+{"timestamp": "2025-08-12T13:56:24.739821Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 395, "message": "  System Memory: 60.4% used"}
+{"timestamp": "2025-08-12T13:56:24.742781Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:25.753711Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:26.760301Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:27.082017Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:27.119438Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:56:27.131225Z", "level": "ERROR", "module": "resource_monitor", "function": "_trigger_garbage_collection", "line": 219, "message": "Error in GC callback: Test error"}
+{"timestamp": "2025-08-12T13:56:28.130129Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 6553MB limit"}
+{"timestamp": "2025-08-12T13:56:29.140533Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:57:05.865557Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 1000MB limit"}
+{"timestamp": "2025-08-12T13:57:05.865745Z", "level": "INFO", "module": "resource_monitor", "function": "force_gc", "line": 313, "message": "Forcing garbage collection"}
+{"timestamp": "2025-08-12T13:57:05.867492Z", "level": "INFO", "module": "resource_monitor", "function": "force_gc", "line": 323, "message": "Forced GC freed 0.0MB"}
+{"timestamp": "2025-08-12T13:57:05.867591Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 500MB limit"}
+{"timestamp": "2025-08-12T13:57:05.867745Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 2000MB limit"}
+{"timestamp": "2025-08-12T13:57:06.874102Z", "level": "INFO", "module": "resource_monitor", "function": "_trigger_garbage_collection", "line": 204, "message": "Memory usage high, triggering garbage collection"}
+{"timestamp": "2025-08-12T13:57:06.879817Z", "level": "INFO", "module": "resource_monitor", "function": "_trigger_garbage_collection", "line": 225, "message": "GC freed -0.0MB (collected 0 objects)"}
+{"timestamp": "2025-08-12T13:57:07.868827Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 382, "message": "Memory Usage Summary:"}
+{"timestamp": "2025-08-12T13:57:07.868955Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 383, "message": "  Current: 28.9MB (2.9%)"}
+{"timestamp": "2025-08-12T13:57:07.869030Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 384, "message": "  Peak: 28.9MB"}
+{"timestamp": "2025-08-12T13:57:07.869093Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 385, "message": "  Limit: 1000MB"}
+{"timestamp": "2025-08-12T13:57:07.869150Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 386, "message": "  Available: 971.1MB"}
+{"timestamp": "2025-08-12T13:57:07.869204Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 387, "message": "  GC Collections: 2"}
+{"timestamp": "2025-08-12T13:57:07.869258Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 388, "message": "  Streaming Activations: 0"}
+{"timestamp": "2025-08-12T13:57:07.869309Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 389, "message": "  Dimension Reductions: 0"}
+{"timestamp": "2025-08-12T13:57:07.869360Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 390, "message": "  Current HV Dims: 1024"}
+{"timestamp": "2025-08-12T13:57:07.869462Z", "level": "INFO", "module": "resource_monitor", "function": "log_memory_summary", "line": 395, "message": "  System Memory: 60.3% used"}
+{"timestamp": "2025-08-12T13:57:07.869545Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 100MB limit"}
+{"timestamp": "2025-08-12T13:57:07.869678Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 500MB limit"}
+{"timestamp": "2025-08-12T13:57:07.869795Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 2000MB limit"}
