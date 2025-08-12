@@ -58,26 +58,33 @@ def collect_files(
             if not ignore_manager.should_ignore(base):
                 files.append(base)
         else:
-            for p in base.rglob("*.py"):
-                # Use IgnoreManager for filtering
-                if not ignore_manager.should_ignore(p):
-                    # Also check legacy exclude patterns for backward compatibility
-                    rel_path = p.relative_to(root)
-                    excluded = False
-                    
-                    for ex in exclude:
-                        ex_path = Path(ex)
-                        try:
-                            # Check if the file is under an excluded directory
-                            rel_path.relative_to(ex_path)
-                            excluded = True
-                            break
-                        except ValueError:
-                            # Not under this exclude path
-                            pass
+            # Use os.walk with followlinks=False to avoid following symlinks
+            for dirpath, dirnames, filenames in os.walk(base, followlinks=False):
+                # Skip hidden directories and __pycache__
+                dirnames[:] = [d for d in dirnames if not d.startswith('.') and d != '__pycache__']
+                
+                for filename in filenames:
+                    if filename.endswith('.py'):
+                        p = Path(dirpath) / filename
+                        # Use IgnoreManager for filtering
+                        if not ignore_manager.should_ignore(p):
+                            # Also check legacy exclude patterns for backward compatibility
+                            rel_path = p.relative_to(root)
+                            excluded = False
                             
-                    if not excluded:
-                        files.append(p)
+                            for ex in exclude:
+                                ex_path = Path(ex)
+                                try:
+                                    # Check if the file is under an excluded directory
+                                    rel_path.relative_to(ex_path)
+                                    excluded = True
+                                    break
+                                except ValueError:
+                                    # Not under this exclude path
+                                    pass
+                                    
+                            if not excluded:
+                                files.append(p)
                     
     return sorted(set(files))
 
