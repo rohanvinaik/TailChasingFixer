@@ -21,6 +21,7 @@ from .core.issue_provenance import IssueProvenanceTracker
 from .plugins import load_analyzers
 from .core.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
 from .core.batch_processor import BatchProcessor, ProcessingStats
+from .cli import OutputManager, VerbosityLevel, OutputFormat, PerformanceProfiler
 
 
 # Setup module logger
@@ -89,11 +90,60 @@ def main():
         help="Exit with error if risk score exceeds threshold"
     )
     
-    parser.add_argument(
+    # Verbosity levels
+    verbosity_group = parser.add_mutually_exclusive_group()
+    verbosity_group.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Quiet mode - only show errors and critical info"
+    )
+    verbosity_group.add_argument(
         "--verbose",
         "-v",
         action="store_true",
-        help="Enable verbose logging"
+        help="Verbose mode - show detailed output"
+    )
+    verbosity_group.add_argument(
+        "--debug",
+        action="store_true",
+        help="Debug mode - show all debug information"
+    )
+    
+    # Output format
+    parser.add_argument(
+        "--output-format",
+        choices=["text", "json", "yaml", "html", "sarif"],
+        default="text",
+        help="Output format (default: text)"
+    )
+    
+    # Watch mode
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Watch mode - show live updates during analysis"
+    )
+    
+    # Performance profiling
+    parser.add_argument(
+        "--profile",
+        action="store_true",
+        help="Enable performance profiling and show metrics"
+    )
+    
+    # Dry run
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be analyzed without actually running"
+    )
+    
+    # Color output
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable colored output"
     )
     
     # Stub Guard mode
@@ -390,8 +440,38 @@ def main():
     
     args = parser.parse_args()
     
-    # Setup logging
-    setup_logging(args.verbose)
+    # Determine verbosity level
+    if args.quiet:
+        verbosity = VerbosityLevel.QUIET
+    elif args.verbose:
+        verbosity = VerbosityLevel.VERBOSE
+    elif args.debug:
+        verbosity = VerbosityLevel.DEBUG
+    else:
+        verbosity = VerbosityLevel.NORMAL
+    
+    # Setup logging (for backward compatibility)
+    setup_logging(args.debug or args.verbose)
+    
+    # Determine output format
+    if args.json:  # Backward compatibility
+        output_format = OutputFormat.JSON
+    elif args.html:  # Backward compatibility
+        output_format = OutputFormat.HTML
+    else:
+        output_format = OutputFormat[args.output_format.upper()]
+    
+    # Initialize output manager
+    output_manager = OutputManager(
+        verbosity=verbosity,
+        output_format=output_format,
+        output_file=args.output if args.output else None,
+        use_color=not args.no_color,
+        watch_mode=args.watch
+    )
+    
+    # Initialize profiler if requested
+    profiler = PerformanceProfiler(enabled=args.profile) if args.profile else None
     
     # Find project root
     root_path = Path(args.path).resolve()
@@ -514,9 +594,27 @@ def main():
         sys.exit(0)
         
     logger.info(f"Found {len(files)} Python files")
+    output_manager.log(f"Found {len(files)} Python files to analyze", VerbosityLevel.NORMAL)
     
-    # Parse files
-    logger.info("Parsing Python files")
+    # Load analyzers for dry-run info
+    analyzers = load_analyzers(config.to_dict())
+    analyzer_names = [a.name for a in analyzers if hasattr(a, 'name')]
+    
+    # Dry-run mode - show what would be analyzed
+    if args.dry_run:
+        output_manager.show_dry_run_summary(
+            files=files,
+            analyzers=analyzer_names,
+            config=config.to_dict()
+        )
+        sys.exit(0)
+    
+    # Parse files with progress tracking
+    spinner_id = output_manager.start_spinner("Parsing Python files...")
+    
+    if profiler:
+        profiler_context = profiler.profile("file_parsing")
+        profiler_context.__enter__()
     
     # Create robust parser if enabled
     robust_parser = None
@@ -524,7 +622,7 @@ def main():
     if args.robust_parsing:
         from .core.robust_parser import RobustParser
         robust_parser = RobustParser(auto_fix_trivial=args.auto_fix_trivial_syntax)
-        logger.info(f"Using robust parser (auto-fix: {args.auto_fix_trivial_syntax})")
+        output_manager.log(f"Using robust parser (auto-fix: {args.auto_fix_trivial_syntax})", VerbosityLevel.VERBOSE)
     
     # Parse files with appropriate method
     if robust_parser:
@@ -533,16 +631,20 @@ def main():
         # Show parsing statistics
         stats = robust_parser.get_statistics()
         if stats['quarantined'] > 0:
-            logger.warning(f"Quarantined {stats['quarantined']} files due to parsing errors")
-            sys.stderr.write(f"Warning: {stats['quarantined']} files could not be parsed and were quarantined\n")
+            output_manager.warning(f"Quarantined {stats['quarantined']} files due to parsing errors")
             
             # Show details of quarantined files if verbose
-            if args.verbose:
+            if verbosity == VerbosityLevel.VERBOSE:
                 for file_path, result in parse_results.items():
                     if result.is_quarantined:
-                        sys.stderr.write(f"  - {file_path}: {', '.join(result.warnings[:2])}\n")
+                        output_manager.log(f"  - {file_path}: {', '.join(result.warnings[:2])}", VerbosityLevel.VERBOSE)
     else:
         ast_index, _ = parse_files(files, cache_manager=cache_manager)
+    
+    output_manager.stop_spinner(spinner_id)
+    
+    if profiler:
+        profiler_context.__exit__(None, None, None)
     
     if not ast_index:
         logger.error("No valid Python files could be parsed")
@@ -1098,6 +1200,12 @@ def main():
     # Stop watchdog (for non-batch mode)
     if not use_batching:
         watchdog.stop()
+    
+    # Show performance profile if requested
+    if profiler:
+        profile_report = profiler.get_report()
+        output_manager.show_performance_profile(profile_report)
+        profiler.stop()
     
     # Flush cache before exiting
     if cache_enabled:
