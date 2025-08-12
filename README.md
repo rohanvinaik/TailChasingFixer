@@ -69,24 +69,26 @@ This tool detects these patterns using advanced semantic analysis and provides a
 # Install from PyPI
 pip install tail-chasing-detector
 
-# Basic analysis
-tailchasing analyze
+# Basic analysis of current directory
+tailchasing .
 
-# Deep analysis with all enhanced features
-tailchasing analyze --deep
+# Analyze a specific directory
+tailchasing /path/to/project
 
-# Semantic analysis with confidence threshold
-tailchasing analyze --semantic-analysis --confidence-threshold 0.85
+# Generate HTML report
+tailchasing . --html --output ./reports
 
-# Generate interactive HTML report with visualizations
-tailchasing visualize --open
+# Generate JSON report
+tailchasing . --json
 
-# Apply automatic fixes (preview first)
-tailchasing fix --dry-run
-tailchasing fix --auto
+# Verbose mode with detailed output
+tailchasing . --verbose
 
-# Get detailed explanations
-tailchasing explain duplicate_function --examples
+# Generate fix suggestions
+tailchasing . --show-suggestions
+
+# Generate automated fix script
+tailchasing . --generate-fixes
 ```
 
 ## 📦 Installation
