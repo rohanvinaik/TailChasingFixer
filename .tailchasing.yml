@@ -127,6 +127,14 @@ explanations:
   include_suggestions: true
   include_examples: true
 
+# Catalytic hypervector analysis settings
+catalytic:
+  enabled: true
+  hv_threshold: 0.88  # Hypervector similarity threshold
+  ast_threshold: 0.85  # AST skeleton similarity threshold
+  min_similarity: 0.9  # Minimum similarity for duplicate detection
+  max_candidates: 50  # Maximum candidates per query
+  
 # Performance settings
 performance:
   parallel_processing: true  # Enable parallel processing for speed

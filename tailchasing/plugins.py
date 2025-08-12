@@ -89,6 +89,13 @@ try:
 except ImportError:
     ENHANCED_MISSING_SYMBOLS_AVAILABLE = False
 
+# Import catalytic analyzer
+try:
+    from .catalytic.catalytic_analyzer import CatalyticDuplicateAnalyzer
+    CATALYTIC_ANALYZER_AVAILABLE = True
+except ImportError:
+    CATALYTIC_ANALYZER_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -181,6 +188,13 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
         # Replace regular missing symbols analyzer with enhanced version
         analyzers = [a for a in analyzers if a.name != "missing_symbols"]
         analyzers.append(EnhancedMissingSymbolAnalyzer())
+    
+    # Add catalytic analyzer if enabled
+    catalytic_config = config.get("catalytic", {})
+    if catalytic_config.get("enabled", True) and CATALYTIC_ANALYZER_AVAILABLE:
+        # This replaces traditional O(N²) duplicate detection with O(N) catalytic approach
+        analyzers = [a for a in analyzers if a.name not in ["duplicates", "fast_duplicates"]]
+        analyzers.insert(1, CatalyticDuplicateAnalyzer())  # Insert after import_graph
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])
