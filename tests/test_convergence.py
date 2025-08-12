@@ -373,3 +373,372 @@ class TestFixSuggestions:
         # Check that at least one suggestion contains the expected keyword
         assert any(expected_suggestion in s.lower() for s in suggestions), \
             f"Expected '{expected_suggestion}' in suggestions for {issue_kind}"
+
+
+# =============================================================================
+# REPLICATION TIMING SCHEDULER TESTS
+# =============================================================================
+
+class TestReplicationTimingScheduler:
+    """Test replication timing-based fix scheduling."""
+    
+    def setup_method(self):
+        """Set up test environment."""
+        from unittest.mock import Mock
+        self.git_analyzer = Mock()
+        self.chromatin_analyzer = Mock()
+        
+        # Import the enhanced convergence classes
+        from tailchasing.engine.convergence import ReplicationTimingScheduler, ReplicationTiming
+        from tailchasing.analyzers.chromatin_contact import TAD
+        
+        self.scheduler = ReplicationTimingScheduler(
+            git_analyzer=self.git_analyzer,
+            chromatin_analyzer=self.chromatin_analyzer
+        )
+        
+        # Mock TADs
+        self.chromatin_analyzer._tads = {
+            'TAD_core': TAD('TAD_core', 'core', {'core.module1', 'core.module2'}, [], 0.8, 0.9, 0.85),
+            'TAD_utils': TAD('TAD_utils', 'utils', {'utils.helper'}, [], 0.6, 0.7, 0.65)
+        }
+    
+    def test_compute_replication_timing_basic(self):
+        """Test basic replication timing computation."""
+        from tailchasing.engine.convergence import ReplicationTiming
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            working_dir = Path(temp_dir)
+            
+            # Mock git history
+            with patch('subprocess.run') as mock_run:
+                mock_run.return_value.returncode = 0
+                mock_run.return_value.stdout = "commit1\ncommit2\ncommit3\n"
+                
+                # Create test file
+                test_file = working_dir / "core" / "module1.py"
+                test_file.parent.mkdir(parents=True)
+                test_file.write_text("def test_func(): pass\nclass TestClass: pass\n")
+                
+                rt = self.scheduler.compute_replication_timing(
+                    "core.module1", working_dir
+                )
+        
+        assert isinstance(rt, ReplicationTiming)
+        assert rt.module_path == "core.module1"
+        assert 0.0 <= rt.rt_score <= 1.0
+        assert 0.0 <= rt.git_churn <= 1.0
+        assert 0.0 <= rt.test_coverage <= 1.0
+        assert 0.0 <= rt.runtime_reach <= 1.0
+        assert rt.tad_membership is not None
+    
+    def test_rt_score_calculation(self):
+        """Test RT score calculation formula."""
+        from unittest.mock import patch
+        import tempfile
+        from pathlib import Path
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            working_dir = Path(temp_dir)
+            
+            with patch.object(self.scheduler, '_compute_git_churn', return_value=0.8):
+                with patch.object(self.scheduler, '_compute_test_coverage', return_value=0.6):
+                    with patch.object(self.scheduler, '_compute_runtime_reach', return_value=0.4):
+                        rt = self.scheduler.compute_replication_timing(
+                            "test.module", working_dir
+                        )
+            
+            # RT(m) = λ₁*git_churn + λ₂*test_coverage + λ₃*runtime_reach
+            # RT(m) = 0.4*0.8 + 0.3*0.6 + 0.3*0.4 = 0.32 + 0.18 + 0.12 = 0.62
+            expected_score = 0.4 * 0.8 + 0.3 * 0.6 + 0.3 * 0.4
+            assert abs(rt.rt_score - expected_score) < 0.001
+    
+    def test_early_replication_detection(self):
+        """Test early replication criteria."""
+        from tailchasing.engine.convergence import ReplicationTiming
+        
+        rt = ReplicationTiming(
+            module_path="high_priority.module",
+            rt_score=0.8,
+            git_churn=0.7,  # High churn
+            test_coverage=0.6,  # High coverage
+            runtime_reach=0.5,  # High reach
+            early_replication=False  # Set in __post_init__
+        )
+        
+        assert rt.early_replication is True
+        
+        rt_low = ReplicationTiming(
+            module_path="low_priority.module",
+            rt_score=0.3,
+            git_churn=0.3,  # Low churn
+            test_coverage=0.2,  # Low coverage
+            runtime_reach=0.1,  # Low reach
+            early_replication=False
+        )
+        
+        assert rt_low.early_replication is False
+    
+    def test_prioritize_fixes_tad_aware(self):
+        """Test TAD-aware fix prioritization."""
+        from unittest.mock import Mock
+        from tailchasing.engine.convergence import ReplicationTiming
+        import tempfile
+        from pathlib import Path
+        
+        issues = [
+            Issue(kind="duplicate", message="Duplicate in utils", severity=2, 
+                  file="utils/helper.py", confidence=0.8),
+            Issue(kind="circular", message="Circular in core", severity=3, 
+                  file="core/module1.py", confidence=0.9),
+            Issue(kind="phantom", message="Phantom in core", severity=1, 
+                  file="core/module2.py", confidence=0.7)
+        ]
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            working_dir = Path(temp_dir)
+            
+            # Mock RT computation
+            def mock_compute_rt(module_path, working_directory, context=None):
+                rt_scores = {
+                    "utils.helper": ReplicationTiming("utils.helper", 0.3, 0.2, 0.3, 0.4, False, "TAD_utils"),
+                    "core.module1": ReplicationTiming("core.module1", 0.8, 0.7, 0.6, 0.5, True, "TAD_core"),
+                    "core.module2": ReplicationTiming("core.module2", 0.6, 0.5, 0.4, 0.3, False, "TAD_core")
+                }
+                return rt_scores.get(module_path, ReplicationTiming(module_path, 0.1, 0.1, 0.1, 0.1, False, "TAD_unknown"))
+            
+            self.scheduler.compute_replication_timing = mock_compute_rt
+            
+            prioritized = self.scheduler.prioritize_fixes(issues, working_dir)
+        
+        assert len(prioritized) == 3
+        
+        # First issue should be from high-RT TAD (core)
+        assert "core" in prioritized[0].file
+        
+        # TAD grouping should be preserved (no interleaving)
+        tad_sequence = []
+        for issue in prioritized:
+            if "core" in issue.file:
+                tad_sequence.append("core")
+            else:
+                tad_sequence.append("utils")
+        
+        # Check for at most one transition between TADs
+        transitions = sum(1 for i in range(1, len(tad_sequence)) 
+                         if tad_sequence[i] != tad_sequence[i-1])
+        assert transitions <= 1
+
+
+class TestEnhancedConvergenceTracker:
+    """Test enhanced convergence tracking with RT evolution."""
+    
+    def setup_method(self):
+        """Set up test environment."""
+        from tailchasing.engine.convergence import ConvergenceTracker
+        self.tracker = ConvergenceTracker(max_iterations=5)
+    
+    def test_rt_evolution_tracking(self):
+        """Test RT evolution tracking across iterations."""
+        from tailchasing.engine.convergence import IterationState, ReplicationTiming
+        import numpy as np
+        
+        # Create iteration states with RT scores
+        state1 = IterationState(
+            iteration=1,
+            timestamp=1000.0,
+            issues=[],
+            code_snapshot={},
+            error_fingerprint="fp1",
+            changes_applied=[],
+            rt_scores={
+                "mod1": ReplicationTiming("mod1", 0.5, 0.4, 0.3, 0.2, False),
+                "mod2": ReplicationTiming("mod2", 0.7, 0.6, 0.5, 0.4, True)
+            }
+        )
+        
+        state2 = IterationState(
+            iteration=2,
+            timestamp=1001.0,
+            issues=[],
+            code_snapshot={},
+            error_fingerprint="fp2",
+            changes_applied=[],
+            rt_scores={
+                "mod1": ReplicationTiming("mod1", 0.6, 0.5, 0.4, 0.3, False),
+                "mod2": ReplicationTiming("mod2", 0.8, 0.7, 0.6, 0.5, True)
+            }
+        )
+        
+        # Process states
+        self.tracker._track_rt_evolution(state1)
+        self.tracker._track_rt_evolution(state2)
+        
+        # Check RT evolution tracking
+        assert len(state1.rt_evolution) == 1
+        assert len(state2.rt_evolution) == 1
+        assert state1.rt_evolution[0] == 0.6  # (0.5 + 0.7) / 2
+        assert state2.rt_evolution[0] == 0.7  # (0.6 + 0.8) / 2
+    
+    def test_enhanced_progress_detection(self):
+        """Test enhanced progress detection with RT metrics."""
+        from tailchasing.engine.convergence import IterationState, ReplicationTiming
+        from unittest.mock import Mock
+        
+        # Create states with issue reduction but RT stagnation
+        prev_state = IterationState(
+            iteration=1, timestamp=1000.0, 
+            issues=[Mock(), Mock(), Mock()],  # 3 issues
+            code_snapshot={}, error_fingerprint="fp1", changes_applied=[],
+            rt_scores={"mod1": ReplicationTiming("mod1", 0.5, 0.4, 0.3, 0.2, False)}
+        )
+        
+        curr_state = IterationState(
+            iteration=2, timestamp=1001.0,
+            issues=[Mock(), Mock()],  # 2 issues (improvement)
+            code_snapshot={}, error_fingerprint="fp2", changes_applied=[],
+            rt_scores={"mod1": ReplicationTiming("mod1", 0.5, 0.4, 0.3, 0.2, False)}  # No RT change
+        )
+        
+        self.tracker.iteration_history = [prev_state]
+        
+        # Should detect sufficient progress due to issue reduction
+        insufficient = self.tracker._is_insufficient_progress(curr_state)
+        assert insufficient is False  # Good progress in issues
+
+
+class TestEnhancedFixOrchestrator:
+    """Test enhanced fix orchestrator with RT scheduling."""
+    
+    def setup_method(self):
+        """Set up test environment."""
+        from tailchasing.engine.convergence import (
+            ConvergenceTracker, PatchValidator, FixOrchestrator, 
+            ReplicationTimingScheduler, PatchInfo, RiskLevel
+        )
+        from unittest.mock import Mock
+        
+        self.tracker = ConvergenceTracker()
+        self.validator = PatchValidator()
+        self.rt_scheduler = Mock(spec=ReplicationTimingScheduler)
+        self.orchestrator = FixOrchestrator(
+            self.tracker, self.validator, rt_scheduler=self.rt_scheduler
+        )
+    
+    def test_rt_enhanced_fix_planning(self):
+        """Test fix planning with RT scheduling."""
+        from tailchasing.engine.convergence import PatchInfo, RiskLevel
+        import tempfile
+        from pathlib import Path
+        
+        fixes = [
+            PatchInfo("file1.py", "old1", "new1", "Fix 1", [], [], RiskLevel.LOW),
+            PatchInfo("file2.py", "old2", "new2", "Fix 2", [], [], RiskLevel.MEDIUM),
+            PatchInfo("file3.py", "old3", "new3", "Fix 3", [], [], RiskLevel.HIGH)
+        ]
+        
+        # Mock RT scheduler to return specific order
+        mock_prioritized = [
+            Issue(kind="patch", message="Fix 2", severity=2, file="file2.py"),
+            Issue(kind="patch", message="Fix 1", severity=1, file="file1.py"),
+            Issue(kind="patch", message="Fix 3", severity=3, file="file3.py")
+        ]
+        
+        self.rt_scheduler.prioritize_fixes.return_value = mock_prioritized
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            working_dir = Path(temp_dir)
+            
+            plan = self.orchestrator._create_fix_plan(fixes, working_dir)
+        
+        # Verify RT scheduler was called
+        self.rt_scheduler.prioritize_fixes.assert_called_once()
+        
+        # Verify plan uses RT ordering
+        assert plan.confidence_score == 0.9  # Higher confidence with RT scheduler
+        assert len(plan.dependency_order) == 3
+
+
+class TestIntegrationWithRT:
+    """Integration tests for complete RT scheduling system."""
+    
+    def test_create_convergence_system_with_rt(self):
+        """Test creating convergence system with RT scheduling."""
+        from tailchasing.engine.convergence import (
+            create_convergence_system, ConvergenceTracker, 
+            PatchValidator, FixOrchestrator
+        )
+        from unittest.mock import Mock
+        
+        git_analyzer = Mock()
+        chromatin_analyzer = Mock()
+        
+        tracker, validator, orchestrator = create_convergence_system(
+            max_iterations=5,
+            git_analyzer=git_analyzer,
+            chromatin_analyzer=chromatin_analyzer,
+            enable_rt_scheduling=True
+        )
+        
+        assert isinstance(tracker, ConvergenceTracker)
+        assert isinstance(validator, PatchValidator)
+        assert isinstance(orchestrator, FixOrchestrator)
+        assert orchestrator.rt_scheduler is not None
+        assert orchestrator.rt_scheduler.git_analyzer is git_analyzer
+        assert orchestrator.rt_scheduler.chromatin_analyzer is chromatin_analyzer
+    
+    def test_end_to_end_rt_workflow(self):
+        """Test end-to-end RT scheduling workflow."""
+        from tailchasing.engine.convergence import (
+            ReplicationTimingScheduler, create_replication_timing_scheduler
+        )
+        from unittest.mock import Mock, patch
+        import tempfile
+        from pathlib import Path
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            working_dir = Path(temp_dir)
+            
+            # Create test files
+            (working_dir / "core").mkdir()
+            (working_dir / "utils").mkdir()
+            
+            core_file = working_dir / "core" / "module.py"
+            core_file.write_text("def core_function(): pass")
+            
+            utils_file = working_dir / "utils" / "helper.py"
+            utils_file.write_text("def helper_function(): pass")
+            
+            # Create issues
+            issues = [
+                Issue(kind="duplicate", message="Duplicate in utils", severity=2, 
+                      file="utils/helper.py", confidence=0.8),
+                Issue(kind="circular", message="Circular in core", severity=3, 
+                      file="core/module.py", confidence=0.9)
+            ]
+            
+            # Create RT scheduler with mocked analyzers
+            git_analyzer = Mock()
+            chromatin_analyzer = Mock()
+            chromatin_analyzer._tads = {
+                'TAD_core': Mock(modules={'core.module'}),
+                'TAD_utils': Mock(modules={'utils.helper'})
+            }
+            
+            scheduler = create_replication_timing_scheduler(
+                git_analyzer=git_analyzer,
+                chromatin_analyzer=chromatin_analyzer
+            )
+            
+            # Mock git and coverage analysis
+            with patch('subprocess.run') as mock_run:
+                mock_run.return_value.returncode = 0
+                mock_run.return_value.stdout = "5"  # 5 commits
+                
+                prioritized = scheduler.prioritize_fixes(issues, working_dir)
+            
+            assert len(prioritized) == 2
+            assert all(isinstance(issue, Issue) for issue in prioritized)

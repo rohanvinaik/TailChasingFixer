@@ -54,6 +54,20 @@ try:
 except ImportError:
     PHANTOM_TRIAGE_AVAILABLE = False
 
+# Import context thrashing analyzer
+try:
+    from .analyzers.context_thrashing import ContextThrashingAnalyzer
+    CONTEXT_THRASHING_AVAILABLE = True
+except ImportError:
+    CONTEXT_THRASHING_AVAILABLE = False
+
+# Import chromatin contact analyzer
+try:
+    from .analyzers.chromatin_contact import ChromatinContactAnalyzer
+    CHROMATIN_CONTACT_AVAILABLE = True
+except ImportError:
+    CHROMATIN_CONTACT_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -114,6 +128,16 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     phantom_config = config.get("placeholders", {})
     if phantom_config.get("triage_enabled", True) and PHANTOM_TRIAGE_AVAILABLE:
         analyzers.append(PhantomTriageAnalyzer(config))
+    
+    # Add context thrashing analyzer if enabled
+    context_config = config.get("context_thrashing", {})
+    if context_config.get("enabled", True) and CONTEXT_THRASHING_AVAILABLE:
+        analyzers.append(ContextThrashingAnalyzer(config))
+    
+    # Add chromatin contact analyzer if enabled
+    chromatin_config = config.get("chromatin_contact", {})
+    if chromatin_config.get("enabled", True) and CHROMATIN_CONTACT_AVAILABLE:
+        analyzers.append(ChromatinContactAnalyzer(config))
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])

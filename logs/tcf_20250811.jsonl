@@ -690,3 +690,219 @@
 {"timestamp": "2025-08-12T01:06:58.477532Z", "level": "INFO", "module": "cli", "function": "main", "line": 259, "message": "Performing root cause clustering analysis"}
 {"timestamp": "2025-08-12T01:07:06.911753Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
 {"timestamp": "2025-08-12T01:12:50.867445Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-12T01:46:58.194042Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:58.195844Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.196679Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.197093Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.197919Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.209395Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.209574Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.210976Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.211158Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.212898Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.212986Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:58.328073Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:58.328997Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.329835Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.330241Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.331137Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.341163Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.341303Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.342190Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.342349Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.343788Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.343860Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:58.526442Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:58.527263Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.528052Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.528453Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.529279Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.539978Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.540204Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.541357Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.541537Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.543067Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.543155Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:58.664348Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:58.665204Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.666133Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.666547Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.667259Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.677437Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.677579Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.678443Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.678602Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.680048Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.680122Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:58.794094Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:58.795022Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.795861Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.796266Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.797093Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.807639Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.807776Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.808750Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.808937Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.810650Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.810750Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:58.928348Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:58.929260Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.930107Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.930512Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.931374Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.942515Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.942669Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.943525Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.943689Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:58.945273Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:58.945375Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:59.065934Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:59.066608Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.067175Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 2 issues"}
+{"timestamp": "2025-08-12T01:46:59.067507Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 2 issues"}
+{"timestamp": "2025-08-12T01:46:59.068130Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.079043Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.079202Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.079867Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.081199Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 2 issues"}
+{"timestamp": "2025-08-12T01:46:59.081549Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.081619Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 6 total issues found"}
+{"timestamp": "2025-08-12T01:46:59.203892Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:59.205008Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.206254Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:59.206728Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.207665Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.217760Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.217903Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.218885Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.219073Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.220723Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:59.220800Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:59.337394Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:59.338503Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.339544Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:59.340018Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.341009Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.351134Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.351272Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.352207Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.352390Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.353973Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:59.354045Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T01:46:59.469003Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 126, "message": "Analyzing 5 files"}
+{"timestamp": "2025-08-12T01:46:59.470060Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "import_graph found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.471096Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "duplicates found 1 issues"}
+{"timestamp": "2025-08-12T01:46:59.471590Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "placeholders found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.472625Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "missing_symbols found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.482972Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "git_chains found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.483177Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "semantic_hv found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.484490Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "circular_import_resolver found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.484713Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "phantom_triage found 0 issues"}
+{"timestamp": "2025-08-12T01:46:59.486415Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 166, "message": "context_thrashing found 1 issues"}
+{"timestamp": "2025-08-12T01:46:59.486495Z", "level": "INFO", "module": "cli_enhanced", "function": "run", "line": 194, "message": "Analysis complete: 2 total issues found"}
+{"timestamp": "2025-08-12T02:29:45.552155Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 688, "message": "Prioritizing 3 fixes using replication timing"}
+{"timestamp": "2025-08-12T02:29:45.552326Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 722, "message": "Completed replication timing-based prioritization"}
+{"timestamp": "2025-08-12T02:29:57.046274Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 688, "message": "Prioritizing 2 fixes using replication timing"}
+{"timestamp": "2025-08-12T02:29:57.046649Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 722, "message": "Completed replication timing-based prioritization"}
+{"timestamp": "2025-08-12T02:30:11.577073Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 688, "message": "Prioritizing 3 fixes using replication timing"}
+{"timestamp": "2025-08-12T02:30:11.577244Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 722, "message": "Completed replication timing-based prioritization"}
+{"timestamp": "2025-08-12T02:30:11.579393Z", "level": "INFO", "module": "convergence", "function": "_create_fix_plan", "line": 1158, "message": "Creating fix plan with replication timing scheduling"}
+{"timestamp": "2025-08-12T02:30:11.579510Z", "level": "INFO", "module": "convergence", "function": "_create_fix_plan", "line": 1194, "message": "RT-based fix ordering: 3 fixes prioritized"}
+{"timestamp": "2025-08-12T02:30:11.582023Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 688, "message": "Prioritizing 2 fixes using replication timing"}
+{"timestamp": "2025-08-12T02:30:11.582437Z", "level": "INFO", "module": "convergence", "function": "prioritize_fixes", "line": 722, "message": "Completed replication timing-based prioritization"}
+{"timestamp": "2025-08-12T02:39:10.536517Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 3 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:10.537291Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.667"}
+{"timestamp": "2025-08-12T02:39:10.538841Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 3 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:10.539015Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.778"}
+{"timestamp": "2025-08-12T02:39:10.599005Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 183, "message": "Computing linkage disequilibrium matrix"}
+{"timestamp": "2025-08-12T02:39:10.599180Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 224, "message": "LD matrix computed: mean LD = 0.000"}
+{"timestamp": "2025-08-12T02:39:10.600044Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 372, "message": "Identifying linkage groups with threshold 0.6"}
+{"timestamp": "2025-08-12T02:39:10.600354Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 414, "message": "Identified 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:10.602578Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 246, "message": "Predicting extraction ROI from 1 linkage groups"}
+{"timestamp": "2025-08-12T02:39:10.602807Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 304, "message": "Identified 1 extraction ROIs"}
+{"timestamp": "2025-08-12T02:39:10.604181Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 320, "message": "Extracting git history from /var/***REDACTED***"}
+{"timestamp": "2025-08-12T02:39:10.604294Z", "level": "WARNING", "module": "recombination_mapper", "function": "extract_git_history", "line": 344, "message": "Git command failed: not a git repository"}
+{"timestamp": "2025-08-12T02:39:10.604716Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 320, "message": "Extracting git history from /var/***REDACTED***"}
+{"timestamp": "2025-08-12T02:39:10.604817Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 351, "message": "Extracted 1 co-edit events"}
+{"timestamp": "2025-08-12T02:39:10.605603Z", "level": "INFO", "module": "recombination_mapper", "function": "add_module_boundaries", "line": 677, "message": "Adding module boundaries to test_module.py"}
+{"timestamp": "2025-08-12T02:39:10.606908Z", "level": "INFO", "module": "recombination_mapper", "function": "generate_facade_file", "line": 767, "message": "Generating facade for test_module.py"}
+{"timestamp": "2025-08-12T02:39:10.607576Z", "level": "INFO", "module": "recombination_mapper", "function": "generate_common_file", "line": 847, "message": "Generating common file for shared_helpers"}
+{"timestamp": "2025-08-12T02:39:10.608347Z", "level": "INFO", "module": "recombination_mapper", "function": "enhance_chromatin_analyzer", "line": 1098, "message": "Enhancing ChromatinContactAnalyzer with recombination mapping"}
+{"timestamp": "2025-08-12T02:39:10.608421Z", "level": "INFO", "module": "recombination_mapper", "function": "enhance_chromatin_analyzer", "line": 1119, "message": "ChromatinContactAnalyzer enhancement complete"}
+{"timestamp": "2025-08-12T02:39:10.609075Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 4 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:10.609187Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.500"}
+{"timestamp": "2025-08-12T02:39:10.609249Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 183, "message": "Computing linkage disequilibrium matrix"}
+{"timestamp": "2025-08-12T02:39:10.609350Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 224, "message": "LD matrix computed: mean LD = -0.250"}
+{"timestamp": "2025-08-12T02:39:10.609410Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 372, "message": "Identifying linkage groups with threshold 0.6"}
+{"timestamp": "2025-08-12T02:39:10.609517Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 414, "message": "Identified 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:10.609590Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 246, "message": "Predicting extraction ROI from 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:10.609777Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 304, "message": "Identified 2 extraction ROIs"}
+{"timestamp": "2025-08-12T02:39:10.609838Z", "level": "INFO", "module": "recombination_mapper", "function": "add_module_boundaries", "line": 677, "message": "Adding module boundaries to src/auth.py"}
+{"timestamp": "2025-08-12T02:39:10.610765Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 10 files from 1 commits"}
+{"timestamp": "2025-08-12T02:39:10.610934Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 1.000"}
+{"timestamp": "2025-08-12T02:39:22.522147Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 3 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:22.522388Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.667"}
+{"timestamp": "2025-08-12T02:39:22.523548Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 3 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:22.523695Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.778"}
+{"timestamp": "2025-08-12T02:39:22.524739Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 183, "message": "Computing linkage disequilibrium matrix"}
+{"timestamp": "2025-08-12T02:39:22.524893Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 224, "message": "LD matrix computed: mean LD = 0.000"}
+{"timestamp": "2025-08-12T02:39:22.525868Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 372, "message": "Identifying linkage groups with threshold 0.6"}
+{"timestamp": "2025-08-12T02:39:22.526185Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 414, "message": "Identified 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:22.528076Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 246, "message": "Predicting extraction ROI from 1 linkage groups"}
+{"timestamp": "2025-08-12T02:39:22.528289Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 304, "message": "Identified 1 extraction ROIs"}
+{"timestamp": "2025-08-12T02:39:22.529767Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 320, "message": "Extracting git history from /var/***REDACTED***"}
+{"timestamp": "2025-08-12T02:39:22.529908Z", "level": "WARNING", "module": "recombination_mapper", "function": "extract_git_history", "line": 344, "message": "Git command failed: not a git repository"}
+{"timestamp": "2025-08-12T02:39:22.530239Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 320, "message": "Extracting git history from /var/***REDACTED***"}
+{"timestamp": "2025-08-12T02:39:22.530370Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 351, "message": "Extracted 1 co-edit events"}
+{"timestamp": "2025-08-12T02:39:22.533577Z", "level": "INFO", "module": "recombination_mapper", "function": "add_module_boundaries", "line": 677, "message": "Adding module boundaries to test_module.py"}
+{"timestamp": "2025-08-12T02:39:22.539068Z", "level": "INFO", "module": "recombination_mapper", "function": "generate_facade_file", "line": 767, "message": "Generating facade for test_module.py"}
+{"timestamp": "2025-08-12T02:39:22.540432Z", "level": "INFO", "module": "recombination_mapper", "function": "generate_common_file", "line": 847, "message": "Generating common file for shared_helpers"}
+{"timestamp": "2025-08-12T02:39:22.541454Z", "level": "INFO", "module": "recombination_mapper", "function": "enhance_chromatin_analyzer", "line": 1098, "message": "Enhancing ChromatinContactAnalyzer with recombination mapping"}
+{"timestamp": "2025-08-12T02:39:22.541556Z", "level": "INFO", "module": "recombination_mapper", "function": "enhance_chromatin_analyzer", "line": 1119, "message": "ChromatinContactAnalyzer enhancement complete"}
+{"timestamp": "2025-08-12T02:39:22.542360Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 4 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:22.542572Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.500"}
+{"timestamp": "2025-08-12T02:39:22.542665Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 183, "message": "Computing linkage disequilibrium matrix"}
+{"timestamp": "2025-08-12T02:39:22.542799Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 224, "message": "LD matrix computed: mean LD = -0.250"}
+{"timestamp": "2025-08-12T02:39:22.542894Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 372, "message": "Identifying linkage groups with threshold 0.6"}
+{"timestamp": "2025-08-12T02:39:22.543035Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 414, "message": "Identified 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:22.543133Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 246, "message": "Predicting extraction ROI from 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:22.543355Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 304, "message": "Identified 2 extraction ROIs"}
+{"timestamp": "2025-08-12T02:39:22.543444Z", "level": "INFO", "module": "recombination_mapper", "function": "add_module_boundaries", "line": 677, "message": "Adding module boundaries to src/auth.py"}
+{"timestamp": "2025-08-12T02:39:22.544548Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 10 files from 1 commits"}
+{"timestamp": "2025-08-12T02:39:22.544745Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 1.000"}
+{"timestamp": "2025-08-12T02:39:45.513425Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 3 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:45.513632Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.667"}
+{"timestamp": "2025-08-12T02:39:45.514642Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 3 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:45.514763Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.778"}
+{"timestamp": "2025-08-12T02:39:45.515566Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 183, "message": "Computing linkage disequilibrium matrix"}
+{"timestamp": "2025-08-12T02:39:45.515681Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 224, "message": "LD matrix computed: mean LD = 0.000"}
+{"timestamp": "2025-08-12T02:39:45.516446Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 372, "message": "Identifying linkage groups with threshold 0.6"}
+{"timestamp": "2025-08-12T02:39:45.516711Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 414, "message": "Identified 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:45.518370Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 246, "message": "Predicting extraction ROI from 1 linkage groups"}
+{"timestamp": "2025-08-12T02:39:45.518546Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 304, "message": "Identified 1 extraction ROIs"}
+{"timestamp": "2025-08-12T02:39:45.519813Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 320, "message": "Extracting git history from /var/***REDACTED***"}
+{"timestamp": "2025-08-12T02:39:45.519921Z", "level": "WARNING", "module": "recombination_mapper", "function": "extract_git_history", "line": 344, "message": "Git command failed: not a git repository"}
+{"timestamp": "2025-08-12T02:39:45.520962Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 320, "message": "Extracting git history from /var/***REDACTED***"}
+{"timestamp": "2025-08-12T02:39:45.521061Z", "level": "INFO", "module": "recombination_mapper", "function": "extract_git_history", "line": 351, "message": "Extracted 1 co-edit events"}
+{"timestamp": "2025-08-12T02:39:45.521925Z", "level": "INFO", "module": "recombination_mapper", "function": "add_module_boundaries", "line": 677, "message": "Adding module boundaries to test_module.py"}
+{"timestamp": "2025-08-12T02:39:45.523625Z", "level": "INFO", "module": "recombination_mapper", "function": "generate_facade_file", "line": 767, "message": "Generating facade for test_module.py"}
+{"timestamp": "2025-08-12T02:39:45.524350Z", "level": "INFO", "module": "recombination_mapper", "function": "generate_common_file", "line": 847, "message": "Generating common file for shared_helpers"}
+{"timestamp": "2025-08-12T02:39:45.525150Z", "level": "INFO", "module": "recombination_mapper", "function": "enhance_chromatin_analyzer", "line": 1098, "message": "Enhancing ChromatinContactAnalyzer with recombination mapping"}
+{"timestamp": "2025-08-12T02:39:45.525228Z", "level": "INFO", "module": "recombination_mapper", "function": "enhance_chromatin_analyzer", "line": 1119, "message": "ChromatinContactAnalyzer enhancement complete"}
+{"timestamp": "2025-08-12T02:39:45.525902Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 4 files from 3 commits"}
+{"timestamp": "2025-08-12T02:39:45.526032Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 0.500"}
+{"timestamp": "2025-08-12T02:39:45.526095Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 183, "message": "Computing linkage disequilibrium matrix"}
+{"timestamp": "2025-08-12T02:39:45.526198Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 224, "message": "LD matrix computed: mean LD = -0.250"}
+{"timestamp": "2025-08-12T02:39:45.526261Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 372, "message": "Identifying linkage groups with threshold 0.6"}
+{"timestamp": "2025-08-12T02:39:45.526379Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 414, "message": "Identified 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:45.526449Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 246, "message": "Predicting extraction ROI from 2 linkage groups"}
+{"timestamp": "2025-08-12T02:39:45.526638Z", "level": "INFO", "module": "recombination_mapper", "function": "predict_extraction_roi", "line": 304, "message": "Identified 2 extraction ROIs"}
+{"timestamp": "2025-08-12T02:39:45.526697Z", "level": "INFO", "module": "recombination_mapper", "function": "add_module_boundaries", "line": 677, "message": "Adding module boundaries to src/auth.py"}
+{"timestamp": "2025-08-12T02:39:45.527617Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 119, "message": "Building co-edit matrix for 10 files from 1 commits"}
+{"timestamp": "2025-08-12T02:39:45.527776Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 161, "message": "Co-edit matrix built: mean frequency = 1.000"}
+{"timestamp": "2025-08-12T02:40:07.774798Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 116, "message": "Building co-edit matrix for 2 files from 1 commits"}
+{"timestamp": "2025-08-12T02:40:07.775011Z", "level": "INFO", "module": "recombination_mapper", "function": "build_coedit_matrix", "line": 158, "message": "Co-edit matrix built: mean frequency = 1.000"}
+{"timestamp": "2025-08-12T02:40:07.775096Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 180, "message": "Computing linkage disequilibrium matrix"}
+{"timestamp": "2025-08-12T02:40:07.775199Z", "level": "INFO", "module": "recombination_mapper", "function": "compute_linkage_disequilibrium", "line": 221, "message": "LD matrix computed: mean LD = 0.500"}
+{"timestamp": "2025-08-12T02:40:07.775275Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 369, "message": "Identifying linkage groups with threshold 0.6"}
+{"timestamp": "2025-08-12T02:40:07.775512Z", "level": "INFO", "module": "recombination_mapper", "function": "identify_linkage_groups", "line": 411, "message": "Identified 1 linkage groups"}

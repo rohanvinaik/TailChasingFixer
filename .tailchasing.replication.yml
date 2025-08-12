@@ -1,0 +1,78 @@
+# Example configuration for replication timing-based fix scheduling
+# This demonstrates how to enable biologically-inspired fix ordering
+
+# Enable replication timing scheduler
+replication_timing:
+  enabled: true
+  
+  # RT score computation weights (must sum to 1.0)
+  weights:
+    git_churn: 0.4      # λ₁: Git commit frequency/churn rate
+    test_coverage: 0.3  # λ₂: Test coverage density  
+    runtime_reach: 0.3  # λ₃: Runtime reachability/impact
+  
+  # Early replication criteria (high priority modules)
+  early_replication:
+    min_git_churn: 0.6      # High development activity
+    min_test_coverage: 0.5  # Well-tested and stable
+    min_runtime_reach: 0.4  # High system impact
+  
+  # TAD-aware scheduling
+  tad_scheduling:
+    prevent_interleaving: true    # Prevent cross-TAD fix mixing
+    tad_boundary_rollbacks: true  # Create rollback points at TAD transitions
+    max_tad_transitions: 2        # Limit TAD context switches per session
+
+# Required: ChromatinContactAnalyzer for TAD detection
+chromatin_contact:
+  enabled: true
+  weights:
+    token: 0.3
+    ast: 0.25
+    module: 0.25
+    git: 0.2
+  contact_params:
+    kappa: 1.0
+    alpha: 1.5
+    epsilon: 0.1
+    tad_penalty: 0.7
+
+# Enhanced convergence tracking
+convergence:
+  max_iterations: 8
+  similarity_threshold: 0.05
+  rt_evolution_tracking: true
+  adaptive_progress_detection: true
+  
+# Fix orchestration with RT scheduling  
+orchestration:
+  enable_rt_scheduling: true
+  max_risk_level: "HIGH"
+  rt_confidence_boost: 0.1  # Higher confidence with RT scheduling
+  
+# Example usage:
+# 
+# Python API:
+# ```python
+# from tailchasing.engine.convergence import create_convergence_system
+# from tailchasing.analyzers.git_chains import GitChainAnalyzer
+# from tailchasing.analyzers.chromatin_contact import ChromatinContactAnalyzer
+# 
+# # Create analyzers
+# git_analyzer = GitChainAnalyzer(config)
+# chromatin_analyzer = ChromatinContactAnalyzer(config)
+# 
+# # Create enhanced convergence system
+# tracker, validator, orchestrator = create_convergence_system(
+#     max_iterations=8,
+#     git_analyzer=git_analyzer,
+#     chromatin_analyzer=chromatin_analyzer,
+#     enable_rt_scheduling=True
+# )
+# 
+# # Use orchestrator with RT-aware fix planning
+# success, messages = orchestrator.execute_fix_sequence(fixes, working_dir)
+# ```
+#
+# CLI usage:
+# tailchasing-enhanced . --config .tailchasing.replication.yml --rt-scheduling

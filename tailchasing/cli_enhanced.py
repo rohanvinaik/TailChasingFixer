@@ -78,6 +78,14 @@ class EnhancedCLI:
         parser.add_argument('--exclude-types', nargs='+',
                           help='Exclude specific issue types from analysis')
         
+        # Context-thrashing specific options
+        parser.add_argument('--flat', action='store_true',
+                          help='Show context-window thrashing in flat view (individual functions)')
+        parser.add_argument('--max-members', type=int, metavar='N',
+                          help='Limit cluster member display to N functions')
+        parser.add_argument('--expand', metavar='CLUSTER_ID',
+                          help='Expand specific cluster to show all members')
+        
         # Configuration
         parser.add_argument('--config', metavar='FILE',
                           help='Path to configuration file')
@@ -186,18 +194,22 @@ class EnhancedCLI:
             self.logger.info(f"Analysis complete: {len(issues)} total issues found")
             sys.stdout.write(f"\n📊 Analysis complete: {len(issues)} total issues found\n")
             
-            # Generate outputs
-            reporter = Reporter(config)
-            if parsed_args.json:
-                sys.stdout.write(reporter.render_json(issues))
-            elif parsed_args.html:
-                self._generate_html_report(issues, files, parsed_args.html)
-                self.logger.info(f"HTML report generated: {parsed_args.html}")
-                sys.stdout.write(f"📄 HTML report generated: {parsed_args.html}\n")
-            elif parsed_args.explain:
-                self._generate_explanations(issues)
+            # Handle context-thrashing specific output
+            if parsed_args.flat or parsed_args.max_members or parsed_args.expand:
+                self._handle_context_thrashing_output(ctx, parsed_args)
             else:
-                sys.stdout.write(reporter.render_text(issues))
+                # Generate standard outputs
+                reporter = Reporter(config)
+                if parsed_args.json:
+                    sys.stdout.write(reporter.render_json(issues))
+                elif parsed_args.html:
+                    self._generate_html_report(issues, files, parsed_args.html)
+                    self.logger.info(f"HTML report generated: {parsed_args.html}")
+                    sys.stdout.write(f"📄 HTML report generated: {parsed_args.html}\n")
+                elif parsed_args.explain:
+                    self._generate_explanations(issues)
+                else:
+                    sys.stdout.write(reporter.render_text(issues))
             
             # Handle auto-fix options
             if parsed_args.auto_fix or parsed_args.fix_plan:
@@ -373,6 +385,55 @@ class EnhancedCLI:
         sys.stdout.write(f"\n✅ Applied {applied_count} fixes successfully\n")
         sys.stdout.write("💡 Run your tests to ensure everything still works correctly\n")
         sys.stdout.write(f"🔄 To rollback changes, run: {' && '.join(fix_plan.rollback_plan)}\n")
+    
+    def _handle_context_thrashing_output(self, ctx: AnalysisContext, args):
+        """Handle context-thrashing specific output options."""
+        from .analyzers.context_thrashing import ContextThrashingAnalyzer
+        
+        # Get or create the context-thrashing analyzer
+        analyzer = None
+        analyzers = load_analyzers(ctx.config)
+        
+        for a in analyzers:
+            if hasattr(a, 'name') and a.name == 'context_thrashing':
+                analyzer = a
+                break
+        
+        if not analyzer:
+            # Create new analyzer if not found
+            analyzer = ContextThrashingAnalyzer(ctx.config)
+            # Run the analyzer
+            analyzer.run(ctx)
+        elif not analyzer._clusters:
+            # If analyzer exists but hasn't run yet
+            analyzer.run(ctx)
+        
+        if args.expand:
+            # Expand specific cluster
+            cluster = analyzer.expand_cluster(args.expand)
+            if cluster:
+                sys.stdout.write(f"\n🔍 EXPANDED CLUSTER {args.expand}:\n")
+                sys.stdout.write("=" * 50 + "\n")
+                sys.stdout.write(f"Functions: {len(cluster.functions)}\n")
+                sys.stdout.write(f"File: {cluster.file_path}\n")
+                sys.stdout.write(f"Severity: {cluster.severity:.1f}\n")
+                sys.stdout.write(f"Suggested helper: {cluster.suggested_helper}\n\n")
+                
+                for i, func in enumerate(cluster.functions, 1):
+                    class_prefix = f"{func.class_name}." if func.class_name else ""
+                    sys.stdout.write(f"  {i}. {class_prefix}{func.name}{func.signature}\n")
+                    sys.stdout.write(f"     Lines {func.line_start}-{func.line_end}\n")
+                
+                sys.stdout.write("\n" + cluster.extract_playbook + "\n")
+            else:
+                sys.stderr.write(f"Cluster '{args.expand}' not found.\n")
+        else:
+            # Generate cluster report with specified options
+            report = analyzer.generate_cluster_report(
+                flat_view=args.flat,
+                max_members=args.max_members
+            )
+            sys.stdout.write("\n" + report + "\n")
 
 
 def main():
