@@ -281,9 +281,12 @@ def encode_function(
     # Get channel weights from config
     channel_weights = config.get('channel_weights', {})
     default_weight = 1.0
+    use_weighted_bundle = config.get('use_weighted_bundle', False)
+    normalize_channels = config.get('normalize_channels', True)
     
     # Encode each channel
     channel_vectors = []
+    channel_weight_pairs = []
     
     for channel, tokens in features.items():
         if not tokens:
@@ -294,30 +297,290 @@ def encode_function(
         if weight <= 0:
             continue
         
-        # Encode tokens
-        token_hvs = []
-        for token in tokens:
-            token_hvs.append(space.token(token))
+        # Encode tokens with different strategies based on channel
+        channel_vec = encode_channel(channel, tokens, space, config)
         
-        # Bundle tokens for this channel
-        channel_bundle = space.bundle(token_hvs)
-        
-        # Bind with role vector
-        role_vec = space.role(channel)
-        channel_vec = space.bind(role_vec, channel_bundle)
-        
-        # Apply weight by repeating (simple weighting scheme)
-        repeat_count = max(1, int(weight))
-        for _ in range(repeat_count):
-            channel_vectors.append(channel_vec)
+        if use_weighted_bundle:
+            channel_weight_pairs.append((channel_vec, weight))
+        else:
+            # Apply weight by repeating (simple weighting scheme)
+            repeat_count = max(1, int(weight * 5))  # Scale factor for weights
+            for _ in range(repeat_count):
+                channel_vectors.append(channel_vec)
     
     # Handle empty function case
-    if not channel_vectors:
+    if not channel_vectors and not channel_weight_pairs:
         # Create a unique vector for empty function
         return space.token(f"EMPTY::{file}::{fn.name}")
     
     # Bundle all channel vectors
-    return space.bundle(channel_vectors)
+    if use_weighted_bundle and channel_weight_pairs:
+        result = space.weighted_bundle(channel_weight_pairs)
+    else:
+        result = space.bundle(channel_vectors)
+    
+    # Optional normalization
+    if normalize_channels:
+        result = space.threshold_cleanup(result)
+    
+    return result
+
+
+def encode_channel(
+    channel: str, 
+    tokens: List[str], 
+    space: HVSpace, 
+    config: Dict[str, Any]
+) -> np.ndarray:
+    """
+    Encode a specific channel with appropriate strategy.
+    
+    Args:
+        channel: Channel name
+        tokens: List of tokens for this channel
+        space: Hypervector space
+        config: Encoding configuration
+    
+    Returns:
+        Encoded channel vector
+    """
+    if not tokens:
+        return space._rand_vec()
+    
+    # Choose encoding strategy based on channel type
+    if channel in ['NAME_TOKENS', 'ARG_SIG']:
+        # Use sequence encoding for structured tokens
+        use_sequence = config.get('use_sequence_encoding', False)
+        if use_sequence:
+            channel_vec = space.create_sequence_vector(tokens, use_permutation=True)
+        else:
+            token_hvs = [space.token(token) for token in tokens]
+            channel_vec = space.bundle(token_hvs)
+    
+    elif channel == 'CONTROL':
+        # For control flow, order matters
+        channel_vec = space.create_sequence_vector(tokens, use_permutation=True)
+    
+    elif channel == 'DOC_TOKENS':
+        # For documentation, use frequency weighting
+        token_counts = {}
+        for token in tokens:
+            token_counts[token] = token_counts.get(token, 0) + 1
+        
+        weighted_pairs = []
+        for token, count in token_counts.items():
+            weight = min(3.0, count)  # Cap frequency weight
+            weighted_pairs.append((space.token(token), weight))
+        
+        if weighted_pairs:
+            channel_vec = space.weighted_bundle(weighted_pairs)
+        else:
+            channel_vec = space._rand_vec()
+    
+    elif channel in ['CALLS', 'IMPORTS', 'EXCEPTIONS']:
+        # For these channels, treat as sets (no order, but unique items)
+        unique_tokens = list(set(tokens))
+        token_hvs = [space.token(token) for token in unique_tokens]
+        channel_vec = space.bundle(token_hvs)
+    
+    elif channel == 'LITERALS':
+        # For literals, group by type
+        type_groups = {}
+        for token in tokens:
+            type_groups.setdefault(token, []).append(token)
+        
+        type_vecs = []
+        for lit_type, instances in type_groups.items():
+            type_vec = space.token(lit_type)
+            count_vec = space.token(f"count_{len(instances)}")
+            bound_vec = space.bind(type_vec, count_vec)
+            type_vecs.append(bound_vec)
+        
+        channel_vec = space.bundle(type_vecs) if type_vecs else space._rand_vec()
+    
+    else:
+        # Default encoding: simple bundle
+        token_hvs = [space.token(token) for token in tokens]
+        channel_vec = space.bundle(token_hvs)
+    
+    # Bind with role vector
+    role_vec = space.role(channel)
+    return space.bind(role_vec, channel_vec)
+
+
+def encode_function_with_context(
+    fn: ast.FunctionDef,
+    file: str,
+    space: HVSpace,
+    config: Dict[str, Any],
+    class_context: Optional[str] = None,
+    module_imports: Optional[List[str]] = None
+) -> np.ndarray:
+    """
+    Encode a function with additional context information.
+    
+    Args:
+        fn: Function AST node
+        file: Source file path
+        space: Hypervector space
+        config: Encoding configuration
+        class_context: Name of containing class (if any)
+        module_imports: List of module imports
+    
+    Returns:
+        Contextual hypervector representing the function
+    """
+    # Get base function encoding
+    base_vec = encode_function(fn, file, space, config)
+    
+    # Add context vectors
+    context_vecs = [base_vec]
+    
+    # File context
+    file_role = space.role('FILE_CONTEXT')
+    file_token = space.token(file.split('/')[-1].replace('.py', ''))
+    file_vec = space.bind(file_role, file_token)
+    context_vecs.append(file_vec)
+    
+    # Class context
+    if class_context:
+        class_role = space.role('CLASS_CONTEXT')
+        class_tokens = split_identifier(class_context)
+        if class_tokens:
+            class_bundle = space.bundle([space.token(token) for token in class_tokens])
+            class_vec = space.bind(class_role, class_bundle)
+            context_vecs.append(class_vec)
+    
+    # Import context
+    if module_imports:
+        import_role = space.role('IMPORT_CONTEXT')
+        # Limit to most relevant imports
+        relevant_imports = module_imports[:10]
+        import_tokens = [space.token(imp) for imp in relevant_imports]
+        import_bundle = space.bundle(import_tokens)
+        import_vec = space.bind(import_role, import_bundle)
+        context_vecs.append(import_vec)
+    
+    # Function signature context
+    sig_context = encode_signature_context(fn, space)
+    if sig_context is not None:
+        context_vecs.append(sig_context)
+    
+    return space.bundle(context_vecs)
+
+
+def encode_signature_context(fn: ast.FunctionDef, space: HVSpace) -> Optional[np.ndarray]:
+    """
+    Encode function signature as contextual information.
+    
+    Args:
+        fn: Function AST node
+        space: Hypervector space
+    
+    Returns:
+        Signature context vector or None
+    """
+    sig_elements = []
+    
+    # Argument count
+    arg_count = len(fn.args.args)
+    sig_elements.append(f"args_{arg_count}")
+    
+    # Default arguments
+    default_count = len(fn.args.defaults)
+    if default_count > 0:
+        sig_elements.append(f"defaults_{default_count}")
+    
+    # Varargs and kwargs
+    if fn.args.vararg:
+        sig_elements.append("varargs")
+    if fn.args.kwarg:
+        sig_elements.append("kwargs")
+    
+    # Return annotation
+    if fn.returns:
+        sig_elements.append("typed_return")
+    
+    # Decorators
+    if fn.decorator_list:
+        sig_elements.append(f"decorators_{len(fn.decorator_list)}")
+    
+    if not sig_elements:
+        return None
+    
+    sig_role = space.role('SIGNATURE_CONTEXT')
+    sig_tokens = [space.token(elem) for elem in sig_elements]
+    sig_bundle = space.bundle(sig_tokens)
+    
+    return space.bind(sig_role, sig_bundle)
+
+
+def batch_encode_functions(
+    functions: List[Tuple[ast.FunctionDef, str]], 
+    space: HVSpace,
+    config: Dict[str, Any]
+) -> List[np.ndarray]:
+    """
+    Efficiently encode a batch of functions.
+    
+    Args:
+        functions: List of (function_node, file_path) tuples
+        space: Hypervector space
+        config: Encoding configuration
+    
+    Returns:
+        List of encoded function vectors
+    """
+    encoded_functions = []
+    
+    # Pre-warm token cache with common tokens
+    if config.get('prewarm_cache', False):
+        prewarm_token_cache(functions, space)
+    
+    for fn, file_path in functions:
+        try:
+            encoded_vec = encode_function(fn, file_path, space, config)
+            encoded_functions.append(encoded_vec)
+        except Exception as e:
+            # Create error vector for failed encodings
+            error_vec = space.token(f"ERROR::{file_path}::{fn.name}")
+            encoded_functions.append(error_vec)
+    
+    return encoded_functions
+
+
+def prewarm_token_cache(
+    functions: List[Tuple[ast.FunctionDef, str]], 
+    space: HVSpace
+):
+    """
+    Pre-warm the token cache with common tokens from functions.
+    
+    Args:
+        functions: List of (function_node, file_path) tuples
+        space: Hypervector space
+    """
+    token_counts = {}
+    extractor = FunctionFeatureExtractor()
+    
+    # Sample a subset of functions for pre-warming
+    sample_size = min(100, len(functions))
+    sample_functions = functions[:sample_size]
+    
+    for fn, _ in sample_functions:
+        features = extractor.extract(fn)
+        for channel, tokens in features.items():
+            for token in tokens:
+                token_counts[token] = token_counts.get(token, 0) + 1
+    
+    # Pre-generate vectors for frequent tokens
+    frequent_tokens = [
+        token for token, count in token_counts.items() 
+        if count >= 3  # Appear in at least 3 functions
+    ]
+    
+    for token in frequent_tokens:
+        space.token(token)  # This caches the vector
 
 
 def extract_channels(fn: ast.FunctionDef, source: str) -> List[Tuple[str, List[str]]]:

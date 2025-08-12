@@ -1,0 +1,226 @@
+# Example TailChasingFixer Configuration
+# Place this file as .tailchasing.yml in your project root
+
+# Severity threshold (1-5)
+# Only report issues at or above this severity
+severity_threshold: 2
+
+# Automatic fix application
+auto_fix: false
+dry_run: true  # Preview fixes without applying
+
+# Analyzer Configuration
+analyzers:
+  # Duplicate function detection
+  duplicate_function:
+    enabled: true
+    min_lines: 3  # Minimum lines to consider a duplicate
+    ignore_test_files: true
+    exclude_patterns:
+      - "__init__"
+      - "setUp"
+      - "tearDown"
+  
+  # Semantic duplicate detection with hypervectors
+  semantic_duplicate:
+    enabled: true
+    threshold: 0.80  # Similarity threshold (0.0-1.0)
+    use_multimodal: true
+    channels:
+      - structure
+      - data_flow
+      - control_flow
+      - identifiers
+    statistical_significance:
+      z_threshold: 2.5
+      fdr_correction: true
+      fdr_alpha: 0.05
+  
+  # Circular import detection
+  circular_import:
+    enabled: true
+    max_depth: 10  # Maximum recursion depth
+    ignore_type_checking: true  # Ignore TYPE_CHECKING imports
+  
+  # Phantom function detection
+  phantom_function:
+    enabled: true
+    check_docstrings: true
+    check_todos: true
+    patterns:
+      - "pass"
+      - "..."
+      - "raise NotImplementedError"
+      - "return None"
+      - "# TODO"
+  
+  # Advanced pattern: Hallucination cascade
+  hallucination_cascade:
+    enabled: true
+    min_chain_length: 3  # Minimum abstraction chain
+    max_abstraction_depth: 5
+    min_external_refs: 2  # Minimum external usage to not flag
+    detect_meta_patterns: true  # Detect factory-factories, etc.
+  
+  # Advanced pattern: Context window thrashing
+  context_window_thrashing:
+    enabled: true
+    window_size: 500  # Lines between potential duplicates
+    similarity_threshold: 0.85
+    min_distance: 100  # Minimum line distance
+    detect_naming_drift: true
+  
+  # Advanced pattern: Import anxiety
+  import_anxiety:
+    enabled: true
+    max_imports: 20  # Flag files with too many imports
+    check_wildcards: true
+    check_redundant: true
+    check_defensive: true
+
+# Semantic Analysis Configuration
+semantic:
+  enabled: false  # Enable with --semantic-analysis flag
+  dimensions: 8192  # Hypervector dimensions
+  sparsity: 0.01
+  channels:
+    structure:
+      weight: 0.3
+      features:
+        - ast_nodes
+        - nesting_depth
+        - complexity
+    data_flow:
+      weight: 0.25
+      features:
+        - variable_usage
+        - data_dependencies
+        - return_patterns
+    control_flow:
+      weight: 0.25
+      features:
+        - conditionals
+        - loops
+        - exception_handling
+    identifiers:
+      weight: 0.1
+      features:
+        - variable_names
+        - function_names
+        - parameter_names
+    literals:
+      weight: 0.05
+      features:
+        - string_literals
+        - numeric_constants
+    operations:
+      weight: 0.05
+      features:
+        - operators
+        - function_calls
+
+# Performance Configuration
+performance:
+  parallel: false  # Enable with --parallel flag
+  max_workers: null  # Auto-detect CPU count
+  cache_enabled: false  # Enable with --cache flag
+  cache_ttl: 3600  # Cache time-to-live in seconds
+  memory_limit_mb: 4096
+  batch_size: 100
+  profile: false  # Enable profiling
+
+# Reporting Configuration
+reporting:
+  formats:
+    - text  # Console output
+    # - json
+    # - html
+    # - markdown
+  include_visualizations: false
+  max_issues_display: 100
+  group_by_file: true
+  show_suggestions: true
+  include_metrics: false
+
+# CI/CD Integration
+ci:
+  enabled: false
+  github_actions: false
+  risk_threshold: 10.0  # Block PRs above this risk
+  block_on_critical: true  # Block on severity 5 issues
+  auto_comment: true
+  comment_template: |
+    ## TailChasingFixer Analysis
+    
+    **Risk Score:** {risk_score}
+    **Issues Found:** {issue_count}
+    
+    {issue_summary}
+    
+    View full report: {report_url}
+
+# LLM Integration
+llm:
+  enabled: false
+  generate_feedback: true
+  format: openai  # openai, anthropic, local
+  include_examples: true
+  max_prompt_length: 4000
+  prevention_rules: true
+  context_alerts: true
+
+# File Paths Configuration
+paths:
+  include:
+    - "**/*.py"
+  exclude:
+    - "**/test_*.py"
+    - "**/*_test.py"
+    - "**/tests/**"
+    - "**/migrations/**"
+    - "**/__pycache__/**"
+    - "**/venv/**"
+    - "**/env/**"
+    - "**/.venv/**"
+    - "**/node_modules/**"
+    - "**/.git/**"
+    - "**/build/**"
+    - "**/dist/**"
+    - "**/*.egg-info/**"
+
+# Fix Generation Configuration
+fixes:
+  validate_syntax: true
+  validate_imports: true
+  preserve_formatting: true
+  backup_files: true
+  backup_dir: ".tailchasing_backups"
+  consolidation_strategy: "parameterize"  # parameterize, pick_best, merge
+  
+# Custom Rules (Advanced)
+custom_rules:
+  # Flag specific patterns
+  - name: "large_function"
+    type: "warning"
+    condition: "function_lines > 50"
+    message: "Function exceeds 50 lines"
+    severity: 2
+  
+  - name: "too_many_parameters"
+    type: "warning"
+    condition: "parameter_count > 5"
+    message: "Function has too many parameters"
+    severity: 2
+
+# Plugins (if using custom analyzers)
+plugins:
+  # - my_custom_analyzer
+  # - team_specific_rules
+
+# Development Mode
+development:
+  debug: false
+  verbose: false
+  log_level: "INFO"
+  log_file: null
+  save_intermediates: false  # Save ASTs, hypervectors, etc.

@@ -1,445 +1,673 @@
 """
 Enhanced CLI with advanced features for tail-chasing detection.
+
+Provides a rich command-line interface with progress bars, colored output,
+and advanced analysis capabilities.
 """
 
-import argparse
+import click
 import sys
 import json
+import time
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
+from rich.table import Table
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.tree import Tree
+from rich import print as rprint
 
-from .utils.logging_setup import get_logger, log_operation, log_retry
-from .core.loader import collect_files, parse_files
-from .core.symbols import SymbolTable
-from .core.issues import Issue
-from .core.reporting import Reporter
+from .utils.logging_setup import get_logger
+from .loader import collect_files, parse_files
+from .symbols import SymbolTable
+from .issues import Issue
+from .detector import TailChasingDetector
 from .analyzers.base import AnalysisContext
 from .analyzers.explainer import TailChasingExplainer
-from .analyzers.advanced.enhanced_pattern_detector import EnhancedPatternDetector
-from .analyzers.advanced.multimodal_semantic import SemanticDuplicateEnhancer
-from .fixers.advanced.intelligent_fixer import IntelligentAutoFixer
-from .visualization import TailChasingVisualizer
-from .plugins import load_analyzers
+from .fixers.suggestion_generator import SuggestionGenerator
+from .fixers.fix_applier import FixApplier
+from .visualization.report_generator import ReportGenerator
+from .visualization.tail_chase_visualizer import TailChaseVisualizer
+from .orchestration.orchestrator import TailChasingOrchestrator
+from .llm_integration.feedback_generator import FeedbackGenerator
+from .semantic.encoder import SemanticEncoder
+from .semantic.index import SemanticIndex
+from .performance.cache import get_cache_manager
+from .performance.parallel import ParallelExecutor
+from .performance.monitor import get_monitor, track_performance
 from .config import Config
 
 
-class EnhancedCLI:
-    """Enhanced command-line interface with advanced features."""
+console = Console()
+
+
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
+    """
+    TailChasingFixer - Detect and fix LLM-induced anti-patterns in your codebase.
     
-    def __init__(self):
-        self.logger = get_logger(__name__)
-        self.explainer = TailChasingExplainer()
-        self.enhanced_detector = EnhancedPatternDetector()
-        self.semantic_enhancer = SemanticDuplicateEnhancer()
-        self.auto_fixer = IntelligentAutoFixer()
-        self.visualizer = TailChasingVisualizer()
+    Use 'tailchasing COMMAND --help' for more information on a command.
+    """
+    if ctx.invoked_subcommand is None:
+        # Default to analyze command
+        ctx.invoke(analyze)
+
+
+@cli.command()
+@click.argument('path', type=click.Path(exists=True), default='.')
+@click.option('--deep', is_flag=True, help='Run all enhanced analyzers including semantic analysis')
+@click.option('--ml-enhanced', is_flag=True, help='Use ML-powered detection algorithms')
+@click.option('--semantic-analysis', is_flag=True, help='Enable hypervector-based semantic analysis')
+@click.option('--confidence-threshold', type=float, default=0.7, help='Set detection confidence threshold (0.0-1.0)')
+@click.option('--output-format', type=click.Choice(['text', 'json', 'html', 'markdown']), default='text', help='Choose output format')
+@click.option('--severity', type=click.IntRange(1, 5), help='Only show issues with this severity or higher')
+@click.option('--parallel', is_flag=True, help='Enable parallel processing for large codebases')
+@click.option('--cache', is_flag=True, help='Enable caching for incremental analysis')
+@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
+@track_performance("cli_analyze")
+def analyze(path, deep, ml_enhanced, semantic_analysis, confidence_threshold, 
+           output_format, severity, parallel, cache, verbose):
+    """
+    Analyze codebase for tail-chasing patterns.
     
-    def create_parser(self) -> argparse.ArgumentParser:
-        """Create the enhanced argument parser."""
-        parser = argparse.ArgumentParser(
-            prog='tailchasing',
-            description='Detect and fix LLM-induced tail-chasing patterns in your codebase'
+    Examples:
+    
+        tailchasing analyze --deep
+        
+        tailchasing analyze src/ --semantic-analysis --confidence-threshold 0.8
+        
+        tailchasing analyze --ml-enhanced --output-format json > report.json
+    """
+    console.print(Panel.fit(
+        "[bold cyan]TailChasingFixer Analysis[/bold cyan]\n"
+        f"Analyzing: [yellow]{path}[/yellow]",
+        border_style="cyan"
+    ))
+    
+    # Initialize components
+    detector = TailChasingDetector()
+    orchestrator = TailChasingOrchestrator()
+    monitor = get_monitor(enable_profiling=verbose)
+    
+    if cache:
+        cache_manager = get_cache_manager()
+        console.print("[dim]Cache enabled[/dim]")
+    
+    # Collect files
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TimeElapsedColumn(),
+        console=console
+    ) as progress:
+        
+        # File collection
+        task = progress.add_task("Collecting files...", total=None)
+        root_path = Path(path).resolve()
+        
+        config = Config.find_and_load(root_path).to_dict()
+        config['confidence_threshold'] = confidence_threshold
+        
+        if parallel:
+            config['max_workers'] = None  # Use all CPUs
+        
+        if semantic_analysis or deep:
+            config['enable_semantic'] = True
+        
+        if ml_enhanced or deep:
+            config['enable_ml'] = True
+        
+        # Run analysis
+        progress.update(task, description="Running analysis...")
+        
+        with monitor.track("full_analysis"):
+            result = orchestrator.orchestrate(
+                path=root_path,
+                auto_fix=False,
+                config=config
+            )
+        
+        progress.update(task, completed=True)
+    
+    issues = result.get('issues', [])
+    
+    # Filter by severity if requested
+    if severity:
+        issues = [i for i in issues if i.severity >= severity]
+    
+    # Display results based on format
+    if output_format == 'json':
+        output = {
+            'issues': [i.to_dict() for i in issues],
+            'summary': {
+                'total_issues': len(issues),
+                'by_severity': _count_by_severity(issues),
+                'by_type': _count_by_type(issues)
+            },
+            'performance': monitor.get_summary() if verbose else None
+        }
+        console.print_json(data=output)
+    
+    elif output_format == 'html':
+        report_gen = ReportGenerator()
+        report_gen.add_issues(issues)
+        html = report_gen.generate_html_report(include_visualizations=True)
+        
+        output_file = Path('tailchasing_report.html')
+        output_file.write_text(html)
+        console.print(f"[green]HTML report saved to: {output_file}[/green]")
+    
+    elif output_format == 'markdown':
+        report_gen = ReportGenerator()
+        report_gen.add_issues(issues)
+        markdown = report_gen.generate_markdown_summary()
+        console.print(markdown)
+    
+    else:  # text format
+        _display_text_results(issues, verbose, monitor)
+    
+    # Show performance summary if verbose
+    if verbose:
+        _display_performance_summary(monitor)
+    
+    # Exit code based on issues found
+    if issues:
+        sys.exit(1)
+    else:
+        console.print("[green]✅ No issues found![/green]")
+        sys.exit(0)
+
+
+@cli.command()
+@click.argument('path', type=click.Path(exists=True), default='.')
+@click.option('--auto', is_flag=True, help='Apply automatic fixes without confirmation')
+@click.option('--dry-run', is_flag=True, help='Show what would be fixed without making changes')
+@click.option('--severity', type=click.IntRange(1, 5), help='Only fix issues with this severity or higher')
+@click.option('--backup', is_flag=True, default=True, help='Create backups before applying fixes')
+@click.option('--validate', is_flag=True, help='Validate fixes before applying')
+@track_performance("cli_fix")
+def fix(path, auto, dry_run, severity, backup, validate):
+    """
+    Apply automatic fixes for detected issues.
+    
+    Examples:
+    
+        tailchasing fix --dry-run
+        
+        tailchasing fix src/ --auto --severity 3
+        
+        tailchasing fix --validate --backup
+    """
+    console.print(Panel.fit(
+        "[bold yellow]TailChasingFixer Auto-Fix[/bold yellow]\n"
+        f"Target: [cyan]{path}[/cyan]\n"
+        f"Mode: [{'green' if not dry_run else 'yellow'}]{'Dry Run' if dry_run else 'Apply Fixes'}[/]",
+        border_style="yellow"
+    ))
+    
+    # Run detection first
+    orchestrator = TailChasingOrchestrator({
+        'auto_fix': True,
+        'dry_run': dry_run,
+        'validate_fixes': validate,
+        'create_backups': backup
+    })
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console
+    ) as progress:
+        
+        task = progress.add_task("Detecting issues...", total=None)
+        
+        result = orchestrator.orchestrate(
+            path=Path(path).resolve(),
+            auto_fix=True,
+            dry_run=dry_run
         )
         
-        # Basic arguments
-        parser.add_argument('root', nargs='?', default='.', 
-                          help='Root directory to analyze (default: current directory)')
-        
-        # Output format options
-        output_group = parser.add_mutually_exclusive_group()
-        output_group.add_argument('--json', action='store_true',
-                                help='Output results in JSON format')
-        output_group.add_argument('--html', metavar='FILE',
-                                help='Generate HTML report with visualizations')
-        output_group.add_argument('--explain', action='store_true',
-                                help='Generate detailed natural language explanations')
-        
-        # Analysis options
-        parser.add_argument('--enhanced', action='store_true',
-                          help='Enable enhanced pattern detection (hallucination cascades, context thrashing)')
-        parser.add_argument('--semantic-multimodal', action='store_true',
-                          help='Enable advanced semantic analysis with multiple channels')
-        parser.add_argument('--git-history', action='store_true',
-                          help='Analyze git history for temporal patterns')
-        
-        # Auto-fix options
-        parser.add_argument('--auto-fix', action='store_true',
-                          help='Generate automatic fixes for detected issues')
-        parser.add_argument('--fix-plan', metavar='FILE',
-                          help='Save fix plan to specified file without applying')
-        parser.add_argument('--apply-fixes', action='store_true',
-                          help='Apply generated fixes automatically (use with caution)')
-        
-        # Filtering options
-        parser.add_argument('--severity', type=int, choices=[1, 2, 3, 4, 5],
-                          help='Only show issues with this severity or higher')
-        parser.add_argument('--types', nargs='+',
-                          help='Only analyze specific issue types')
-        parser.add_argument('--exclude-types', nargs='+',
-                          help='Exclude specific issue types from analysis')
-        
-        # Context-thrashing specific options
-        parser.add_argument('--flat', action='store_true',
-                          help='Show context-window thrashing in flat view (individual functions)')
-        parser.add_argument('--max-members', type=int, metavar='N',
-                          help='Limit cluster member display to N functions')
-        parser.add_argument('--expand', metavar='CLUSTER_ID',
-                          help='Expand specific cluster to show all members')
-        
-        # Configuration
-        parser.add_argument('--config', metavar='FILE',
-                          help='Path to configuration file')
-        parser.add_argument('--fail-on', type=int, metavar='N',
-                          help='Exit with code 2 if N or more issues found')
-        
-        # Performance options
-        parser.add_argument('--parallel', action='store_true',
-                          help='Enable parallel processing for large codebases')
-        parser.add_argument('--cache', action='store_true',
-                          help='Enable caching for incremental analysis')
-        
-        return parser
+        progress.update(task, description="Generating fixes...", completed=50)
     
-    def run(self, args: Optional[List[str]] = None):
-        """Run the enhanced CLI."""
-        parser = self.create_parser()
-        parsed_args = parser.parse_args(args)
-        
-        try:
-            # Load configuration
-            root = Path(parsed_args.root).resolve()
-            if parsed_args.config:
-                config = Config.from_file(Path(parsed_args.config)).to_dict()
-            else:
-                config = Config.find_and_load(root).to_dict()
-            
-            # Collect and parse files
-            files = collect_files(root, 
-                                config.get('paths', {}).get('include'),
-                                config.get('paths', {}).get('exclude'))
-            
-            if not files:
-                self.logger.error("No Python files found to analyze.")
-                sys.stderr.write("No Python files found to analyze.\n")
-                return 1
-            
-            self.logger.info(f"Analyzing {len(files)} files")
-            sys.stdout.write(f"🔍 Analyzing {len(files)} files...\n")
-            
-            ast_index = parse_files(files)
-            symbol_table = SymbolTable()
-            
-            for filepath, tree in ast_index.items():
-                try:
-                    symbol_table.ingest(filepath, tree, "")
-                except Exception as e:
-                    self.logger.warning(f"Failed to process {filepath}: {e}")
-                    sys.stderr.write(f"Warning: Failed to process {filepath}: {e}\n")
-            
-            # Set up analysis context
-            cache = {}
-            source_cache = {}
-            ctx = AnalysisContext(
-                config=config,
-                root_dir=root,
-                file_paths=files,
-                ast_index=ast_index,
-                symbol_table=symbol_table,
-                source_cache=source_cache,
-                cache=cache
-            )
-            
-            # Run standard analyzers
-            issues = []
-            analyzers = load_analyzers(config)
-            
-            # Filter analyzers based on command line options
-            if parsed_args.types:
-                analyzers = [a for a in analyzers if a.name in parsed_args.types]
-            elif parsed_args.exclude_types:
-                analyzers = [a for a in analyzers if a.name not in parsed_args.exclude_types]
-            
-            for analyzer in analyzers:
-                try:
-                    analyzer_issues = list(analyzer.run(ctx))
-                    issues.extend(analyzer_issues)
-                    self.logger.info(f"{analyzer.name} found {len(analyzer_issues)} issues")
-                    sys.stdout.write(f"  ✓ {analyzer.name}: {len(analyzer_issues)} issues\n")
-                except Exception as e:
-                    self.logger.error(f"{analyzer.name} failed: {e}")
-                    sys.stderr.write(f"  ✗ {analyzer.name}: Failed ({e})\n")
-            
-            # Run enhanced detection if requested
-            if parsed_args.enhanced:
-                self.logger.info("Running enhanced pattern detection")
-                sys.stdout.write("🧠 Running enhanced pattern detection...\n")
-                enhanced_issues = self._run_enhanced_detection(ctx, ast_index)
-                issues.extend(enhanced_issues)
-                self.logger.info(f"Enhanced detection found {len(enhanced_issues)} additional issues")
-                sys.stdout.write(f"  ✓ Enhanced detection: {len(enhanced_issues)} additional issues\n")
-            
-            # Run multimodal semantic analysis if requested
-            if parsed_args.semantic_multimodal:
-                self.logger.info("Running multimodal semantic analysis")
-                sys.stdout.write("🔬 Running multimodal semantic analysis...\n")
-                semantic_issues = self._run_semantic_analysis(ctx, symbol_table)
-                issues.extend(semantic_issues)
-                self.logger.info(f"Semantic analysis found {len(semantic_issues)} additional issues")
-                sys.stdout.write(f"  ✓ Semantic analysis: {len(semantic_issues)} additional issues\n")
-            
-            # Filter by severity
-            if parsed_args.severity:
-                issues = [issue for issue in issues if issue.severity >= parsed_args.severity]
-            
-            self.logger.info(f"Analysis complete: {len(issues)} total issues found")
-            sys.stdout.write(f"\n📊 Analysis complete: {len(issues)} total issues found\n")
-            
-            # Handle context-thrashing specific output
-            if parsed_args.flat or parsed_args.max_members or parsed_args.expand:
-                self._handle_context_thrashing_output(ctx, parsed_args)
-            else:
-                # Generate standard outputs
-                reporter = Reporter(config)
-                if parsed_args.json:
-                    sys.stdout.write(reporter.render_json(issues))
-                elif parsed_args.html:
-                    self._generate_html_report(issues, files, parsed_args.html)
-                    self.logger.info(f"HTML report generated: {parsed_args.html}")
-                    sys.stdout.write(f"📄 HTML report generated: {parsed_args.html}\n")
-                elif parsed_args.explain:
-                    self._generate_explanations(issues)
-                else:
-                    sys.stdout.write(reporter.render_text(issues))
-            
-            # Handle auto-fix options
-            if parsed_args.auto_fix or parsed_args.fix_plan:
-                self._handle_auto_fix(issues, parsed_args)
-            
-            # Check exit conditions
-            if parsed_args.fail_on and len(issues) >= parsed_args.fail_on:
-                return 2
-            
-            return 0
-            
-        except KeyboardInterrupt:
-            self.logger.warning("Analysis interrupted by user")
-            sys.stderr.write("\n⚠️  Analysis interrupted by user\n")
-            return 130
-        except Exception as e:
-            self.logger.error(f"Error during analysis: {e}", exc_info=True)
-            sys.stderr.write(f"❌ Error during analysis: {e}\n")
-            if hasattr(parsed_args, 'debug') and parsed_args.debug:
-                import traceback
-                traceback.print_exc()
-            return 1
+    issues = result.get('issues', [])
+    fixes_applied = result.get('fixes_applied', 0)
     
-    def _run_enhanced_detection(self, ctx: AnalysisContext, ast_index: dict) -> List[Issue]:
-        """Run enhanced pattern detection."""
-        issues = []
-        
-        # Detect hallucination cascades
-        cascade_issues = self.enhanced_detector.detect_hallucination_cascade(ast_index)
-        issues.extend(cascade_issues)
-        
-        # Detect context window thrashing for each file
-        for filepath, tree in ast_index.items():
-            thrashing_issues = self.enhanced_detector.detect_context_window_thrashing(tree, filepath)
-            issues.extend(thrashing_issues)
-        
-        # Detect import anxiety (simplified - would need import analysis)
-        # This would require more sophisticated import tracking
-        
-        return issues
+    if severity:
+        issues = [i for i in issues if i.severity >= severity]
     
-    def _run_semantic_analysis(self, ctx: AnalysisContext, symbol_table: SymbolTable) -> List[Issue]:
-        """Run multimodal semantic analysis."""
-        # Extract all functions for analysis
-        functions = []
-        for func_name, entries in symbol_table.functions.items():
-            for entry in entries:
-                functions.append((entry['file'], entry['node']))
+    if not issues:
+        console.print("[yellow]No issues found to fix.[/yellow]")
+        return
+    
+    # Display fix plan
+    table = Table(title="Fix Plan", show_header=True, header_style="bold magenta")
+    table.add_column("Issue Type", style="cyan")
+    table.add_column("File", style="yellow")
+    table.add_column("Severity", justify="center")
+    table.add_column("Fix Available", justify="center")
+    
+    for issue in issues[:20]:  # Show first 20
+        severity_color = _get_severity_color(issue.severity)
+        table.add_row(
+            issue.kind,
+            str(issue.file)[:50],
+            f"[{severity_color}]{issue.severity}[/]",
+            "[green]✓[/green]" if issue.suggestions else "[red]✗[/red]"
+        )
+    
+    console.print(table)
+    
+    if not auto and not dry_run:
+        if not click.confirm(f"Apply {fixes_applied} fixes?"):
+            console.print("[yellow]Fix application cancelled.[/yellow]")
+            return
+    
+    if not dry_run:
+        console.print(f"[green]✅ Applied {fixes_applied} fixes successfully![/green]")
+        console.print("[dim]Run your tests to ensure everything works correctly.[/dim]")
+    else:
+        console.print(f"[yellow]Dry run complete. {fixes_applied} fixes would be applied.[/yellow]")
+
+
+@cli.command()
+@click.argument('issue_id', required=False)
+@click.option('--file', type=click.Path(exists=True), help='Explain issues in specific file')
+@click.option('--type', 'issue_type', help='Explain specific issue type')
+@click.option('--examples', is_flag=True, help='Include examples in explanation')
+def explain(issue_id, file, issue_type, examples):
+    """
+    Get detailed explanations for issues.
+    
+    Examples:
+    
+        tailchasing explain duplicate_function
         
-        # Find semantic duplicates
-        return self.semantic_enhancer.find_semantic_duplicates(functions)
+        tailchasing explain --file src/utils.py
+        
+        tailchasing explain --type circular_import --examples
+    """
+    explainer = TailChasingExplainer()
     
-    def _generate_html_report(self, issues: List[Issue], files: List[Path], output_path: str):
-        """Generate HTML visualization report."""
-        file_paths = [str(f) for f in files]
-        self.visualizer.generate_html_report(issues, file_paths, output_path)
+    console.print(Panel.fit(
+        "[bold blue]TailChasingFixer Explainer[/bold blue]",
+        border_style="blue"
+    ))
     
-    def _generate_explanations(self, issues: List[Issue]):
-        """Generate detailed natural language explanations."""
-        if not issues:
-            self.logger.info("No issues found")
-            sys.stdout.write("🎉 No issues found! Your code appears to be free of tail-chasing patterns.\n")
+    if issue_type:
+        # Explain a specific pattern type
+        explanation = _get_pattern_explanation(issue_type, examples)
+        console.print(explanation)
+    
+    elif file:
+        # Explain issues in a specific file
+        detector = TailChasingDetector()
+        issues = detector.detect(Path(file).parent)
+        file_issues = [i for i in issues if str(i.file) == file]
+        
+        if not file_issues:
+            console.print(f"[yellow]No issues found in {file}[/yellow]")
             return
         
-        # Generate summary report
-        summary = self.explainer.generate_summary_report(issues)
-        sys.stdout.write(summary + "\n")
-        
-        # Generate detailed explanations for high-severity issues
-        high_severity_issues = [issue for issue in issues if issue.severity >= 4]
-        if high_severity_issues:
-            self.logger.info(f"Generating detailed explanations for {len(high_severity_issues)} high-severity issues")
-            sys.stdout.write("\n" + "="*80 + "\n")
-            sys.stdout.write("🚨 DETAILED EXPLANATIONS FOR HIGH-SEVERITY ISSUES\n")
-            sys.stdout.write("="*80 + "\n")
-            
-            for i, issue in enumerate(high_severity_issues, 1):
-                sys.stdout.write(f"\n## Issue {i}: {issue.kind}\n")
-                explanation = self.explainer.explain_issue(issue)
-                sys.stdout.write(explanation + "\n")
+        for issue in file_issues:
+            explanation = explainer.explain_issue_enhanced(issue)
+            _display_explanation(explanation)
     
-    def _handle_auto_fix(self, issues: List[Issue], args):
-        """Handle automatic fix generation and application."""
-        if not issues:
-            self.logger.info("No issues to fix")
-            sys.stdout.write("No issues to fix.\n")
-            return
-        
-        self.logger.info("Generating fix plan")
-        sys.stdout.write("\n🔧 Generating fix plan...\n")
-        fix_plan = self.auto_fixer.generate_fix_plan(issues)
-        
-        self.logger.info(f"Generated {len(fix_plan.actions)} fix actions for {len(fix_plan.issues_addressed)} issues")
-        sys.stdout.write(f"Generated {len(fix_plan.actions)} fix actions for {len(fix_plan.issues_addressed)} issues\n")
-        sys.stdout.write(f"Estimated impact: {fix_plan.estimated_impact}\n")
-        
-        # Save fix plan if requested
-        if args.fix_plan:
-            fix_plan_data = {
-                'issues': [issue.to_dict() for issue in fix_plan.issues_addressed],
-                'actions': [
-                    {
-                        'type': action.action_type,
-                        'file': action.target_file,
-                        'line': action.target_line,
-                        'description': action.description,
-                        'old_code': action.old_code,
-                        'new_code': action.new_code
-                    }
-                    for action in fix_plan.actions
-                ],
-                'impact': fix_plan.estimated_impact,
-                'rollback': fix_plan.rollback_plan
-            }
-            
-            with open(args.fix_plan, 'w') as f:
-                json.dump(fix_plan_data, f, indent=2)
-            
-            self.logger.info(f"Fix plan saved to: {args.fix_plan}")
-            sys.stdout.write(f"📋 Fix plan saved to: {args.fix_plan}\n")
-        
-        # Apply fixes if requested
-        if args.apply_fixes:
-            self.logger.warning("Applying fixes automatically")
-            sys.stdout.write("\n⚠️  APPLYING FIXES AUTOMATICALLY\n")
-            sys.stdout.write("This will modify your code. Make sure you have backups!\n")
-            
-            try:
-                input("\nPress Enter to continue or Ctrl+C to cancel...")
-            except KeyboardInterrupt:
-                self.logger.info("Fix application cancelled by user")
-                sys.stdout.write("\nFix application cancelled.\n")
-                return
-            
-            self._apply_fixes(fix_plan)
+    elif issue_id:
+        # Explain specific issue by ID (would need issue tracking)
+        console.print("[yellow]Issue ID lookup not yet implemented[/yellow]")
     
-    def _apply_fixes(self, fix_plan):
-        """Apply the generated fixes to the codebase."""
-        self.logger.info("Applying fixes to codebase")
-        sys.stdout.write("🔧 Applying fixes...\n")
-        
-        # Group actions by file for efficient processing
-        actions_by_file = {}
-        for action in fix_plan.actions:
-            actions_by_file.setdefault(action.target_file, []).append(action)
-        
-        applied_count = 0
-        for filepath, actions in actions_by_file.items():
-            try:
-                # Read the current file
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # Apply actions (simplified - real implementation would be more sophisticated)
-                modified_content = content
-                for action in actions:
-                    if action.old_code and action.new_code:
-                        modified_content = modified_content.replace(action.old_code, action.new_code)
-                    applied_count += 1
-                
-                # Write back the modified content
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    f.write(modified_content)
-                
-                self.logger.info(f"Applied {len(actions)} fixes to {filepath}")
-                sys.stdout.write(f"  ✓ {filepath}: {len(actions)} fixes applied\n")
-                
-            except Exception as e:
-                self.logger.error(f"Failed to apply fixes to {filepath}: {e}")
-                sys.stderr.write(f"  ✗ {filepath}: Failed to apply fixes ({e})\n")
-        
-        self.logger.info(f"Applied {applied_count} fixes successfully")
-        sys.stdout.write(f"\n✅ Applied {applied_count} fixes successfully\n")
-        sys.stdout.write("💡 Run your tests to ensure everything still works correctly\n")
-        sys.stdout.write(f"🔄 To rollback changes, run: {' && '.join(fix_plan.rollback_plan)}\n")
+    else:
+        # Show general explanation of all pattern types
+        _display_pattern_catalog()
+
+
+@cli.command()
+@click.argument('path', type=click.Path(exists=True), default='.')
+@click.option('--output', type=click.Path(), default='report.html', help='Output file for visualization')
+@click.option('--open', 'open_browser', is_flag=True, help='Open visualization in browser')
+@click.option('--include-graphs', is_flag=True, default=True, help='Include dependency graphs')
+@click.option('--include-heatmaps', is_flag=True, default=True, help='Include similarity heatmaps')
+@track_performance("cli_visualize")
+def visualize(path, output, open_browser, include_graphs, include_heatmaps):
+    """
+    Generate interactive visualization reports.
     
-    def _handle_context_thrashing_output(self, ctx: AnalysisContext, args):
-        """Handle context-thrashing specific output options."""
-        from .analyzers.context_thrashing import ContextThrashingAnalyzer
+    Examples:
+    
+        tailchasing visualize --open
         
-        # Get or create the context-thrashing analyzer
-        analyzer = None
-        analyzers = load_analyzers(ctx.config)
+        tailchasing visualize src/ --output analysis.html
         
-        for a in analyzers:
-            if hasattr(a, 'name') and a.name == 'context_thrashing':
-                analyzer = a
-                break
+        tailchasing visualize --include-heatmaps
+    """
+    console.print(Panel.fit(
+        "[bold magenta]TailChasingFixer Visualizer[/bold magenta]\n"
+        f"Analyzing: [cyan]{path}[/cyan]",
+        border_style="magenta"
+    ))
+    
+    # Run analysis
+    detector = TailChasingDetector()
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console
+    ) as progress:
         
-        if not analyzer:
-            # Create new analyzer if not found
-            analyzer = ContextThrashingAnalyzer(ctx.config)
-            # Run the analyzer
-            analyzer.run(ctx)
-        elif not analyzer._clusters:
-            # If analyzer exists but hasn't run yet
-            analyzer.run(ctx)
+        task = progress.add_task("Detecting issues...", total=None)
+        issues = detector.detect(Path(path).resolve())
         
-        if args.expand:
-            # Expand specific cluster
-            cluster = analyzer.expand_cluster(args.expand)
-            if cluster:
-                sys.stdout.write(f"\n🔍 EXPANDED CLUSTER {args.expand}:\n")
-                sys.stdout.write("=" * 50 + "\n")
-                sys.stdout.write(f"Functions: {len(cluster.functions)}\n")
-                sys.stdout.write(f"File: {cluster.file_path}\n")
-                sys.stdout.write(f"Severity: {cluster.severity:.1f}\n")
-                sys.stdout.write(f"Suggested helper: {cluster.suggested_helper}\n\n")
-                
-                for i, func in enumerate(cluster.functions, 1):
-                    class_prefix = f"{func.class_name}." if func.class_name else ""
-                    sys.stdout.write(f"  {i}. {class_prefix}{func.name}{func.signature}\n")
-                    sys.stdout.write(f"     Lines {func.line_start}-{func.line_end}\n")
-                
-                sys.stdout.write("\n" + cluster.extract_playbook + "\n")
-            else:
-                sys.stderr.write(f"Cluster '{args.expand}' not found.\n")
-        else:
-            # Generate cluster report with specified options
-            report = analyzer.generate_cluster_report(
-                flat_view=args.flat,
-                max_members=args.max_members
+        progress.update(task, description="Generating visualizations...")
+        
+        # Generate visualizations
+        visualizer = TailChaseVisualizer()
+        visualizer.add_issues(issues)
+        
+        if include_graphs:
+            dep_graph = visualizer.generate_dependency_graph()
+        
+        if include_heatmaps:
+            heatmap = visualizer.generate_similarity_heatmap()
+        
+        # Generate report
+        report_gen = ReportGenerator()
+        report_gen.add_issues(issues)
+        
+        html = report_gen.generate_html_report(
+            output_path=Path(output),
+            include_visualizations=True,
+            embed_data=True
+        )
+        
+        progress.update(task, completed=True)
+    
+    console.print(f"[green]✅ Visualization saved to: {output}[/green]")
+    
+    if open_browser:
+        import webbrowser
+        webbrowser.open(f"file://{Path(output).resolve()}")
+
+
+# Helper functions
+
+def _count_by_severity(issues: List[Issue]) -> Dict[int, int]:
+    """Count issues by severity."""
+    counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for issue in issues:
+        counts[issue.severity] = counts.get(issue.severity, 0) + 1
+    return counts
+
+
+def _count_by_type(issues: List[Issue]) -> Dict[str, int]:
+    """Count issues by type."""
+    counts = {}
+    for issue in issues:
+        counts[issue.kind] = counts.get(issue.kind, 0) + 1
+    return counts
+
+
+def _get_severity_color(severity: int) -> str:
+    """Get color for severity level."""
+    colors = {
+        1: "green",
+        2: "yellow", 
+        3: "yellow",
+        4: "red",
+        5: "bold red"
+    }
+    return colors.get(severity, "white")
+
+
+def _display_text_results(issues: List[Issue], verbose: bool, monitor):
+    """Display results in text format."""
+    if not issues:
+        console.print("[green]✅ No tail-chasing patterns detected![/green]")
+        return
+    
+    # Summary
+    severity_counts = _count_by_severity(issues)
+    type_counts = _count_by_type(issues)
+    
+    console.print(f"\n[bold]Found {len(issues)} issue(s)[/bold]\n")
+    
+    # Severity breakdown
+    severity_table = Table(show_header=True, header_style="bold")
+    severity_table.add_column("Severity", justify="center")
+    severity_table.add_column("Count", justify="center")
+    severity_table.add_column("Level")
+    
+    severity_names = {
+        1: "Info", 2: "Low", 3: "Medium", 4: "High", 5: "Critical"
+    }
+    
+    for sev in range(5, 0, -1):
+        if severity_counts[sev] > 0:
+            color = _get_severity_color(sev)
+            severity_table.add_row(
+                f"[{color}]{sev}[/]",
+                str(severity_counts[sev]),
+                f"[{color}]{severity_names[sev]}[/]"
             )
-            sys.stdout.write("\n" + report + "\n")
+    
+    console.print(severity_table)
+    
+    # Type breakdown
+    console.print("\n[bold]Issues by Type:[/bold]")
+    type_tree = Tree("Issue Types")
+    for issue_type, count in sorted(type_counts.items(), key=lambda x: -x[1]):
+        type_tree.add(f"{issue_type}: {count}")
+    console.print(type_tree)
+    
+    # Detailed issues (first 10)
+    console.print("\n[bold]Top Issues:[/bold]\n")
+    
+    for i, issue in enumerate(issues[:10], 1):
+        color = _get_severity_color(issue.severity)
+        console.print(Panel(
+            f"[{color}]{issue.kind}[/]\n"
+            f"File: [cyan]{issue.file}:{issue.line}[/cyan]\n"
+            f"Message: {issue.message[:200]}",
+            title=f"Issue #{i} (Severity: {issue.severity})",
+            border_style=color
+        ))
+    
+    if len(issues) > 10:
+        console.print(f"\n[dim]... and {len(issues) - 10} more issues[/dim]")
+
+
+def _display_performance_summary(monitor):
+    """Display performance monitoring summary."""
+    summary = monitor.get_summary()
+    
+    if summary.get('status') == 'no_metrics':
+        return
+    
+    console.print("\n[bold]Performance Summary:[/bold]")
+    
+    perf_table = Table(show_header=True, header_style="bold cyan")
+    perf_table.add_column("Metric")
+    perf_table.add_column("Value", justify="right")
+    
+    perf_table.add_row("Total Duration", f"{summary['total_duration']:.2f}s")
+    perf_table.add_row("Items Processed", str(summary['total_items_processed']))
+    perf_table.add_row("Throughput", f"{summary['overall_throughput']:.1f} items/s")
+    
+    memory = summary.get('memory', {})
+    perf_table.add_row("Memory Usage", f"{memory.get('current_mb', 0):.1f} MB")
+    perf_table.add_row("Memory Increase", f"{memory.get('increase_mb', 0):.1f} MB")
+    
+    console.print(perf_table)
+    
+    # Bottlenecks
+    bottlenecks = summary.get('bottlenecks', [])
+    if bottlenecks:
+        console.print("\n[bold yellow]Performance Bottlenecks:[/bold yellow]")
+        for b in bottlenecks:
+            console.print(f"  • {b['operation']}: {b['duration']:.2f}s ({b['percentage']:.1f}%)")
+
+
+def _get_pattern_explanation(pattern_type: str, include_examples: bool) -> str:
+    """Get explanation for a specific pattern type."""
+    explanations = {
+        'duplicate_function': """
+[bold]Duplicate Functions[/bold]
+
+Functions that are structurally or semantically identical but have different names.
+This often occurs when LLMs recreate functionality that already exists.
+
+[yellow]Causes:[/yellow]
+• Limited context window preventing the LLM from seeing existing functions
+• Incremental development where each request starts fresh
+• Different naming conventions used in different sessions
+
+[green]How to Fix:[/green]
+1. Search for existing functions before creating new ones
+2. Use consistent naming conventions
+3. Consolidate duplicate functions into a single implementation
+4. Add parameters to handle variations instead of duplicating
+""",
+        
+        'circular_import': """
+[bold]Circular Imports[/bold]
+
+Modules that import from each other, creating a dependency cycle.
+This pattern emerges when LLMs add imports reactively without considering architecture.
+
+[yellow]Causes:[/yellow]
+• Adding imports to fix undefined symbol errors
+• Lack of clear dependency hierarchy
+• Mixing concerns between modules
+
+[green]How to Fix:[/green]
+1. Move shared code to a separate utility module
+2. Use local imports (inside functions) when necessary
+3. Restructure code to follow a clear dependency hierarchy
+4. Consider dependency injection or event patterns
+""",
+        
+        'phantom_function': """
+[bold]Phantom Functions[/bold]
+
+Empty stub functions that were created but never implemented.
+These appear when LLMs create placeholders to satisfy imports or API expectations.
+
+[yellow]Causes:[/yellow]
+• Creating functions to fix import errors
+• Placeholder creation without follow-through
+• Incomplete implementation during incremental development
+
+[green]How to Fix:[/green]
+1. Implement the function properly or remove it
+2. If a stub is needed, raise NotImplementedError with a message
+3. Add TODO comments with clear requirements
+4. Review and implement all stubs before considering code complete
+"""
+    }
+    
+    explanation = explanations.get(pattern_type, f"No explanation available for '{pattern_type}'")
+    
+    if include_examples and pattern_type in explanations:
+        explanation += """
+
+[bold]Example:[/bold]
+""" + _get_pattern_example(pattern_type)
+    
+    return explanation
+
+
+def _get_pattern_example(pattern_type: str) -> str:
+    """Get code example for a pattern type."""
+    examples = {
+        'duplicate_function': """[red]# Bad:[/red]
+def calculate_sum(numbers):
+    total = 0
+    for num in numbers:
+        total += num
+    return total
+
+def compute_total(values):  # Duplicate!
+    result = 0
+    for val in values:
+        result += val
+    return result
+
+[green]# Good:[/green]
+def calculate_sum(numbers, initial=0):
+    total = initial
+    for num in numbers:
+        total += num
+    return total
+""",
+        
+        'circular_import': """[red]# Bad:[/red]
+# module_a.py
+from module_b import func_b
+
+# module_b.py
+from module_a import func_a  # Circular!
+
+[green]# Good:[/green]
+# shared.py
+def shared_function(): ...
+
+# module_a.py
+from shared import shared_function
+
+# module_b.py
+from shared import shared_function
+"""
+    }
+    
+    return examples.get(pattern_type, "")
+
+
+def _display_explanation(explanation):
+    """Display an explanation object."""
+    console.print(Panel(
+        f"[bold]{explanation.summary}[/bold]\n\n"
+        f"{explanation.narrative}\n\n"
+        f"[yellow]Root Causes:[/yellow]\n" +
+        "\n".join(f"  • {cause}" for cause in explanation.root_causes) + "\n\n"
+        f"[green]Remediation Steps:[/green]\n" +
+        "\n".join(f"  {i}. {step}" for i, step in enumerate(explanation.remediation_steps, 1)),
+        title=explanation.pattern_type.replace('_', ' ').title(),
+        border_style="blue"
+    ))
+
+
+def _display_pattern_catalog():
+    """Display catalog of all pattern types."""
+    patterns = [
+        ("duplicate_function", "Functions that do the same thing with different names"),
+        ("semantic_duplicate", "Functions that are semantically equivalent despite surface differences"),
+        ("circular_import", "Modules that import from each other creating cycles"),
+        ("phantom_function", "Empty stub functions that were never implemented"),
+        ("hallucination_cascade", "Over-engineered abstractions solving non-existent problems"),
+        ("context_window_thrashing", "Reimplemented functions due to limited context"),
+        ("import_anxiety", "Excessive or defensive importing patterns")
+    ]
+    
+    console.print("[bold]Tail-Chasing Pattern Catalog[/bold]\n")
+    
+    table = Table(show_header=True, header_style="bold cyan")
+    table.add_column("Pattern", style="yellow")
+    table.add_column("Description")
+    
+    for pattern, description in patterns:
+        table.add_row(pattern, description)
+    
+    console.print(table)
+    console.print("\n[dim]Use 'tailchasing explain PATTERN --examples' for detailed information[/dim]")
 
 
 def main():
     """Entry point for the enhanced CLI."""
-    cli = EnhancedCLI()
-    sys.exit(cli.run())
+    cli()
 
 
 if __name__ == '__main__':

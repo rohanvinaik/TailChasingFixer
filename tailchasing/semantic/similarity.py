@@ -1,14 +1,116 @@
 """
-Statistical similarity analysis for hypervectors.
+Similarity computation and analysis for semantic hypervectors.
 
-Provides significance testing, false discovery rate control,
-and channel contribution analysis.
+This module provides advanced similarity analysis including channel contribution
+analysis, prototype clustering, and temporal drift detection.
 """
 
-import math
-from typing import List, Tuple, Dict, Optional, Set
 import numpy as np
-from scipy import stats
+import logging
+from typing import Dict, List, Tuple, Optional, Set, Any, Union
+from dataclasses import dataclass, field
+from collections import defaultdict
+import statistics
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from .hv_space import HVSpace
+
+try:
+    from scipy import stats
+    from scipy.cluster import hierarchy
+    from scipy.spatial.distance import pdist, squareform
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
+    stats = None
+    hierarchy = None
+
+try:
+    from sklearn.cluster import DBSCAN, AgglomerativeClustering
+    from sklearn.decomposition import PCA
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ChannelContribution:
+    """Contribution of a specific channel to similarity."""
+    
+    channel_name: str
+    contribution_score: float
+    normalized_score: float
+    significance: float
+    
+    def is_significant(self, threshold: float = 0.1) -> bool:
+        """Check if channel contribution is significant."""
+        return self.normalized_score > threshold
+
+
+@dataclass
+class PrototypeCluster:
+    """A cluster of similar functions with a prototype."""
+    
+    cluster_id: str
+    prototype_vector: np.ndarray
+    member_ids: List[str] = field(default_factory=list)
+    member_similarities: Dict[str, float] = field(default_factory=dict)
+    
+    # Cluster statistics
+    cohesion: float = 0.0
+    separation: float = 0.0
+    silhouette_score: float = 0.0
+    
+    # Temporal properties
+    creation_times: List[datetime] = field(default_factory=list)
+    temporal_spread: Optional[timedelta] = None
+    
+    def add_member(self, function_id: str, similarity: float, creation_time: Optional[datetime] = None):
+        """Add a member to the cluster."""
+        self.member_ids.append(function_id)
+        self.member_similarities[function_id] = similarity
+        if creation_time:
+            self.creation_times.append(creation_time)
+    
+    def compute_statistics(self, all_vectors: Dict[str, np.ndarray], space: HVSpace):
+        """Compute cluster statistics."""
+        if len(self.member_ids) < 2:
+            return
+        
+        # Compute cohesion (average intra-cluster similarity)
+        intra_similarities = []
+        for i, id1 in enumerate(self.member_ids):
+            for id2 in self.member_ids[i+1:]:
+                if id1 in all_vectors and id2 in all_vectors:
+                    sim = space.similarity(all_vectors[id1], all_vectors[id2])
+                    intra_similarities.append(sim)
+        
+        self.cohesion = np.mean(intra_similarities) if intra_similarities else 0.0
+        
+        # Compute temporal spread
+        if len(self.creation_times) >= 2:
+            self.temporal_spread = max(self.creation_times) - min(self.creation_times)
+
+
+@dataclass
+class TemporalDrift:
+    """Temporal drift analysis results."""
+    
+    time_window: timedelta
+    drift_score: float
+    affected_functions: List[str] = field(default_factory=list)
+    
+    # Statistical measures
+    mean_similarity_before: float = 0.0
+    mean_similarity_after: float = 0.0
+    p_value: float = 1.0
+    
+    def is_significant(self, alpha: float = 0.05) -> bool:
+        """Check if drift is statistically significant."""
+        return self.p_value < alpha
 
 
 def benjamini_hochberg_fdr(p_values: List[float], alpha: float = 0.05) -> List[bool]:

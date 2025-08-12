@@ -1,122 +1,221 @@
 """
-Semantic index for hypervector storage and similarity search.
+Semantic indexing system for hypervector-based function analysis.
 
-Manages the collection of function hypervectors, computes background
-statistics, and identifies significantly similar pairs.
+This module provides efficient storage and retrieval of function hypervectors
+with statistical significance testing and background distribution modeling.
 """
 
-import json
-import pickle
-import random
-import math
-import logging
-import time
-from pathlib import Path
-from typing import List, Tuple, Dict, Optional, Set, Any, TypedDict, cast
-from collections import defaultdict
 import numpy as np
-from numpy.typing import NDArray
+import logging
+import pickle
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional, Set, Any, Union
+from dataclasses import dataclass, field
+import hashlib
+import statistics
+from collections import defaultdict
+import json
+
+# For numpy typing compatibility
+try:
+    from numpy.typing import NDArray
+except ImportError:
+    # Fallback for older numpy versions
+    NDArray = np.ndarray
 
 from .hv_space import HVSpace
+from .encoder import encode_function, encode_function_with_context
 
 
-class FunctionEntry(TypedDict, total=False):
-    """Type definition for function metadata."""
-    removed: bool
+@dataclass
+class FunctionEntry:
+    """Entry for a function in the semantic index."""
+    
+    function_id: str
+    file_path: str
     name: str
-    file: str
-    line: int
-    complexity: float
-    tokens: List[str]
+    line_number: int
+    hypervector: np.ndarray
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    # Statistical properties
+    self_similarity: float = 1.0
+    mean_similarity: Optional[float] = None
+    std_similarity: Optional[float] = None
+    
+    def get_z_score(self, similarity: float) -> float:
+        """Calculate z-score for a similarity value."""
+        if self.mean_similarity is None or self.std_similarity is None:
+            return 0.0
+        
+        if self.std_similarity == 0:
+            return 0.0
+        
+        return (similarity - self.mean_similarity) / self.std_similarity
 
 
-class SimilarityAnalysis(TypedDict):
-    """Type definition for similarity analysis results."""
+@dataclass
+class SimilarityPair:
+    """A pair of similar functions with statistical significance."""
+    
+    function1_id: str
+    function2_id: str
+    similarity: float
+    z_score: float
+    p_value: float
+    q_value: Optional[float] = None  # FDR-adjusted p-value
+    
+    # Channel contributions
+    channel_contributions: Dict[str, float] = field(default_factory=dict)
+    
+    # Additional metrics
+    line_distance: Optional[int] = None
+    file_distance: Optional[int] = None
+    temporal_distance: Optional[float] = None
+    
+    def is_significant(self, alpha: float = 0.05, use_fdr: bool = True) -> bool:
+        """Check if similarity is statistically significant."""
+        if use_fdr and self.q_value is not None:
+            return self.q_value < alpha
+        return self.p_value < alpha
+
+
+@dataclass
+class SimilarityAnalysis:
+    """Analysis of what contributes to similarity between functions."""
+    
     files_same: bool
     names_similar: bool
+    channel_contributions: Dict[str, float] = field(default_factory=dict)
 
 
-class IndexStats(TypedDict):
-    """Type definition for index statistics."""
-    total_functions: int
-    space_stats: Dict[str, Any]
-    background_stats: Dict[str, Optional[float]]
+@dataclass
+class IndexStats:
+    """Statistics about the semantic index."""
+    
+    num_functions: int
+    num_files: int
+    mean_similarity: float
+    std_similarity: float
+    cache_hit_rate: float
+    search_count: int
+    cache_hits: int
+    cache_misses: int
 
 
 class SemanticIndex:
     """
-    Index for storing and querying function hypervectors.
+    Semantic index for storing and querying function hypervectors.
     
-    Provides similarity search with statistical significance testing.
+    Provides efficient similarity search with statistical significance testing,
+    background distribution modeling, and FDR correction for multiple testing.
     """
     
-    def __init__(self, config: Dict[str, Any], cache_dir: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        space: HVSpace,
+        cache_dir: Optional[Path] = None,
+        config: Optional[Dict[str, Any]] = None
+    ):
         """
-        Initialize enhanced semantic index with 16384-dimensional vectors.
+        Initialize semantic index.
         
         Args:
-            config: Semantic configuration
-            cache_dir: Directory for persisting index
+            space: Hypervector space for encoding
+            cache_dir: Directory for persistent caching
+            config: Configuration parameters
         """
-        self.config = config
-        self.cache_dir = cache_dir
-        self.logger = logging.getLogger(__name__)
+        self.space = space
+        self.cache_dir = Path(cache_dir) if cache_dir else None
+        self.config = config or {}
         
-        # Resource limits
-        self.max_duplicate_pairs = config.get('resource_limits', {}).get('max_duplicate_pairs', 200000)
-        self.lsh_bucket_cap = config.get('resource_limits', {}).get('lsh_bucket_cap', 2000)
+        # Storage
+        self.entries: Dict[str, FunctionEntry] = {}
+        self.hypervector_matrix: Optional[np.ndarray] = None
+        self.function_ids: List[str] = []
         
-        # Initialize hypervector space with enhanced dimensions
-        self.space = HVSpace(
-            dim=config.get('hv_dim', 16384),  # Enhanced to 16384 dimensions
-            bipolar=config.get('bipolar', True),
-            seed=config.get('random_seed', 42)
-        )
+        # Background statistics
+        self.background_mean: Optional[float] = None
+        self.background_std: Optional[float] = None
+        self.background_samples: List[float] = []
         
-        # Function entries: (id, hv, metadata)
-        self.entries: List[Tuple[str, Optional[NDArray[np.float32]], FunctionEntry]] = []
+        # Configuration
+        self.min_similarity_threshold = self.config.get('min_similarity_threshold', 0.5)
+        self.z_score_threshold = self.config.get('z_score_threshold', 2.5)
+        self.fdr_alpha = self.config.get('fdr_alpha', 0.05)
+        self.max_pairs_to_return = self.config.get('max_pairs_to_return', 100)
+        self.use_approximate_search = self.config.get('use_approximate_search', False)
         
-        # ID to entry index mapping
-        self.id_to_index: Dict[str, int] = {}
+        # Statistical parameters
+        self.bootstrap_samples = self.config.get('bootstrap_samples', 1000)
+        self.permutation_tests = self.config.get('permutation_tests', 100)
         
-        # Background statistics cache
-        self._background_stats: Optional[Tuple[float, float]] = None
-        self._stats_sample_size = 0
-        
-        # Enhanced indexing structures for efficient similarity search
-        self._similarity_cache: Dict[Tuple[str, str], Any] = {}
-        self._vector_matrix: Optional[NDArray[np.float32]] = None
-        self._matrix_valid = False
-        self._incremental_updates: List[Tuple[str, str, NDArray[np.float32], FunctionEntry]] = []
-        
-        # Performance monitoring
-        self._last_rebuild_time = 0.0
-        self._search_stats = {
-            'cache_hits': 0,
-            'cache_misses': 0,
-            'matrix_rebuilds': 0,
-            'incremental_updates': 0
-        }
-        
-        # Load cache if available
-        if cache_dir:
+        # Initialize cache if directory provided
+        if self.cache_dir:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
             self._load_cache()
+        
+        logger = logging.getLogger(__name__)
+        logger.debug(f"SemanticIndex initialized: dim={space.dim}, "
+                    f"z_threshold={self.z_score_threshold}")
     
-    def add(self, func_id: str, file: str, line: int, hv: NDArray[np.float32],
-            metadata: Optional[FunctionEntry] = None) -> None:
-        """Add a function hypervector to the index with incremental updates."""
-        full_id = f"{func_id}@{file}:{line}"
+    def add_function(
+        self,
+        function_id: str,
+        ast_node: Any,
+        file_path: str,
+        line_number: int,
+        metadata: Optional[Dict[str, Any]] = None,
+        context: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Add a function to the semantic index.
         
-        # Store incremental update for batch processing
-        entry_meta = metadata or cast(FunctionEntry, {})
-        self._incremental_updates.append(("add", full_id, hv, entry_meta))
+        Args:
+            function_id: Unique identifier for the function
+            ast_node: AST node of the function
+            file_path: Path to the source file
+            line_number: Line number where function starts
+            metadata: Additional metadata
+            context: Context information for encoding
+        """
+        try:
+            # Encode function to hypervector
+            if context:
+                hypervector = encode_function_with_context(
+                    ast_node, file_path, self.space, 
+                    self.config.get('encoding_config', {}),
+                    context.get('class_context'),
+                    context.get('module_imports')
+                )
+            else:
+                hypervector = encode_function(
+                    ast_node, file_path, self.space,
+                    self.config.get('encoding_config', {})
+                )
+            
+            # Create entry
+            entry = FunctionEntry(
+                function_id=function_id,
+                file_path=file_path,
+                name=ast_node.name if hasattr(ast_node, 'name') else function_id,
+                line_number=line_number,
+                hypervector=hypervector,
+                metadata=metadata or {}
+            )
+            
+            # Store entry
+            self.entries[function_id] = entry
+            
+            # Invalidate matrix cache
+            self.hypervector_matrix = None
+            
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Added function {function_id} to semantic index")
         
-        # Process incremental updates if batch is large enough
-        if len(self._incremental_updates) >= self.config.get('batch_size', 100):
-            self._process_incremental_updates()
-        
-        # Invalidate caches
-        self._invalidate_caches()
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error adding function {function_id}: {e}")
     
     def remove(self, func_id: str, file: str, line: int) -> bool:
         """Remove a function from the index with incremental updates."""
@@ -263,15 +362,7 @@ class SemanticIndex:
         
         This is approximate since we can't perfectly decompose bound vectors.
         """
-        analysis: SimilarityAnalysis = {
-            "files_same": id1.split('@')[1].split(':')[0] == id2.split('@')[1].split(':')[0],
-            "names_similar": self._name_similarity(id1, id2) > 0.5,
-        }
-        
-        # Implement enhanced channel contribution analysis
-        # Use approximation techniques with channel prototypes
-        
-        # Add channel contribution analysis
+        # Build channel contribution analysis
         channel_contributions = {}
         
         # Define channel prototypes based on common patterns
@@ -295,8 +386,12 @@ class SemanticIndex:
                 # Skip if prototype generation fails
                 channel_contributions[channel.lower()] = 0.0
         
-        # Add to analysis dictionary
-        analysis['channel_contributions'] = channel_contributions  # type: ignore
+        # Create and return analysis object
+        analysis = SimilarityAnalysis(
+            files_same=id1.split('@')[1].split(':')[0] == id2.split('@')[1].split(':')[0],
+            names_similar=self._name_similarity(id1, id2) > 0.5,
+            channel_contributions=channel_contributions
+        )
         
         return analysis
     

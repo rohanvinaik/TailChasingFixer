@@ -1,16 +1,72 @@
 """
-Natural Language Explainer for tail-chasing patterns.
-Generates human-readable explanations of detected issues.
+Explanation system for tail-chasing patterns.
+
+Generates human-readable explanations, identifies root causes,
+and provides specific remediation guidance.
 """
 
-from typing import Dict, List, Optional
+import re
+import logging
+from typing import Dict, List, Optional, Any, Tuple, Set
+from dataclasses import dataclass, field
+from collections import defaultdict
+from pathlib import Path
+
 from ..core.issues import Issue
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Explanation:
+    """A human-readable explanation of a pattern."""
+    
+    pattern_type: str
+    summary: str
+    narrative: str
+    root_causes: List[str]
+    remediation_steps: List[str]
+    similar_patterns: List[Dict[str, Any]] = field(default_factory=list)
+    technical_details: Optional[str] = None
+    confidence_explanation: Optional[str] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            'pattern_type': self.pattern_type,
+            'summary': self.summary,
+            'narrative': self.narrative,
+            'root_causes': self.root_causes,
+            'remediation_steps': self.remediation_steps,
+            'similar_patterns': self.similar_patterns,
+            'technical_details': self.technical_details,
+            'confidence_explanation': self.confidence_explanation
+        }
 
 
 class TailChasingExplainer:
-    """Generate human-readable explanations of tail-chasing patterns."""
+    """
+    Generate human-readable explanations for tail-chasing patterns.
     
-    def __init__(self):
+    Provides clear, actionable guidance for understanding and fixing
+    detected patterns.
+    """
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        """
+        Initialize explainer.
+        
+        Args:
+            config: Configuration parameters
+        """
+        self.config = config or {}
+        self.technical_mode = self.config.get('technical_mode', False)
+        self.max_similar_patterns = self.config.get('max_similar_patterns', 5)
+        
+        # Cache for similar patterns
+        self.pattern_cache: Dict[str, List[Issue]] = defaultdict(list)
+        
+        # Initialize existing templates for backward compatibility
         self.explanation_templates = {
             'semantic_duplicate': self._explain_semantic_duplicate,
             'semantic_duplicate_multimodal': self._explain_semantic_duplicate_multimodal,
@@ -21,9 +77,49 @@ class TailChasingExplainer:
             'hallucination_cascade': self._explain_hallucination_cascade,
             'fix_induced_regression': self._explain_fix_induced_regression,
         }
+        
+        # Pattern templates for new explanation system
+        self.pattern_templates = self._initialize_templates()
+    
+    def explain_issue_enhanced(
+        self,
+        issue: Issue,
+        all_issues: Optional[List[Issue]] = None
+    ) -> Explanation:
+        """
+        Generate enhanced explanation for a specific issue.
+        
+        Args:
+            issue: The issue to explain
+            all_issues: All issues for finding similar patterns
+            
+        Returns:
+            Human-readable explanation with remediation steps
+        """
+        pattern_type = self._classify_pattern(issue)
+        
+        # Generate base explanation
+        explanation = self._generate_base_explanation(pattern_type, issue)
+        
+        # Add evidence-specific details
+        self._add_evidence_details(explanation, issue)
+        
+        # Find similar patterns if context provided
+        if all_issues:
+            similar = self._find_similar_patterns(issue, all_issues)
+            explanation.similar_patterns = similar[:self.max_similar_patterns]
+        
+        # Add confidence explanation
+        if hasattr(issue, 'confidence'):
+            explanation.confidence_explanation = self._explain_confidence(
+                issue.confidence,
+                issue.evidence if hasattr(issue, 'evidence') else {}
+            )
+        
+        return explanation
     
     def explain_issue(self, issue: Issue) -> str:
-        """Generate a comprehensive explanation for a tail-chasing issue."""
+        """Generate a comprehensive explanation for a tail-chasing issue (legacy method)."""
         explainer = self.explanation_templates.get(issue.kind)
         if explainer:
             return explainer(issue)
