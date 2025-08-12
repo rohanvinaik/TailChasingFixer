@@ -80,6 +80,54 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
+## 🔄 Updating/Reinstalling
+
+### Updating from PyPI
+```bash
+# Update to latest version
+pip install --upgrade tail-chasing-detector
+
+# Update with all features
+pip install --upgrade "tail-chasing-detector[all]"
+```
+
+### Updating from Source
+```bash
+# If installed in editable mode
+cd /path/to/TailChasingFixer
+git pull origin main
+pip install -e . --upgrade
+
+# Force reinstall if having issues
+pip install -e . --force-reinstall
+```
+
+### Uninstalling
+```bash
+# Uninstall the package
+pip uninstall tail-chasing-detector
+
+# Clean up any remaining files (if installed from source)
+rm -rf build/ dist/ *.egg-info/
+```
+
+### Troubleshooting Installation Issues
+```bash
+# If you encounter import errors after updating
+pip uninstall tail-chasing-detector
+pip cache purge  # Clear pip cache
+pip install tail-chasing-detector
+
+# For development installation issues
+pip install -e . --force-reinstall --no-deps
+pip install -e ".[dev]"
+
+# If commands aren't found after installation
+python -m tailchasing --help  # Use module syntax
+# Or reinstall with:
+pip install -e . --force-reinstall
+```
+
 ## 📖 Usage
 
 ### Basic Commands
