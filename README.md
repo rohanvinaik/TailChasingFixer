@@ -25,6 +25,8 @@ This tool detects these patterns using advanced semantic analysis and provides a
 - **Smart Filtering** - Reduces false positives by understanding legitimate patterns
 - **Multi-Modal Analysis** - Analyzes structure, behavior, data flow, and complexity
 - **Cargo Cult Detection** - Identifies copied boilerplate and misused patterns
+- **🧬 Chromatin-Inspired Analysis** - Uses polymer physics models from chromatin biology
+- **🔬 Loop Extrusion Detection** - Identifies code organization patterns using TAD-like boundaries
 
 ### 🔧 Intelligent Auto-Fixing
 - **Automated Fix Generation** - Creates safe, tested fixes for detected issues
@@ -345,6 +347,14 @@ canonical_policy:
 | `import_anxiety` | Defensive over-importing | LOW |
 | `cargo_cult_pattern` | Copied boilerplate without understanding | MEDIUM |
 
+### Biology-Inspired Patterns
+| Issue Type | Description | Risk |
+|------------|-------------|------|
+| `chromatin_contact_violation` | Code violating expected polymer distance relationships | MEDIUM |
+| `tad_boundary_crossing` | Improper module boundary violations | HIGH |
+| `loop_extrusion_anomaly` | Abnormal code organization patterns | MEDIUM |
+| `recombination_hotspot` | Area of excessive code churn | HIGH |
+
 ### Canonical Policy Issues
 | Issue Type | Description | Risk |
 |------------|-------------|------|
@@ -400,6 +410,54 @@ def compute_mean(data_list):
     for val in data_list:
         total += val
     return total / len(data_list)
+```
+
+### 🧬 Biology-Inspired Polymer Physics Analysis
+
+Applies chromatin biology concepts to code organization:
+
+- **Contact Probability Decay**: Models code relationships using polymer distance metrics
+- **TAD Boundary Detection**: Identifies natural module boundaries like topologically associating domains
+- **Loop Extrusion Simulation**: Analyzes how code structures form and reorganize
+- **Recombination Hotspot Mapping**: Finds areas of high code churn and instability
+
+#### Polymer Physics Configuration
+
+```yaml
+# .tailchasing_polymer.yml
+alpha: 1.2  # Contact decay exponent (1.0-1.5)
+weights:
+  tok: 1.0  # Token-level distance weight
+  ast: 2.0  # AST-level distance weight  
+  mod: 3.0  # Module-level distance weight
+  git: 4.0  # Git-level distance weight
+tad_patterns:
+  - "*.api.*"
+  - "*.core.*"
+  - "*.models.*"
+```
+
+#### Calibration Tool
+
+Optimize parameters based on historical data:
+
+```python
+from tailchasing.calibrate import CalibrationTool
+from tailchasing.config import PolymerConfig
+
+# Calibrate based on historical thrashing events
+tool = CalibrationTool()
+result = tool.fit_parameters(
+    historical_events,
+    codebase_metrics,
+    alpha_range=(1.0, 1.5)
+)
+
+# Apply optimized parameters
+config = PolymerConfig(
+    alpha=result.optimal_alpha,
+    weights=result.optimal_weights
+)
 ```
 
 ### Smart Filtering
