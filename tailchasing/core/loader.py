@@ -3,10 +3,11 @@
 import ast
 import os
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Set
+from typing import Dict, List, Any, Optional, Set, Tuple
 import logging
 
 from .ignore import IgnoreManager
+from .robust_parser import RobustParser, ParseResult
 
 logger = logging.getLogger(__name__)
 
@@ -81,43 +82,78 @@ def collect_files(
     return sorted(set(files))
 
 
-def parse_file(path: Path) -> Optional[ast.AST]:
+def parse_file(path: Path, robust_parser: Optional[RobustParser] = None) -> Optional[ast.AST]:
     """Parse a single Python file.
     
     Args:
         path: Path to the Python file
+        robust_parser: Optional RobustParser instance for resilient parsing
         
     Returns:
         AST node or None if parsing failed
     """
-    try:
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        return ast.parse(text, filename=str(path))
-    except SyntaxError as e:
-        logger.warning(f"Syntax error in {path}: {e}")
-        return None
-    except Exception as e:
-        logger.error(f"Failed to parse {path}: {e}")
-        return None
+    if robust_parser:
+        result = robust_parser.parse_file(path)
+        if result.is_valid:
+            return result.ast_tree
+        elif result.partial_ast:
+            logger.warning(f"Using partial AST for {path}: {result.warnings}")
+            return result.partial_ast
+        else:
+            logger.warning(f"File quarantined: {path}")
+            return None
+    else:
+        # Fallback to original simple parsing
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            return ast.parse(text, filename=str(path))
+        except SyntaxError as e:
+            logger.warning(f"Syntax error in {path}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to parse {path}: {e}")
+            return None
 
 
-def parse_files(paths: List[Path]) -> Dict[str, ast.AST]:
+def parse_files(paths: List[Path], robust_parser: Optional[RobustParser] = None) -> Tuple[Dict[str, ast.AST], Dict[str, ParseResult]]:
     """Parse multiple Python files.
     
     Args:
         paths: List of file paths
+        robust_parser: Optional RobustParser instance for resilient parsing
         
     Returns:
-        Dictionary mapping file paths to AST nodes
+        Tuple of (ast_dict, parse_results)
+        - ast_dict: Dictionary mapping file paths to AST nodes
+        - parse_results: Dictionary mapping file paths to ParseResult objects (if robust_parser used)
     """
-    result = {}
+    ast_dict = {}
+    parse_results = {}
     
     for p in paths:
-        tree = parse_file(p)
-        if tree is not None:
-            result[str(p)] = tree
-        
-    return result
+        if robust_parser:
+            result = robust_parser.parse_file(p)
+            parse_results[str(p)] = result
+            
+            if result.is_valid:
+                ast_dict[str(p)] = result.ast_tree
+            elif result.partial_ast:
+                ast_dict[str(p)] = result.partial_ast
+                logger.warning(f"Using partial AST for {p}")
+        else:
+            tree = parse_file(p)
+            if tree is not None:
+                ast_dict[str(p)] = tree
+    
+    if robust_parser:
+        # Log statistics
+        stats = robust_parser.get_statistics()
+        logger.info(
+            f"Parsing statistics: {stats['successful_parses']}/{stats['total_files']} successful, "
+            f"{stats['partial_parses']} partial, {stats['quarantined']} quarantined"
+        )
+    
+    return ast_dict, parse_results
 
 
 def get_source_lines(path: Path) -> List[str]:

@@ -35,6 +35,7 @@ class AnalysisContext:
     symbol_table: 'SymbolTable'  # Forward reference to avoid circular import
     source_cache: Dict[str, List[str]]
     cache: Dict[str, Any]  # General purpose cache for analyzers
+    parse_results: Dict[str, Any] = None  # Optional parse results from robust parser
     
     def is_excluded(self, path: str) -> bool:
         """Check if a path should be excluded based on config."""
@@ -47,6 +48,12 @@ class AnalysisContext:
     def should_ignore_issue(self, issue_kind: str) -> bool:
         """Check if an issue type should be ignored."""
         return common_functions.should_ignore_issue(issue_kind, self.config)
+        
+    def is_quarantined(self, file_path: str) -> bool:
+        """Check if a file has been quarantined due to parsing errors."""
+        if self.parse_results and file_path in self.parse_results:
+            return self.parse_results[file_path].is_quarantined
+        return False
         
     def is_placeholder_allowed(self, symbol: str) -> bool:
         """Check if a placeholder is explicitly allowed."""

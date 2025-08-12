@@ -237,6 +237,26 @@ def main():
         help="Force semantic analysis even when file/duplicate counts exceed limits"
     )
     
+    parser.add_argument(
+        "--auto-fix-trivial-syntax",
+        action="store_true",
+        help="Attempt to automatically fix trivial syntax errors before parsing"
+    )
+    
+    parser.add_argument(
+        "--robust-parsing",
+        action="store_true",
+        default=True,
+        help="Use robust parser with fallback strategies (default: enabled)"
+    )
+    
+    parser.add_argument(
+        "--no-robust-parsing",
+        action="store_false",
+        dest="robust_parsing",
+        help="Disable robust parsing and use simple AST parser only"
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -348,7 +368,32 @@ def main():
     
     # Parse files
     logger.info("Parsing Python files")
-    ast_index = parse_files(files)
+    
+    # Create robust parser if enabled
+    robust_parser = None
+    parse_results = {}
+    if args.robust_parsing:
+        from .core.robust_parser import RobustParser
+        robust_parser = RobustParser(auto_fix_trivial=args.auto_fix_trivial_syntax)
+        logger.info(f"Using robust parser (auto-fix: {args.auto_fix_trivial_syntax})")
+    
+    # Parse files with appropriate method
+    if robust_parser:
+        ast_index, parse_results = parse_files(files, robust_parser)
+        
+        # Show parsing statistics
+        stats = robust_parser.get_statistics()
+        if stats['quarantined'] > 0:
+            logger.warning(f"Quarantined {stats['quarantined']} files due to parsing errors")
+            sys.stderr.write(f"Warning: {stats['quarantined']} files could not be parsed and were quarantined\n")
+            
+            # Show details of quarantined files if verbose
+            if args.verbose:
+                for file_path, result in parse_results.items():
+                    if result.is_quarantined:
+                        sys.stderr.write(f"  - {file_path}: {', '.join(result.warnings[:2])}\n")
+    else:
+        ast_index, _ = parse_files(files)
     
     if not ast_index:
         logger.error("No valid Python files could be parsed")
@@ -378,7 +423,8 @@ def main():
         ast_index=ast_index,
         symbol_table=symbol_table,
         source_cache=source_cache,
-        cache={}  # Initialize empty cache for analyzers
+        cache={},  # Initialize empty cache for analyzers
+        parse_results=parse_results  # Add parse results for quarantine checking
     )
     
     # Load and run analyzers

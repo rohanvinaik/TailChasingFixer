@@ -54,6 +54,7 @@ setup(
         "numpy>=1.21.0,<2.0",
         "scipy>=1.7.0,<2.0",
         "pathspec>=0.11.0",
+        "chardet>=4.0",  # For encoding detection in robust parser
     ],
     extras_require={
         "dev": [
@@ -85,6 +86,10 @@ setup(
         "cli": [
             "prompt-toolkit>=3.0",
             "watchdog>=3.0",
+        ],
+        "robust-parsing": [
+            "libcst>=1.0",
+            "parso>=0.8",
         ],
         "lsp": [
             "pygls>=1.0",
