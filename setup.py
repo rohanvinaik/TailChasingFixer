@@ -51,8 +51,8 @@ setup(
         "pyyaml>=6.0",
         "click>=8.0",
         "rich>=13.0",
-        "numpy>=1.21.0",
-        "scipy>=1.7.0",
+        "numpy>=1.21.0,<2.0",
+        "scipy>=1.7.0,<2.0",
     ],
     extras_require={
         "dev": [

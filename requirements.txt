@@ -1,0 +1,25 @@
+# Core dependencies for tail-chasing-detector
+# These are the minimum required dependencies
+
+typing-extensions>=4.5
+pyyaml>=6.0
+click>=8.0
+rich>=13.0
+numpy>=1.21.0,<2.0
+scipy>=1.7.0,<2.0
+networkx>=3.0
+
+# Note: If you encounter dependency conflicts with other packages:
+# 
+# 1. For boltons conflicts (e.g., with semgrep):
+#    This package doesn't use boltons directly. The conflict is with
+#    other packages in your environment. Consider using a virtual environment.
+#
+# 2. For pydantic conflicts (e.g., with web3):
+#    This package doesn't use pydantic directly. If needed, you can install
+#    in a separate virtual environment to avoid conflicts.
+#
+# Recommended installation in a clean virtual environment:
+#   python -m venv tailchasing-env
+#   source tailchasing-env/bin/activate  # On Windows: tailchasing-env\Scripts\activate
+#   pip install tail-chasing-detector

@@ -112,6 +112,20 @@ rm -rf build/ dist/ *.egg-info/
 ```
 
 ### Troubleshooting Installation Issues
+
+#### Dependency Conflicts
+If you encounter dependency conflicts with other packages (e.g., semgrep, web3):
+```bash
+# Use a virtual environment to avoid conflicts
+python -m venv tailchasing-env
+source tailchasing-env/bin/activate  # On Windows: tailchasing-env\Scripts\activate
+pip install tail-chasing-detector
+
+# Or use pipx for isolated installation
+pipx install tail-chasing-detector
+```
+
+#### Import Errors
 ```bash
 # If you encounter import errors after updating
 pip uninstall tail-chasing-detector
@@ -127,6 +141,11 @@ python -m tailchasing --help  # Use module syntax
 # Or reinstall with:
 pip install -e . --force-reinstall
 ```
+
+#### Known Compatibility Notes
+- **boltons**: Not a direct dependency. Conflicts may arise with semgrep. Use virtual environment.
+- **pydantic**: Not a direct dependency. Conflicts may arise with web3. Use virtual environment.
+- **numpy/scipy**: Pinned to <2.0 for compatibility with older codebases.
 
 ## 📖 Usage
 
