@@ -47,6 +47,13 @@ try:
 except ImportError:
     CIRCULAR_IMPORT_RESOLVER_AVAILABLE = False
 
+# Import phantom triage analyzer
+try:
+    from .analyzers.phantom_triage import PhantomTriageAnalyzer
+    PHANTOM_TRIAGE_AVAILABLE = True
+except ImportError:
+    PHANTOM_TRIAGE_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -102,6 +109,11 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     circular_config = config.get("circular_import_resolver", {})
     if circular_config.get("enabled", True) and CIRCULAR_IMPORT_RESOLVER_AVAILABLE:
         analyzers.append(CircularImportResolver(config))
+    
+    # Add phantom triage analyzer if enabled
+    phantom_config = config.get("placeholders", {})
+    if phantom_config.get("triage_enabled", True) and PHANTOM_TRIAGE_AVAILABLE:
+        analyzers.append(PhantomTriageAnalyzer(config))
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])

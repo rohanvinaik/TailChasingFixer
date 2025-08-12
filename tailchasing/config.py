@@ -25,7 +25,14 @@ class Config:
             "fail": 30
         },
         "placeholders": {
-            "allow": []
+            "allow": [],
+            "block": [],
+            "triage_enabled": True,
+            "security_patterns": {
+                "crypto": ["*verify*", "*authenticate*", "*sign*", "*encrypt*", "*decrypt*"],
+                "hsm": ["*hsm*", "*hardware*security*", "*secure*element*"],
+                "post_quantum": ["*dilithium*", "*kyber*", "*falcon*", "*sphincs*"]
+            }
         },
         "ignore_issue_types": [],
         "scoring_weights": {
@@ -72,6 +79,14 @@ class Config:
             "db_path": ".tailchasing_history.db",
             "track_regressions": True,
             "git_integration": True
+        },
+        "playbooks": {
+            "enabled": True,
+            "auto_generate": True,
+            "require_review_for_high_risk": True,
+            "backup_before_execution": True,
+            "rollback_on_failure": True,
+            "output_dir": "./playbooks"
         }
     }
     

@@ -157,6 +157,30 @@ def main():
         help="Generate an interactive fix script"
     )
     
+    parser.add_argument(
+        "--phantom-triage-report",
+        action="store_true",
+        help="Generate phantom stub triage report with P0/P1/P3 classification"
+    )
+    
+    parser.add_argument(
+        "--generate-playbooks",
+        action="store_true",
+        help="Generate fix playbooks for issue clusters with safety checks"
+    )
+    
+    parser.add_argument(
+        "--preview-playbooks",
+        action="store_true",
+        help="Preview playbook changes without executing them"
+    )
+    
+    parser.add_argument(
+        "--execute-playbooks",
+        action="store_true",
+        help="Execute generated playbooks (requires --generate-playbooks)"
+    )
+    
     args = parser.parse_args()
     
     # Setup logging
@@ -396,6 +420,42 @@ def main():
         
         regression_report = provenance_tracker.get_regression_report(args.show_regressions)
         sys.stdout.write(regression_report + "\n")
+    
+    # Generate phantom triage report if requested
+    if args.phantom_triage_report:
+        sys.stdout.write(f"\n{'=' * 60}\n")
+        sys.stdout.write("PHANTOM STUB TRIAGE REPORT\n")
+        sys.stdout.write(f"{'=' * 60}\n")
+        
+        # Find phantom triage analyzer
+        phantom_analyzer = None
+        for analyzer in analyzers:
+            if hasattr(analyzer, 'name') and analyzer.name == 'phantom_triage':
+                phantom_analyzer = analyzer
+                break
+        
+        if phantom_analyzer:
+            try:
+                triage_report = phantom_analyzer.generate_triage_report()
+                sys.stdout.write(triage_report + "\n")
+                
+                # Check for blocked stubs that should fail CI
+                stubs = phantom_analyzer.get_detected_stubs()
+                blocked_stubs = [s for s in stubs if s.is_blocked]
+                
+                if blocked_stubs:
+                    sys.stdout.write("\n🚨 CRITICAL: Found blocked security stubs that will fail CI:\n")
+                    for stub in blocked_stubs:
+                        func_name = f"{stub.class_name}.{stub.function_name}" if stub.class_name else stub.function_name
+                        sys.stdout.write(f"  - {func_name} ({stub.file_path}:{stub.line_number})\n")
+                    
+                    if not args.fail_on:
+                        sys.exit(2)  # Exit with error for blocked stubs
+                        
+            except Exception as e:
+                sys.stderr.write(f"Error generating phantom triage report: {e}\n")
+        else:
+            sys.stdout.write("Phantom triage analyzer not available\n")
     
     # Generate reports
     reporter = Reporter(config.to_dict())
