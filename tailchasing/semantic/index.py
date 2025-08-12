@@ -8,8 +8,11 @@ with statistical significance testing and background distribution modeling.
 import numpy as np
 import logging
 import pickle
+import time
+import math
+import random
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Set, Any, Union
+from typing import Dict, List, Tuple, Optional, Set, Any, Union, cast
 from dataclasses import dataclass, field
 import hashlib
 import statistics
@@ -135,6 +138,8 @@ class SemanticIndex:
         self.function_ids: List[str] = []
         self.id_to_index: Dict[str, int] = {}  # Map from function ID to index
         self._incremental_updates: List = []  # Incremental updates queue
+        self._vector_matrix: Optional[np.ndarray] = None  # Vectorized matrix for efficient search
+        self._matrix_valid: bool = False  # Whether the vector matrix is up to date
         
         # Background statistics
         self.background_mean: Optional[float] = None
@@ -150,6 +155,7 @@ class SemanticIndex:
         self.z_score_threshold = self.config.get('z_score_threshold', 2.5)
         self.fdr_alpha = self.config.get('fdr_alpha', 0.05)
         self.max_pairs_to_return = self.config.get('max_pairs_to_return', 100)
+        self.max_duplicate_pairs = self.config.get('max_duplicate_pairs', 1000)
         self.use_approximate_search = self.config.get('use_approximate_search', False)
         
         # Statistical parameters
@@ -249,8 +255,8 @@ class SemanticIndex:
         Returns (mean, std) of random pair distances.
         """
         valid_entries: List[Tuple[str, NDArray[np.float32], FunctionEntry]] = [
-            (id, hv, meta) for id, hv, meta in self.entries
-            if hv is not None and not meta.get("removed", False)
+            (id, entry.hypervector, entry) for id, entry in self.entries.items()
+            if entry.hypervector is not None
         ]
         
         n = len(valid_entries)
@@ -424,8 +430,8 @@ class SemanticIndex:
     
     def get_stats(self) -> IndexStats:
         """Get index statistics."""
-        valid_count = sum(1 for _, hv, meta in self.entries
-                         if hv is not None and not meta.get("removed", False))
+        valid_count = sum(1 for _, entry in self.entries.items()
+                         if entry.hypervector is not None)
         
         stats: IndexStats = {
             "total_functions": valid_count,
@@ -510,23 +516,33 @@ class SemanticIndex:
         
         for action, full_id, hv, entry_meta in self._incremental_updates:
             if action == "add":
-                if full_id in self.id_to_index:
+                # Since entries is a dict, we don't need id_to_index anymore
+                # Create or update the FunctionEntry
+                if full_id in self.entries:
                     # Update existing entry
-                    idx = self.id_to_index[full_id]
-                    self.entries[idx] = (full_id, hv, entry_meta)
+                    self.entries[full_id].hypervector = hv
+                    self.entries[full_id].metadata.update(entry_meta)
                 else:
+                    # Parse the full_id to get components
+                    name, location = full_id.split('@')
+                    file_path, line_str = location.split(':')
                     # Add new entry
-                    idx = len(self.entries)
-                    self.entries.append((full_id, hv, entry_meta))
-                    self.id_to_index[full_id] = idx
+                    self.entries[full_id] = FunctionEntry(
+                        function_id=full_id,
+                        file_path=file_path,
+                        name=name,
+                        line_number=int(line_str),
+                        hypervector=hv,
+                        metadata=entry_meta
+                    )
                 updates_processed += 1
                 
             elif action == "remove":
-                if full_id in self.id_to_index:
-                    # Mark as removed
-                    idx = self.id_to_index[full_id]
-                    self.entries[idx] = (full_id, None, entry_meta)
-                    del self.id_to_index[full_id]
+                if full_id in self.entries:
+                    # Remove the entry
+                    del self.entries[full_id]
+                    if full_id in self.id_to_index:
+                        del self.id_to_index[full_id]
                     updates_processed += 1
         
         # Clear processed updates
@@ -540,7 +556,8 @@ class SemanticIndex:
             self._rebuild_vector_matrix()
         
         process_time = time.time() - start_time
-        self.logger.debug(f"Processed {updates_processed} incremental updates in {process_time:.3f}s")
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Processed {updates_processed} incremental updates in {process_time:.3f}s")
     
     def _invalidate_caches(self) -> None:
         """Invalidate caches after modifications."""
@@ -551,8 +568,8 @@ class SemanticIndex:
     
     def _rebuild_vector_matrix(self) -> None:
         """Rebuild vector matrix for efficient vectorized operations."""
-        valid_entries = [(id, hv, meta) for id, hv, meta in self.entries
-                        if hv is not None and not meta.get("removed", False)]
+        valid_entries = [(id, entry.hypervector, entry) for id, entry in self.entries.items()
+                        if entry.hypervector is not None]
         
         if not valid_entries:
             self._vector_matrix = None
@@ -566,7 +583,8 @@ class SemanticIndex:
         self._last_rebuild_time = time.time()
         self._search_stats['matrix_rebuilds'] += 1
         
-        self.logger.debug(f"Rebuilt vector matrix with {len(valid_entries)} entries")
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Rebuilt vector matrix with {len(valid_entries)} entries")
     
     def _find_similar_vectorized(self, query_hv: NDArray[np.float32], 
                                z_threshold: float, limit: int) -> List[Tuple[str, float, float, FunctionEntry]]:
@@ -578,8 +596,8 @@ class SemanticIndex:
             return []
         
         # Get valid entries for metadata lookup
-        valid_entries = [(id, hv, meta) for id, hv, meta in self.entries
-                        if hv is not None and not meta.get("removed", False)]
+        valid_entries = [(id, entry.hypervector, entry) for id, entry in self.entries.items()
+                        if entry.hypervector is not None]
         
         # Compute distances using vectorized operations
         distances = self._compute_distances_vectorized(query_hv, self._vector_matrix)
@@ -618,8 +636,8 @@ class SemanticIndex:
             return []
         
         # Get valid entries for metadata lookup
-        valid_entries = [(id, hv, meta) for id, hv, meta in self.entries
-                        if hv is not None and not meta.get("removed", False)]
+        valid_entries = [(id, entry.hypervector, entry) for id, entry in self.entries.items()
+                        if entry.hypervector is not None]
         
         n = len(valid_entries)
         if n < 2:
@@ -643,7 +661,8 @@ class SemanticIndex:
         # Log warning if we have many potential pairs
         total_pairs = n * (n - 1) // 2
         if total_pairs > max_pairs * 2:
-            self.logger.warning(
+            logger = logging.getLogger(__name__)
+            logger.warning(
                 f"Large number of potential pairs ({total_pairs}), limiting to {max_pairs} pairs. "
                 f"Consider increasing max_duplicate_pairs or using stricter thresholds."
             )
@@ -653,7 +672,8 @@ class SemanticIndex:
                 if z_scores[i, j] >= z_threshold:
                     # Check if we've reached the limit
                     if pair_count >= max_pairs:
-                        self.logger.warning(
+                        logger = logging.getLogger(__name__)
+                        logger.warning(
                             f"Reached max_duplicate_pairs limit ({max_pairs}), stopping pair search. "
                             f"Found {pair_count} pairs so far."
                         )
@@ -707,7 +727,8 @@ class SemanticIndex:
         
         # For large matrices, warn about memory usage
         if n > 1000:
-            self.logger.warning(f"Computing pairwise distances for {n} vectors - this may take time")
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Computing pairwise distances for {n} vectors - this may take time")
         
         if self.space.bipolar:
             # For bipolar vectors - ensure float32 computation
@@ -754,8 +775,8 @@ class SemanticIndex:
     
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics for the enhanced index."""
-        valid_count = sum(1 for _, hv, meta in self.entries
-                         if hv is not None and not meta.get("removed", False))
+        valid_count = sum(1 for _, entry in self.entries.items()
+                         if entry.hypervector is not None)
         
         stats = {
             "index_stats": {
@@ -797,13 +818,13 @@ class SemanticIndex:
             keep_size = max_cache_size // 2
             self._similarity_cache = dict(cache_items[-keep_size:])
             
-            if hasattr(self, 'logger'):
-                self.logger.info(f"Trimmed similarity cache from {len(cache_items)} to {len(self._similarity_cache)} items")
+            logger = logging.getLogger(__name__)
+            logger.info(f"Trimmed similarity cache from {len(cache_items)} to {len(self._similarity_cache)} items")
     
     def force_rebuild(self) -> None:
         """Force rebuild of all internal structures."""
-        if hasattr(self, 'logger'):
-            self.logger.info("Forcing rebuild of semantic index structures")
+        logger = logging.getLogger(__name__)
+        logger.info("Forcing rebuild of semantic index structures")
         
         # Process pending updates
         if hasattr(self, '_incremental_updates') and self._incremental_updates:
@@ -820,5 +841,5 @@ class SemanticIndex:
         if hasattr(self, '_similarity_cache'):
             self._similarity_cache.clear()
         
-        if hasattr(self, 'logger'):
-            self.logger.info("Semantic index rebuild complete")
+        logger = logging.getLogger(__name__)
+        logger.info("Semantic index rebuild complete")

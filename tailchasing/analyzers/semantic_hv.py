@@ -166,10 +166,17 @@ class SemanticHVAnalyzer(Analyzer):
                         continue
                 
                 # Add to index
-                self.index.add(func_name, file, line, hv, {
-                    'features': features or {},
-                    'args': entry.get('args', [])
-                })
+                self.index.add_function(
+                    function_id=func_id,
+                    ast_node=node,
+                    file_path=file,
+                    line_number=line,
+                    metadata={
+                        'features': features or {},
+                        'args': entry.get('args', []),
+                        'name': func_name
+                    }
+                )
     
     def _find_semantic_duplicates(self) -> List[Issue]:
         """Find semantically similar functions."""
@@ -226,8 +233,8 @@ class SemanticHVAnalyzer(Analyzer):
             features2 = self._feature_cache.get(id2, {})
             
             channel_contrib = self.similarity_analyzer.analyze_channel_contributions(
-                self.index.entries[self.index.id_to_index[id1]][1],
-                self.index.entries[self.index.id_to_index[id2]][1],
+                self.index.entries[id1].hypervector,
+                self.index.entries[id2].hypervector,
                 self.index.space,
                 features1,
                 features2
@@ -310,10 +317,11 @@ class SemanticHVAnalyzer(Analyzer):
         issues = []
         
         # Look for functions with low channel diversity
-        for entry_id, hv, metadata in self.index.entries:
-            if hv is None or metadata.get('removed', False):
+        for entry_id, entry in self.index.entries.items():
+            if entry.hypervector is None:
                 continue
             
+            metadata = entry.metadata
             features = metadata.get('features', {})
             if not features:
                 continue
