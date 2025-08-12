@@ -11,6 +11,9 @@ networkx>=3.0
 pathspec>=0.11.0
 chardet>=4.0
 
+# Optional dependencies for enhanced features
+# psutil>=5.9.0  # For memory monitoring and performance profiling (optional)
+
 # Note: If you encounter dependency conflicts with other packages:
 # 
 # 1. For boltons conflicts (e.g., with semgrep):

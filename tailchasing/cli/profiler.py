@@ -3,13 +3,19 @@ Performance profiler for analyzing performance metrics.
 """
 
 import time
-import psutil
 import tracemalloc
 from typing import Dict, Any, Optional, Callable, List
 from dataclasses import dataclass, field
 from contextlib import contextmanager
 from functools import wraps
 import threading
+
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    HAS_PSUTIL = False
+    psutil = None
 
 
 @dataclass
@@ -63,12 +69,19 @@ class PerformanceProfiler:
                 self.track_memory = False
                 
         # System resources
-        self.process = psutil.Process()
+        self.process = None
+        if HAS_PSUTIL:
+            try:
+                self.process = psutil.Process()
+            except:
+                self.process = None
         self.start_time = time.time()
         self.start_memory = self._get_memory_usage()
         
     def _get_memory_usage(self) -> int:
         """Get current memory usage in bytes."""
+        if not self.process:
+            return 0
         try:
             return self.process.memory_info().rss
         except:
@@ -173,15 +186,16 @@ class PerformanceProfiler:
         }
         
         # System metrics
-        try:
-            report["_system"] = {
-                "cpu_percent": self.process.cpu_percent(),
-                "memory_rss_mb": current_memory / 1024 / 1024,
-                "memory_percent": self.process.memory_percent(),
-                "num_threads": self.process.num_threads()
-            }
-        except:
-            pass
+        if self.process:
+            try:
+                report["_system"] = {
+                    "cpu_percent": self.process.cpu_percent(),
+                    "memory_rss_mb": current_memory / 1024 / 1024,
+                    "memory_percent": self.process.memory_percent(),
+                    "num_threads": self.process.num_threads()
+                }
+            except:
+                pass
             
         # Memory profiling if available
         if self.track_memory and self.memory_tracker_started:

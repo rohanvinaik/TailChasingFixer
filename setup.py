@@ -83,6 +83,7 @@ setup(
             "ray>=2.0",
             "dask>=2023.1",
             "xxhash>=3.0",  # For fast content hashing
+            "psutil>=5.9.0",  # For memory monitoring and performance profiling
         ],
         "cli": [
             "prompt-toolkit>=3.0",

@@ -55,7 +55,8 @@ ml = [
 performance = [
     "numba>=0.57",
     "ray>=2.0",
-    "dask>=2023.1"
+    "dask>=2023.1",
+    "psutil>=5.9.0"
 ]
 cli = [
     "rich>=13.0",

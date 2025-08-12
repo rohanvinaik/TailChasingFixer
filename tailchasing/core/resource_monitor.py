@@ -177,7 +177,11 @@ class MemoryMonitor:
             self._trigger_adaptive_behaviors(self.stats.usage_percent)
             
         except Exception as e:
-            logger.error(f"Failed to check memory usage: {e}")
+            # Only log as debug if psutil is not available, as this is expected
+            if 'psutil' in str(e):
+                logger.debug(f"Memory monitoring unavailable (psutil not installed): {e}")
+            else:
+                logger.error(f"Failed to check memory usage: {e}")
             
     def _trigger_adaptive_behaviors(self, usage_percent: float):
         """Trigger adaptive behaviors based on memory usage."""

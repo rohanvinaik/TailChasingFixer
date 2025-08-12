@@ -560,9 +560,12 @@ def main():
         )
         
         if verbosity in [VerbosityLevel.VERBOSE, VerbosityLevel.DEBUG]:
-            output_manager.log("Initialized memory monitor", VerbosityLevel.VERBOSE)
-            stats = memory_monitor.get_stats()
-            output_manager.log(f"Memory limit: {stats.limit_mb:.0f}MB", VerbosityLevel.VERBOSE)
+            if memory_monitor.config.enable_monitoring:
+                output_manager.log("Initialized memory monitor", VerbosityLevel.VERBOSE)
+                stats = memory_monitor.get_stats()
+                output_manager.log(f"Memory limit: {stats.limit_mb:.0f}MB", VerbosityLevel.VERBOSE)
+            else:
+                output_manager.log("Memory monitoring disabled (psutil not available)", VerbosityLevel.VERBOSE)
     
     # Find project root
     root_path = Path(args.path).resolve()
