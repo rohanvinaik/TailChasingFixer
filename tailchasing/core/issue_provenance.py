@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import ast
 
 from .issues import Issue
+from .reporting import NumpyJSONEncoder
 
 
 class IssueFingerprint:
@@ -44,7 +45,7 @@ class IssueFingerprint:
         content_components = [
             issue.kind,
             normalized_message,
-            json.dumps(issue.evidence, sort_keys=True) if issue.evidence else "{}"
+            json.dumps(issue.evidence, sort_keys=True, cls=NumpyJSONEncoder) if issue.evidence else "{}"
         ]
         content_hash = hashlib.sha256('|'.join(content_components).encode()).hexdigest()[:16]
         
@@ -346,7 +347,7 @@ class IssueDatabase:
                 event.git_commit,
                 event.git_branch,
                 event.analysis_run_id,
-                json.dumps(event.metadata)
+                json.dumps(event.metadata, cls=NumpyJSONEncoder)
             ))
     
     def get_issue_history(self, issue_id: str) -> Optional[IssueHistory]:
@@ -581,7 +582,7 @@ class IssueProvenanceTracker:
             enhanced_issues.append(enhanced_issue)
         
         # Store analysis run metadata
-        config_hash = hashlib.sha256(json.dumps(self.config, sort_keys=True).encode()).hexdigest()[:8]
+        config_hash = hashlib.sha256(json.dumps(self.config, sort_keys=True, cls=NumpyJSONEncoder).encode()).hexdigest()[:8]
         self.db.store_analysis_run(
             run_id=self.run_id,
             timestamp=datetime.now(),
