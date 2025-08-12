@@ -1100,7 +1100,11 @@ class ChromatinContactAnalyzer(Analyzer):
                     continue
                 
                 # Heuristic: functions with similar names might call each other
-                if (elem1.name in elem2.raw_body or elem2.name in elem1.raw_body):
+                # Get function bodies as strings
+                elem1_body = ast.unparse(elem1.ast_node) if elem1.ast_node else ""
+                elem2_body = ast.unparse(elem2.ast_node) if elem2.ast_node else ""
+                
+                if (elem1.name in elem2_body or elem2.name in elem1_body):
                     elem1_tad = self._find_module_tad(elem1.module_path, self._tads)
                     elem2_tad = self._find_module_tad(elem2.module_path, self._tads)
                     
