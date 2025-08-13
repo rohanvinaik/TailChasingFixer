@@ -26,7 +26,8 @@ ignore_issue_types:
   - missing_symbol  # Some analyzers import from base but aren't used directly
 
 # Disabled analyzers (optional)
-disabled_analyzers: []  # All analyzers enabled but optimized for performance
+disabled_analyzers: 
+  - function_coupling  # Disabled due to timeout on large codebases
 
 # Scoring weights
 scoring_weights:
@@ -154,9 +155,10 @@ performance:
   cache_results: true
   max_file_size_mb: 10
   timeout_seconds: 300
-  analyzer_timeout: 60  # Give analyzers more time
+  analyzer_timeout: 30  # Reduced to prevent long hangs
   heartbeat_interval: 2  # More frequent heartbeats
   max_memory_mb: 4096  # Memory limit
+  batch_size: 100  # Process files in batches
 
 # Report settings
 report:

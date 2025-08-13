@@ -446,3 +446,14 @@
 {"timestamp": "2025-08-13T13:58:43.061849Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 898, "message": "Running analyzers"}
 {"timestamp": "2025-08-13T13:58:43.062373Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running import_graph analyzer"}
 {"timestamp": "2025-08-13T13:58:43.260864Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running lsh_duplicates analyzer"}
+{"timestamp": "2025-08-13T14:10:32.713341Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 256, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T14:10:32.720756Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T14:10:32.720869Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 632, "message": "Analyzing path: /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers"}
+{"timestamp": "2025-08-13T14:10:32.722533Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 721, "message": "Collecting Python files from /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers"}
+{"timestamp": "2025-08-13T14:10:32.726060Z", "level": "WARNING", "module": "cli_main", "function": "main", "line": 739, "message": "No Python files found to analyze"}
+{"timestamp": "2025-08-13T14:10:40.018177Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 256, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T14:10:40.025613Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T14:10:40.025748Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 632, "message": "Analyzing path: /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers"}
+{"timestamp": "2025-08-13T14:10:40.026947Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 721, "message": "Collecting Python files from /Users/rohanvinaik/TailChasingFixer/tailchasing/analyzers"}
+{"timestamp": "2025-08-13T14:10:40.030481Z", "level": "WARNING", "module": "cli_main", "function": "main", "line": 739, "message": "No Python files found to analyze"}
+{"timestamp": "2025-08-13T14:10:47.038872Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 256, "message": "Starting operation: cli_main", "operation": "cli_main"}
