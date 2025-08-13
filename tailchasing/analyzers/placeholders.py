@@ -4,6 +4,7 @@ import ast
 from typing import List, Optional, Iterable
 
 from .base import BaseAnalyzer, AnalysisContext
+from .base_visitor import BaseASTVisitor
 from ..core.issues import Issue
 from ..core.utils import safe_get_lineno
 
@@ -26,31 +27,22 @@ class PlaceholderAnalyzer(BaseAnalyzer):
                 yield issue
                 
                 
-class PlaceholderVisitor(ast.NodeVisitor):
+class PlaceholderVisitor(BaseASTVisitor):
     """Visits AST nodes to find placeholder implementations."""
     
     def __init__(self, file: str, ctx: AnalysisContext):
+        super().__init__()
         self.file = file
         self.ctx = ctx
         self.issues: List[Issue] = []
-        self.current_class = None
         
-    def visit_ClassDef(self, node: ast.ClassDef):
-        """Track class context."""
-        old_class = self.current_class
-        self.current_class = node.name
-        self.generic_visit(node)
-        self.current_class = old_class
+    def _process_class(self, node: ast.ClassDef) -> None:
+        """Process class definitions (no special handling needed for placeholders)."""
+        pass
         
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def _process_function(self, node: ast.FunctionDef, is_async: bool = False) -> None:
         """Check function for placeholder patterns."""
         self._check_function(node)
-        self.generic_visit(node)
-        
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
-        """Check async function for placeholder patterns."""
-        self._check_function(node)
-        self.generic_visit(node)
         
     def _check_function(self, node: ast.FunctionDef):
         """Check if a function is a placeholder."""

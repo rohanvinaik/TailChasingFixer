@@ -8,6 +8,7 @@ import difflib
 import re
 
 from .base import BaseAnalyzer, AnalysisContext
+from .base_visitor import BaseASTVisitor
 from ..core.issues import Issue
 from ..core.utils import safe_get_lineno, safe_get_col_offset
 
@@ -277,15 +278,15 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
         return confidence
 
 
-class SymbolCollector(ast.NodeVisitor):
+class SymbolCollector(BaseASTVisitor):
     """Collects all defined symbols in a file."""
     
     def __init__(self, file: str):
+        super().__init__()
         self.file = file
         self.symbols: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
-        self.current_class = None
         
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def _process_function(self, node: ast.FunctionDef, is_async: bool = False) -> None:
         """Record function definitions."""
         name = node.name
         if self.current_class:
@@ -298,24 +299,13 @@ class SymbolCollector(ast.NodeVisitor):
             "full_name": name
         })
         
-        self.generic_visit(node)
-        
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
-        """Record async function definitions."""
-        self.visit_FunctionDef(node)
-        
-    def visit_ClassDef(self, node: ast.ClassDef):
+    def _process_class(self, node: ast.ClassDef) -> None:
         """Record class definitions."""
         self.symbols[node.name].append({
             "file": self.file,
             "kind": "class",
             "line": safe_get_lineno(node)
         })
-        
-        old_class = self.current_class
-        self.current_class = node.name
-        self.generic_visit(node)
-        self.current_class = old_class
         
     def visit_Assign(self, node: ast.Assign):
         """Record variable assignments."""
@@ -330,14 +320,14 @@ class SymbolCollector(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-class ReferenceVisitor(ast.NodeVisitor):
+class ReferenceVisitor(BaseASTVisitor):
     """Collects all symbol references in a file."""
     
     def __init__(self, file: str, defined_symbols: Dict[str, List[Dict[str, Any]]]):
+        super().__init__()
         self.file = file
         self.defined_symbols = defined_symbols
         self.missing_references: List[Dict[str, Any]] = []
-        self.current_function = None
         self.imported_names: Set[str] = set()
         self.local_scopes: List[Set[str]] = [set()]  # Stack of local scopes
         
@@ -358,8 +348,26 @@ class ReferenceVisitor(ast.NodeVisitor):
                 self.local_scopes[-1].add(name)
         self.generic_visit(node)
         
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def _process_function(self, node: ast.FunctionDef, is_async: bool = False) -> None:
         """Track current function context and parameters."""
+        # Create new scope with parameters
+        new_scope = set()
+        for arg in node.args.args:
+            new_scope.add(arg.arg)
+        # Add special parameters
+        if node.args.vararg:
+            new_scope.add(node.args.vararg.arg)
+        if node.args.kwarg:
+            new_scope.add(node.args.kwarg.arg)
+            
+        self.local_scopes.append(new_scope)
+        
+    def _process_class(self, node: ast.ClassDef) -> None:
+        """Track class definitions."""
+        self.local_scopes[-1].add(node.name)
+        
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        """Override to handle scopes manually."""
         old_function = self.current_function
         self.current_function = node.name
         
@@ -367,7 +375,6 @@ class ReferenceVisitor(ast.NodeVisitor):
         new_scope = set()
         for arg in node.args.args:
             new_scope.add(arg.arg)
-        # Add special parameters
         if node.args.vararg:
             new_scope.add(node.args.vararg.arg)
         if node.args.kwarg:
@@ -384,9 +391,20 @@ class ReferenceVisitor(ast.NodeVisitor):
         self.visit_FunctionDef(node)
         
     def visit_ClassDef(self, node: ast.ClassDef):
-        """Track class definitions."""
+        """Override to handle scopes manually."""
+        old_class = self.current_class
+        old_in_class = self.in_class
+        
+        self.current_class = node.name
+        self.in_class = True
+        self.scope_stack.append(f"class:{node.name}")
         self.local_scopes[-1].add(node.name)
+        
         self.generic_visit(node)
+        
+        self.scope_stack.pop()
+        self.current_class = old_class
+        self.in_class = old_in_class
         
     def visit_Name(self, node: ast.Name):
         """Record name references."""
