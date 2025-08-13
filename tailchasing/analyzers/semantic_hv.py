@@ -645,7 +645,6 @@ class SemanticHVAnalyzer(Analyzer):
                 pool = [f for f in functions if f.id not in {f.id for f in pre}]
                 need = min(max_sample - len(pre), max(0, len(pool)))
                 if need:
-                    import random
                     pre.extend(random.sample(pool, need))
             # From here on, operate on the pre-trimmed set only
             functions = pre
