@@ -413,3 +413,41 @@
 {"timestamp": "2025-08-13T00:12:03.201367Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running chromatin_contact analyzer"}
 {"timestamp": "2025-08-13T00:12:03.201670Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running enhanced_placeholders analyzer"}
 {"timestamp": "2025-08-13T00:12:03.249068Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1109, "message": "Analysis complete: 2 issues, risk score 0.4"}
+{"timestamp": "2025-08-13T00:21:59.054571Z", "level": "\u001b[32mINFO\u001b[0m", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T00:21:59.056905Z", "level": "\u001b[32mINFO\u001b[0m", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T00:21:59.065700Z", "level": "\u001b[32mINFO\u001b[0m", "module": "cli_main", "function": "main", "line": 670, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-13T00:21:59.085924Z", "level": "\u001b[32mINFO\u001b[0m", "module": "cli_main", "function": "main", "line": 692, "message": "Found 162 Python files"}
+{"timestamp": "2025-08-13T00:22:00.396983Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 750, "message": "Successfully parsed 162 files"}
+{"timestamp": "2025-08-13T00:22:00.397321Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 763, "message": "Building symbol table"}
+{"timestamp": "2025-08-13T00:22:00.735448Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 789, "message": "Running analyzers"}
+{"timestamp": "2025-08-13T00:22:00.743577Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-13T00:22:00.943190Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running catalytic_duplicates analyzer"}
+{"timestamp": "2025-08-13T00:22:28.557835Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running missing_symbols analyzer"}
+{"timestamp": "2025-08-13T00:22:29.540051Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running git_chains analyzer"}
+{"timestamp": "2025-08-13T00:22:29.540534Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-13T00:25:35.206416Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T00:25:35.207968Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T00:25:35.216199Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 670, "message": "Collecting Python files from ***REDACTED_PATH***"}
+{"timestamp": "2025-08-13T00:25:35.222783Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 692, "message": "Found 2 Python files"}
+{"timestamp": "2025-08-13T00:25:35.234630Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 750, "message": "Successfully parsed 2 files"}
+{"timestamp": "2025-08-13T00:25:35.234933Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 763, "message": "Building symbol table"}
+{"timestamp": "2025-08-13T00:25:35.235149Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 789, "message": "Running analyzers"}
+{"timestamp": "2025-08-13T00:25:35.243023Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-13T00:25:35.243551Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running catalytic_duplicates analyzer"}
+{"timestamp": "2025-08-13T00:25:35.285673Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running missing_symbols analyzer"}
+{"timestamp": "2025-08-13T00:25:35.288495Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running git_chains analyzer"}
+{"timestamp": "2025-08-13T00:25:35.301952Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-13T00:25:35.302480Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running circular_import_resolver analyzer"}
+{"timestamp": "2025-08-13T00:25:35.303606Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running phantom_triage analyzer"}
+{"timestamp": "2025-08-13T00:25:35.303877Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-13T00:25:35.304388Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running chromatin_contact analyzer"}
+{"timestamp": "2025-08-13T00:25:35.305366Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 895, "message": "Running enhanced_placeholders analyzer"}
+{"timestamp": "2025-08-13T00:25:35.347259Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1128, "message": "Analysis complete: 3 issues, risk score 1.2"}
+{"timestamp": "2025-08-13T00:25:35.352382Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1226, "message": "Generated interactive fix script: tailchasing_fixes.py"}
+{"timestamp": "2025-08-13T00:25:35.352801Z", "level": "ERROR", "module": "cli_main", "function": "main", "line": 1242, "message": "Failed to generate fix script: [Errno 32] Broken pipe"}
+{"timestamp": "2025-08-13T00:26:34.552244Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T00:26:34.553903Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T00:26:34.560989Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 670, "message": "Collecting Python files from /Users/rohanvinaik/TailChasingFixer/test_fix_opt"}
+{"timestamp": "2025-08-13T00:26:34.564404Z", "level": "WARNING", "module": "cli_main", "function": "main", "line": 688, "message": "No Python files found to analyze"}
+{"timestamp": "2025-08-13T00:27:04.538588Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T00:27:04.540269Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}

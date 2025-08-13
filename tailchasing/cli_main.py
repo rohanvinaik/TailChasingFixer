@@ -1104,6 +1104,25 @@ def main():
     module_scores, global_score = scorer.calculate_scores(issue_collection.issues)
     risk_level = scorer.get_risk_level(global_score, config.get("risk_thresholds", {}))
     
+    # Generate suggestions for fixable issues during analysis (for efficiency)
+    fixable_types = {
+        'semantic_duplicate_function', 'duplicate_function', 'phantom_function',
+        'missing_symbol', 'circular_import', 'prototype_fragmentation',
+        'hallucination_cascade', 'import_anxiety', 'wrapper_abstraction',
+        'context_window_thrashing'
+    }
+    
+    if issue_collection.issues:
+        from .core.suggestions import FixSuggestionGenerator
+        suggestion_generator = FixSuggestionGenerator()
+        
+        for issue in issue_collection.issues:
+            if not issue.suggestions and issue.kind in fixable_types:
+                try:
+                    issue.suggestions = suggestion_generator.generate_suggestions(issue)
+                except Exception as e:
+                    logger.debug(f"Failed to generate suggestions for {issue.kind}: {e}")
+    
     # Print summary to console
     if not args.json or len(config.get("report.formats", [])) > 1:
         logger.info(f"Analysis complete: {len(issue_collection)} issues, risk score {global_score}")
@@ -1162,49 +1181,41 @@ def main():
             if "html" in results:
                 sys.stdout.write("HTML report: (use --output to save to file)\n")
             
-    # Always check if fix generation would be helpful (unless pure JSON mode)
-    if not (args.json and len(config.get("report.formats", [])) == 1) and issue_collection.issues:
-        # Calculate how many issues have fixable patterns
-        fixable_types = {
-            'semantic_duplicate_function', 'duplicate_function', 'phantom_function',
-            'missing_symbol', 'circular_import', 'prototype_fragmentation',
-            'hallucination_cascade', 'import_anxiety', 'wrapper_abstraction',
-            'context_window_thrashing'
-        }
-        fixable_issues = [i for i in issue_collection.issues if i.kind in fixable_types]
-        
-        if fixable_issues:
-            sys.stdout.write("\nFix Suggestions:\n")
-            sys.stdout.write("-" * 40 + "\n")
-            
-            if args.generate_fixes:
-                # Fix generation code (already exists below)
-                pass
-            else:
-                logger.info(f"Found {len(fixable_issues)} fixable issues")
-                sys.stdout.write(f"Found {len(fixable_issues)} fixable issues out of {len(issue_collection.issues)} total\n")
-                sys.stdout.write("Run with --generate-fixes to create:\n")
-                sys.stdout.write("  • Interactive fix script (tailchasing_fixes.py)\n")
-                sys.stdout.write("  • Detailed suggestions file (tailchasing_suggestions.md)\n")
-                sys.stdout.write("\nExample: tailchasing . --generate-fixes\n")
+    # Pre-compute fixable issues (reuse fixable_types from above)
     
-    # Generate fix script if requested
-    if args.generate_fixes and issue_collection.issues:
-        try:
-            # Convert issues to dict format for fixgen module
-            issues_dict = []
-            for issue in issue_collection.issues:
+    # Convert issues to dict format and filter fixable ones in one pass
+    fixable_issues_dict = []
+    if issue_collection.issues:
+        for issue in issue_collection.issues:
+            if issue.kind in fixable_types:
                 issue_dict = {
                     'kind': getattr(issue, 'kind', 'unknown'),
                     'file': getattr(issue, 'file', ''),
                     'line': getattr(issue, 'line', 0),
                     'message': getattr(issue, 'message', ''),
-                    'suggestions': getattr(issue, 'suggestions', [])
+                    'suggestions': getattr(issue, 'suggestions', [])  # Pre-generated above for efficiency
                 }
-                issues_dict.append(issue_dict)
-            
-            # Select fixable issues with null-safe handling
-            fixable = select_fixable_issues(issues_dict)
+                fixable_issues_dict.append(issue_dict)
+    
+    # Select fixable issues with null-safe handling (reuse the dict conversion)
+    fixable = select_fixable_issues(fixable_issues_dict) if fixable_issues_dict else []
+    
+    # Always check if fix generation would be helpful (unless pure JSON mode)
+    if not (args.json and len(config.get("report.formats", [])) == 1) and fixable:
+        sys.stdout.write("\nFix Suggestions:\n")
+        sys.stdout.write("-" * 40 + "\n")
+        
+        if not args.generate_fixes:
+            logger.info(f"Found {len(fixable)} fixable issues")
+            sys.stdout.write(f"Found {len(fixable)} fixable issues out of {len(issue_collection.issues)} total\n")
+            sys.stdout.write("Run with --generate-fixes to create:\n")
+            sys.stdout.write("  • Interactive fix script (tailchasing_fixes.py)\n")
+            sys.stdout.write("  • Detailed suggestions file (tailchasing_suggestions.md)\n")
+            sys.stdout.write("\nExample: tailchasing . --generate-fixes\n")
+    
+    # Generate fix script if requested (reuse pre-computed fixable issues)
+    if args.generate_fixes and fixable:
+        try:
             
             # Generate interactive fix script
             fix_path = output_dir / "tailchasing_fixes.py"
