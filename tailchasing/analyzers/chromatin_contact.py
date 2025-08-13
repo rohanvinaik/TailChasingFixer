@@ -926,9 +926,24 @@ class ChromatinContactAnalyzer(Analyzer):
             try:
                 # Convert similarity to distance
                 distance_matrix = 1.0 - submatrix
-                condensed_distances = pdist(distance_matrix, metric='precomputed')
                 
-                if len(condensed_distances) > 0:
+                # Check if matrix has sufficient variance for clustering
+                # If all values are too similar, skip clustering
+                matrix_std = np.std(distance_matrix)
+                if matrix_std < 1e-10:
+                    # Matrix is essentially uniform, no meaningful clusters
+                    refined_tads[tad_id] = tad
+                    continue
+                
+                # Ensure distance matrix is valid (no negative values, diagonal is 0)
+                np.fill_diagonal(distance_matrix, 0)
+                distance_matrix = np.maximum(distance_matrix, 0)
+                
+                # Use scipy's squareform to convert to condensed form
+                # This handles edge cases better than using pdist directly
+                condensed_distances = squareform(distance_matrix, checks=False)
+                
+                if len(condensed_distances) > 0 and not np.isnan(condensed_distances).any():
                     linkage_matrix = linkage(condensed_distances, method='ward')
                     clusters = fcluster(linkage_matrix, t=0.7, criterion='distance')
                     
@@ -952,8 +967,9 @@ class ChromatinContactAnalyzer(Analyzer):
                             refined_tads[sub_tad.tad_id] = sub_tad
                 else:
                     refined_tads[tad_id] = tad
-            except:
+            except Exception as e:
                 # If clustering fails, keep original TAD
+                logger.debug(f"Clustering failed for TAD {tad_id}: {e}")
                 refined_tads[tad_id] = tad
         
         return refined_tads

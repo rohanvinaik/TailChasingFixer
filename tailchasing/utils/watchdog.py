@@ -189,8 +189,11 @@ class SemanticAnalysisFallback:
             
             tfidf_matrix = vectorizer.fit_transform(function_bodies)
             
-            # Calculate cosine similarity
-            similarity_matrix = cosine_similarity(tfidf_matrix)
+            # Calculate cosine similarity with warnings suppressed for edge cases
+            import warnings
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore', category=RuntimeWarning)
+                similarity_matrix = cosine_similarity(tfidf_matrix)
             
             # Find similar pairs
             for i in range(len(functions)):
