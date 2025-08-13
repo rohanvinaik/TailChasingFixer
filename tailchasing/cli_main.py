@@ -273,8 +273,8 @@ def main():
         "--analyzer-timeout",
         type=int,
         metavar="SECONDS",
-        default=30,
-        help="Timeout for each analyzer in seconds (default: 30)"
+        default=600,
+        help="Timeout for each analyzer in seconds (default: 600)"
     )
     
     parser.add_argument(
@@ -862,8 +862,14 @@ def main():
         skip_normal_processing = False
         
         # Initialize watchdog for normal processing
+        # Use CLI argument if provided, otherwise fallback to environment variable
+        import os
+        analyzer_timeout = args.analyzer_timeout
+        if analyzer_timeout == 600:  # Default value, check if env var is set
+            analyzer_timeout = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", analyzer_timeout))
+        
         watchdog_config = WatchdogConfig(
-            analyzer_timeout=args.analyzer_timeout,
+            analyzer_timeout=analyzer_timeout,
             heartbeat_interval=args.heartbeat_interval,
             heartbeat_timeout_multiplier=3.0,
             enable_fallback=not args.disable_fallback,
