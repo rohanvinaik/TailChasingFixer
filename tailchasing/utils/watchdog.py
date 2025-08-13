@@ -317,6 +317,10 @@ class AnalyzerWatchdog:
                     analyzer_func, analyzer_name, heartbeat_context, *args, **kwargs
                 )
             
+            # Convert generator to list if needed
+            if issues is not None:
+                issues = list(issues)
+            
             # Record successful completion
             stats.end_time = time.time()
             stats.duration = stats.end_time - stats.start_time

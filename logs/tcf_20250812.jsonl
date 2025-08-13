@@ -468,3 +468,16 @@
 {"timestamp": "2025-08-13T00:48:18.606327Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
 {"timestamp": "2025-08-13T00:48:18.613589Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 670, "message": "Collecting Python files from /Users/rohanvinaik/TailChasingFixer/test_chromatin"}
 {"timestamp": "2025-08-13T00:48:18.617232Z", "level": "WARNING", "module": "cli_main", "function": "main", "line": 688, "message": "No Python files found to analyze"}
+{"timestamp": "2025-08-13T01:08:46.260862Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T01:08:46.262512Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T01:08:46.267339Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 670, "message": "Collecting Python files from /Users/rohanvinaik/TailChasingFixer/examples"}
+{"timestamp": "2025-08-13T01:08:46.270765Z", "level": "WARNING", "module": "cli_main", "function": "main", "line": 688, "message": "No Python files found to analyze"}
+{"timestamp": "2025-08-13T01:08:55.246961Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 253, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T01:08:55.248617Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T01:08:55.257816Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 670, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-13T01:08:55.279803Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 692, "message": "Found 163 Python files"}
+{"timestamp": "2025-08-13T01:08:56.540879Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 750, "message": "Successfully parsed 163 files"}
+{"timestamp": "2025-08-13T01:08:56.541206Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 763, "message": "Building symbol table"}
+{"timestamp": "2025-08-13T01:08:56.880728Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 789, "message": "Running analyzers"}
+{"timestamp": "2025-08-13T01:08:56.888581Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 894, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-13T01:08:57.089627Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 894, "message": "Running catalytic_duplicates analyzer"}
