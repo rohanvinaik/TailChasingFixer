@@ -1,6 +1,7 @@
 """Report generation for tail-chasing analysis."""
 
 import json
+import os
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from datetime import datetime
@@ -9,6 +10,104 @@ import numpy as np
 
 from .issues import Issue, IssueCollection
 from .scoring import RiskScorer
+
+
+class PathSanitizer:
+    """Utility for sanitizing file paths for privacy and readability."""
+    
+    def __init__(self, project_root: Optional[Path] = None):
+        """
+        Initialize path sanitizer.
+        
+        Args:
+            project_root: The project root directory. If None, uses current working directory.
+        """
+        self.project_root = Path(project_root) if project_root else Path.cwd()
+        # Store both resolved and non-resolved versions for flexibility
+        self.project_root_resolved = self.project_root.resolve()
+        
+    def sanitize(self, file_path: Optional[str]) -> str:
+        """
+        Sanitize a file path to show relative path from project root.
+        
+        Args:
+            file_path: The file path to sanitize (can be absolute or relative)
+            
+        Returns:
+            Sanitized relative path like ./src/module.py
+        """
+        if not file_path:
+            return ""
+            
+        try:
+            path = Path(file_path)
+            
+            # If it's already relative and doesn't go outside project, keep it
+            if not path.is_absolute():
+                # Make sure it starts with ./ for consistency
+                path_str = str(path)
+                if not path_str.startswith('./') and not path_str.startswith('../'):
+                    return f"./{path_str}"
+                return path_str
+            
+            # Try to make it relative to project root
+            try:
+                # Try with resolved path first
+                rel_path = path.relative_to(self.project_root_resolved)
+            except ValueError:
+                try:
+                    # Try with non-resolved path
+                    rel_path = path.relative_to(self.project_root)
+                except ValueError:
+                    # Path is outside project root - sanitize it for privacy
+                    # Replace home directory with ~
+                    path_str = str(path)
+                    home = str(Path.home())
+                    if path_str.startswith(home):
+                        path_str = "~" + path_str[len(home):]
+                    
+                    # Further sanitize by only showing last few components
+                    parts = Path(path_str).parts
+                    if len(parts) > 3:
+                        return f".../{'/'.join(parts[-3:])}"
+                    return path_str
+            
+            # Format relative path with ./ prefix
+            return f"./{rel_path}"
+            
+        except Exception:
+            # If anything goes wrong, return the original but with home replaced
+            path_str = str(file_path)
+            home = str(Path.home())
+            if path_str.startswith(home):
+                return "~" + path_str[len(home):]
+            return path_str
+    
+    def sanitize_issue(self, issue: Issue) -> Issue:
+        """
+        Create a copy of an issue with sanitized file path.
+        
+        Args:
+            issue: The issue to sanitize
+            
+        Returns:
+            New issue with sanitized path
+        """
+        if issue.file:
+            # Create a new issue with sanitized path
+            sanitized = Issue(
+                kind=issue.kind,
+                message=issue.message,
+                severity=issue.severity,
+                file=self.sanitize(issue.file),
+                line=issue.line,
+                end_line=issue.end_line,
+                confidence=issue.confidence,
+                evidence=issue.evidence,
+                suggestions=issue.suggestions
+            )
+            return sanitized
+        return issue
 
 
 class IssueExplainer:
@@ -111,8 +210,19 @@ class NumpyJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def format_issue_for_console(issue: Issue) -> str:
-    """Format a single issue for console output with explanation."""
+def format_issue_for_console(issue: Issue, sanitizer: Optional[PathSanitizer] = None) -> str:
+    """Format a single issue for console output with explanation.
+    
+    Args:
+        issue: The issue to format
+        sanitizer: Optional path sanitizer for privacy
+        
+    Returns:
+        Formatted string for console output
+    """
+    if sanitizer:
+        issue = sanitizer.sanitize_issue(issue)
+    
     location = f"{issue.file}:{issue.line}" if issue.file else "global"
     explanation = IssueExplainer.get_explanation(issue.kind)
     
@@ -134,9 +244,10 @@ def format_issue_for_console(issue: Issue) -> str:
 class Reporter:
     """Generate reports in various formats."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], project_root: Optional[Path] = None):
         self.config = config
         self.scorer = RiskScorer(config.get("scoring_weights"))
+        self.sanitizer = PathSanitizer(project_root)
         
     def generate_reports(
         self, 
@@ -254,7 +365,9 @@ class Reporter:
             lines.append("=" * 50)
             
             for issue in severity_issues[:20]:  # Limit to first 20 per severity
-                location = f"{issue.file}:{issue.line}" if issue.file else "global"
+                # Sanitize the issue paths
+                sanitized_issue = self.sanitizer.sanitize_issue(issue)
+                location = f"{sanitized_issue.file}:{sanitized_issue.line}" if sanitized_issue.file else "global"
                 explanation = IssueExplainer.get_explanation(issue.kind)
                 
                 # Main issue header
@@ -286,10 +399,12 @@ class Reporter:
         """Render a JSON report with enhanced issue details."""
         module_scores, global_score = self.scorer.calculate_scores(issues)
         
-        # Enhance each issue with explanations
+        # Enhance each issue with explanations and sanitized paths
         enhanced_issues = []
         for issue in issues:
-            issue_dict = issue.to_dict()
+            # Sanitize the issue path first
+            sanitized_issue = self.sanitizer.sanitize_issue(issue)
+            issue_dict = sanitized_issue.to_dict()
             explanation = IssueExplainer.get_explanation(issue.kind)
             issue_dict['explanation'] = {
                 'problem': explanation['problem'],
@@ -393,7 +508,9 @@ class Reporter:
         html += "    <h2>Issues</h2>\n"
         
         for issue in sorted(issues, key=lambda i: -i.severity)[:50]:
-            location = f"{issue.file}:{issue.line}" if issue.file else "global"
+            # Sanitize paths for privacy
+            sanitized_issue = self.sanitizer.sanitize_issue(issue)
+            location = f"{sanitized_issue.file}:{sanitized_issue.line}" if sanitized_issue.file else "global"
             explanation = IssueExplainer.get_explanation(issue.kind)
             severity_label = {
                 4: "CRITICAL", 3: "HIGH", 2: "MEDIUM", 1: "LOW"

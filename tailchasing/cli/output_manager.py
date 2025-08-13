@@ -35,6 +35,7 @@ from rich.rule import Rule
 from rich import box
 
 from ..core.issues import Issue, IssueCollection
+from ..core.reporting import PathSanitizer
 
 
 class VerbosityLevel(Enum):
@@ -63,7 +64,8 @@ class OutputManager:
         output_format: OutputFormat = OutputFormat.TEXT,
         output_file: Optional[Path] = None,
         use_color: bool = True,
-        watch_mode: bool = False
+        watch_mode: bool = False,
+        project_root: Optional[Path] = None
     ):
         """
         Initialize output manager.
@@ -74,12 +76,14 @@ class OutputManager:
             output_file: Optional file to write output to
             use_color: Whether to use colored output
             watch_mode: Whether to show live updates
+            project_root: Project root for path sanitization
         """
         self.verbosity = verbosity
         self.output_format = output_format
         self.output_file = output_file
         self.use_color = use_color
         self.watch_mode = watch_mode
+        self.path_sanitizer = PathSanitizer(project_root)
         
         # Setup console
         # Use stderr for progress/spinners to avoid conflicts with stdout output
@@ -320,9 +324,12 @@ class OutputManager:
                     4: "bold red"
                 }.get(issue.severity, "white")
                 
+                # Sanitize file path for privacy
+                sanitized_file = self.path_sanitizer.sanitize(issue.file) if issue.file else ""
+                
                 table.add_row(
                     kind,
-                    str(issue.file or ""),
+                    sanitized_file,
                     str(issue.line or ""),
                     issue.message[:80] + "..." if len(issue.message) > 80 else issue.message,
                     f"[{severity_color}]{issue.severity}[/{severity_color}]"
@@ -349,10 +356,16 @@ class OutputManager:
         
     def _output_issues_json(self, issues: List[Issue]):
         """Output issues in JSON format."""
+        # Sanitize issue paths before serialization
+        sanitized_issues = []
+        for issue in issues:
+            sanitized_issue = self.path_sanitizer.sanitize_issue(issue)
+            sanitized_issues.append(sanitized_issue.to_dict())
+        
         output = {
             "timestamp": datetime.now().isoformat(),
             "total_issues": len(issues),
-            "issues": [issue.to_dict() for issue in issues],
+            "issues": sanitized_issues,
             "statistics": self.stats
         }
         
@@ -416,10 +429,12 @@ class OutputManager:
 """
         
         for issue in issues:
+            # Sanitize file path for privacy
+            sanitized_file = self.path_sanitizer.sanitize(issue.file) if issue.file else ''
             html += f"""
         <tr>
             <td>{issue.kind}</td>
-            <td>{issue.file or ''}</td>
+            <td>{sanitized_file}</td>
             <td>{issue.line or ''}</td>
             <td>{issue.message}</td>
             <td class="severity-{issue.severity}">{issue.severity}</td>

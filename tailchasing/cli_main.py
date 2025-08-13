@@ -1093,8 +1093,8 @@ def main():
         else:
             sys.stdout.write("Phantom triage analyzer not available\n")
     
-    # Generate reports
-    reporter = Reporter(config.to_dict())
+    # Generate reports with path sanitization
+    reporter = Reporter(config.to_dict(), project_root=root_path)
     scorer = RiskScorer(config.get("scoring_weights"))
     
     # Calculate scores
