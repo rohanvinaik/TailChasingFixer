@@ -3,6 +3,7 @@
 import sys
 import argparse
 import logging
+import time
 from pathlib import Path
 from typing import List, Optional
 from datetime import datetime
@@ -25,6 +26,7 @@ from .core.resource_monitor import MemoryMonitor, AdaptiveConfig, AdaptiveProces
 from .cli.output_manager import OutputManager, VerbosityLevel, OutputFormat
 from .cli.profiler import PerformanceProfiler
 from .core.fixgen import select_fixable_issues, generate_fix_script_py, generate_suggestions_md
+from .core.analysis_cache import IssueCache, AnalysisArtifact, build_repo_fingerprint, config_fingerprint
 
 
 # Setup module logger
@@ -235,6 +237,25 @@ def main():
         "--generate-fixes",
         action="store_true",
         help="Generate an interactive fix script"
+    )
+    
+    # Cache control arguments
+    parser.add_argument(
+        "--reuse",
+        action="store_true",
+        help="Reuse previous analysis artifact if inputs unchanged"
+    )
+    
+    parser.add_argument(
+        "--force-reanalyze",
+        action="store_true",
+        help="Force a fresh analysis even if cache matches"
+    )
+    
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="Skip analyzers and use cached issues if available"
     )
     
     parser.add_argument(
@@ -815,9 +836,67 @@ def main():
         cache_manager=cache_manager  # Pass cache manager to context
     )
     
-    # Load and run analyzers
-    logger.info("Running analyzers")
-    analyzers = load_analyzers(config.to_dict())
+    # Check if we can reuse cached analysis results
+    consume_only = (
+        args.generate_fixes or
+        args.json or
+        args.html or
+        getattr(args, 'report_only', False)
+    ) and not getattr(args, 'force_reanalyze', False)
+    
+    # Prepare effective config for cache fingerprinting
+    effective_cfg = {
+        "analyzers": [a.name for a in load_analyzers(config.to_dict())],
+        "large_mode": config.get("performance.max_file_size_mb", 10),
+        "lsh": {
+            "bands": config.get("duplicates.lsh_bands", 20),
+            "rows": config.get("duplicates.lsh_rows", 5),
+            "perms": config.get("duplicates.minhash_permutations", 128),
+        },
+        "semantic": config.get("semantic", {}),
+        "version": "1.0"
+    }
+    
+    # Initialize cache
+    cache = IssueCache(cache_dir=config.get("cache.dir", ".tailchasing_cache"))
+    
+    # Try to load cached results if appropriate
+    analysis_start_time = time.time()
+    if consume_only or getattr(args, 'reuse', False):
+        ok, art, _rfp, _cfp = cache.is_reusable(str(root_path), effective_cfg)
+        if ok and art:
+            logger.info("Reusing cached analysis artifact (no re-analysis needed)")
+            output_manager.log("Using cached analysis results", VerbosityLevel.NORMAL)
+            
+            # Convert cached issues back to Issue objects
+            from .core.issues import Issue
+            issue_collection = IssueCollection()
+            for issue_dict in art.issues:
+                issue = Issue(**issue_dict)
+                issue_collection.add(issue)
+            
+            # Skip analyzer execution
+            skip_normal_processing = True
+            skip_semantic = True
+            
+            # Jump to reporting phase
+            global_score = RiskScorer(config.to_dict()).calculate_global_score(issue_collection.issues)
+            module_scores = RiskScorer(config.to_dict()).calculate_module_scores(issue_collection.issues)
+            risk_level = RiskScorer(config.to_dict()).get_risk_level(global_score)
+            
+            # Jump to reporting section by setting a flag
+            cached_analysis_used = True
+        else:
+            logger.info("No reusable analysis artifact found; running analyzers")
+            cached_analysis_used = False
+    else:
+        cached_analysis_used = False
+    
+    # Only run analyzers if not using cached results
+    if not cached_analysis_used:
+        # Load and run analyzers
+        logger.info("Running analyzers")
+        analyzers = load_analyzers(config.to_dict())
     
     issue_collection = IssueCollection()
     
@@ -968,17 +1047,55 @@ def main():
             except Exception as e:
                 logger.error(f"Analyzer {analyzer.name} failed: {e}")
             
-    # Deduplicate issues
-    issue_collection.deduplicate()
+        # Deduplicate issues
+        issue_collection.deduplicate()
     
-    # Process issues with provenance tracking
-    provenance_tracker = IssueProvenanceTracker(config.to_dict())
-    enhanced_issues = provenance_tracker.process_issues(issue_collection.issues, ast_index)
+        # Process issues with provenance tracking
+        provenance_tracker = IssueProvenanceTracker(config.to_dict())
+        enhanced_issues = provenance_tracker.process_issues(issue_collection.issues, ast_index)
+        
+        # Update issue collection with enhanced issues
+        issue_collection.issues = enhanced_issues
+        
+        # Save analysis artifact for future reuse
+        try:
+            analysis_end_time = time.time()
+            repo_fp = build_repo_fingerprint(str(root_path))
+            cfg_fp = config_fingerprint(effective_cfg)
+            
+            # Convert issues to dict format for caching
+            issues_dict = []
+            for issue in issue_collection.issues:
+                issue_dict = {
+                    'kind': issue.kind,
+                    'file': issue.file,
+                    'line': issue.line,
+                    'message': issue.message,
+                    'severity': issue.severity,
+                    'evidence': getattr(issue, 'evidence', {}),
+                    'suggestions': getattr(issue, 'suggestions', [])
+                }
+                issues_dict.append(issue_dict)
+            
+            art = AnalysisArtifact(
+                schema=1,
+                created_at=time.time(),
+                root=str(root_path),
+                repo_fp=repo_fp,
+                config_fp=cfg_fp,
+                issues=issues_dict,
+                stats={
+                    "files": len(files),
+                    "analyzers": [a.name for a in analyzers],
+                    "duration_sec": analysis_end_time - analysis_start_time
+                }
+            )
+            cache.save(art)
+            logger.info("Saved analysis artifact for reuse")
+        except Exception as e:
+            logger.warning(f"Could not save analysis artifact: {e}")
     
-    # Update issue collection with enhanced issues
-    issue_collection.issues = enhanced_issues
-    
-    # Perform root cause clustering if requested
+    # Perform root cause clustering if requested (works with cached or fresh analysis)
     if args.cluster_root_causes and issue_collection.issues:
         logger.info("Performing root cause clustering analysis")
         clusterer = RootCauseClusterer(
