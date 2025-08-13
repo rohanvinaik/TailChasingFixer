@@ -13,6 +13,23 @@ paths:
     - build
     - dist
     - "*.egg-info"
+    # Backup and temporary files
+    - "*.bak"
+    - "*.backup"
+    - "*.orig"
+    - "*~"
+    - "*.tmp"
+    - "*.temp"
+    - "*.swp"
+    - "*.swo"
+    # Linter caches
+    - ".mypy_cache"
+    - ".pylint.d"
+    - ".ruff_cache"
+    # Generated files
+    - "*_pb2.py"
+    - "*_pb2_grpc.py"
+    - "*.generated.py"
 
 risk_thresholds:
   warn: 15
@@ -57,6 +74,13 @@ semantic:
   fdr_q: 0.01  # More conservative FDR
   max_pairs_to_analyze: 50  # Limit pairs to prevent timeout
   max_pairwise_comparisons: 10000  # Limit comparisons
+  
+  # Smart filtering to reduce false positives
+  smart_filter:
+    enable: true
+    filter_backup_files: true  # Ignore duplicates in backup files
+    filter_linter_files: true  # Ignore duplicates in linter-generated files
+    filter_generated_code: true  # Ignore duplicates in generated code
   
   channel_weights:
     NAME_TOKENS: 1.0

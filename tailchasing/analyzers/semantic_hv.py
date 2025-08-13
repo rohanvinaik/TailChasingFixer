@@ -24,6 +24,7 @@ from typing import Dict, List, Optional, Set, Tuple, Any, Sequence, DefaultDict,
 
 from .base import Analyzer, AnalysisContext
 from ..core.issues import Issue
+from ..semantic.smart_filter import SemanticDuplicateFilter
 
 # Import LSH and progressive encoder components
 try:
@@ -158,6 +159,10 @@ class SemanticHVAnalyzer(Analyzer):
         
         # Group timeout budget (configurable per group)
         self.group_timeout_seconds = float(os.getenv("TAILCHASING_GROUP_TIMEOUT_SEC", 120.0))
+        
+        # Initialize smart filter for reducing false positives
+        self.smart_filter = SemanticDuplicateFilter()
+        self.use_smart_filter = config.get("smart_filter", {}).get("enable", True) if config else True
     
     def run(self, ctx: AnalysisContext) -> List[Issue]:
         """
@@ -247,6 +252,15 @@ class SemanticHVAnalyzer(Analyzer):
             f"  - Refinement: {stats.time_refinement:.2f}s\n"
             f"  - Candidates: {stats.l1_candidates} → {stats.l2_candidates} → {stats.final_duplicates}"
         )
+        
+        # Apply smart filtering if enabled
+        if self.use_smart_filter and issues:
+            original_count = len(issues)
+            filtered_issues = self._apply_smart_filter(issues, ctx)
+            filtered_count = original_count - len(filtered_issues)
+            if filtered_count > 0:
+                self.logger.info(f"Smart filter removed {filtered_count} false positives (backup/linter/generated files)")
+            return filtered_issues
         
         return issues
     
@@ -582,6 +596,54 @@ class SemanticHVAnalyzer(Analyzer):
                         issues.append(issue)
         
         return issues
+    
+    def _apply_smart_filter(self, issues: List[Issue], ctx: AnalysisContext) -> List[Issue]:
+        """
+        Apply smart filter to remove false positives from backup/linter/generated files.
+        
+        Args:
+            issues: List of duplicate issues to filter
+            ctx: Analysis context
+            
+        Returns:
+            Filtered list of issues
+        """
+        filtered_issues = []
+        
+        for issue in issues:
+            # Extract file information from issue evidence
+            evidence = issue.evidence
+            if not evidence:
+                filtered_issues.append(issue)
+                continue
+            
+            # Get file paths from evidence
+            file1 = issue.file
+            file2 = evidence.get("duplicate_location", "").split(":")[0] if "duplicate_location" in evidence else None
+            
+            if not file2:
+                filtered_issues.append(issue)
+                continue
+            
+            # Get function names
+            func1_name = evidence.get("function_name", "")
+            func2_name = evidence.get("duplicate_name", "")
+            
+            # Create pseudo function info tuples for the filter
+            func1_info = (func1_name, file1, issue.line)
+            func2_info = (func2_name, file2, 0)  # Line number from duplicate_location if needed
+            
+            # Check if this is a legitimate similarity
+            is_legitimate, reason = self.smart_filter._is_legitimate_similarity(
+                func1_info, func2_info, ctx.ast_index
+            )
+            
+            if not is_legitimate:
+                filtered_issues.append(issue)
+            else:
+                self.logger.debug(f"Filtered out duplicate: {reason} - {file1} vs {file2}")
+        
+        return filtered_issues
     
     def _create_issue(
         self,
