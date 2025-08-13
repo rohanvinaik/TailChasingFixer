@@ -156,9 +156,6 @@ class SemanticAnalysisFallback:
         Returns:
             List of semantic duplicate issues found
         """
-        if not SKLEARN_AVAILABLE:
-            logger.warning("scikit-learn not available for TF-IDF fallback")
-            return []
         
         if len(functions) < 2:
             return []
@@ -179,26 +176,49 @@ class SemanticAnalysisFallback:
                 return []
             
             # Create TF-IDF vectors
-            vectorizer = TfidfVectorizer(
-                stop_words='english',
-                max_features=1000,
-                ngram_range=(1, 2),
-                min_df=1,
-                max_df=0.95
-            )
-            
-            tfidf_matrix = vectorizer.fit_transform(function_bodies)
-            
-            # Calculate cosine similarity with warnings suppressed for edge cases
-            import warnings
-            with warnings.catch_warnings():
-                warnings.filterwarnings('ignore', category=RuntimeWarning)
-                similarity_matrix = cosine_similarity(tfidf_matrix)
+            if SKLEARN_AVAILABLE:
+                vectorizer = TfidfVectorizer(
+                    stop_words='english', max_features=1000, ngram_range=(1, 2), min_df=1, max_df=0.95
+                )
+                tfidf_matrix = vectorizer.fit_transform(function_bodies)
+                # Cosine similarity using sklearn
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('ignore', category=RuntimeWarning)
+                    similarity_matrix = cosine_similarity(tfidf_matrix)
+            else:
+                # --- Pure-Python fallback using tailchasing.semantic.tfidf_encoder ---
+                from ..semantic.tfidf_encoder import SimpleTFIDF
+                tf = SimpleTFIDF(
+                    lowercase=True, ngram_range=(1, 2),
+                    min_df=1, max_df=0.95, sublinear_tf=True, norm="l2"
+                )
+                rows = tf.fit_transform(function_bodies)  # list of {col: val}
+                n = len(rows)
+                # cosine on sparse dict rows
+                def dot(a, b):
+                    # iterate smaller dict
+                    if len(a) > len(b):
+                        a, b = b, a
+                    s = 0.0
+                    for k, v in a.items():
+                        s += v * b.get(k, 0.0)
+                    return s
+                # rows are already L2-normalized by SimpleTFIDF(norm="l2")
+                similarity_matrix = [[0.0]*n for _ in range(n)]
+                for i in range(n):
+                    similarity_matrix[i][i] = 1.0
+                    for j in range(i+1, n):
+                        sim = dot(rows[i], rows[j])
+                        similarity_matrix[i][j] = similarity_matrix[j][i] = sim
             
             # Find similar pairs
             for i in range(len(functions)):
                 for j in range(i + 1, len(functions)):
-                    similarity = similarity_matrix[i, j]
+                    if SKLEARN_AVAILABLE:
+                        similarity = similarity_matrix[i, j]
+                    else:
+                        similarity = similarity_matrix[i][j]
                     
                     if similarity >= threshold:
                         func1, func2 = functions[i], functions[j]
