@@ -82,7 +82,7 @@ class SemanticHVAnalyzer(Analyzer):
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize the hierarchical analyzer."""
-        super().__init__(config)
+        self.config = config or {}
         self.logger = logging.getLogger(__name__)
         
         # Check dependencies
