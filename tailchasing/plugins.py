@@ -196,15 +196,15 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
         analyzers = [a for a in analyzers if a.name != "missing_symbols"]
         analyzers.append(EnhancedMissingSymbolAnalyzer())
     
-    # Add LSH duplicate analyzer if enabled (most efficient)
+    # Add LSH duplicate analyzer if enabled (most efficient) - DEFAULT ON
     lsh_config = config.get("lsh_duplicates", {})
-    if lsh_config.get("enabled", False) and LSH_DUPLICATE_AVAILABLE:
+    if lsh_config.get("enabled", True) and LSH_DUPLICATE_AVAILABLE:  # Default to True
         # This is the most efficient duplicate detector using MinHash LSH
         # O(n·k) complexity where k << n
         analyzers = [a for a in analyzers if a.name not in ["duplicates", "fast_duplicates", "semantic_duplicates"]]
         analyzers.insert(1, LSHDuplicateAnalyzer(config.get("lsh_duplicates", {})))
     # Add semantic duplicate analyzer if enabled (accelerated version)
-    elif config.get("semantic_accelerated", {}).get("enabled", True) and SEMANTIC_ACCELERATED_AVAILABLE:
+    elif config.get("semantic_accelerated", {}).get("enabled", False) and SEMANTIC_ACCELERATED_AVAILABLE:
         # This replaces traditional O(N²) duplicate detection with O(N) accelerated approach
         analyzers = [a for a in analyzers if a.name not in ["duplicates", "fast_duplicates"]]
         analyzers.insert(1, SemanticDuplicateAnalyzer())  # Insert after import_graph

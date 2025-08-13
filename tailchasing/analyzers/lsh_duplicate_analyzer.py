@@ -21,6 +21,14 @@ from ..semantic.lsh_index import (
     precluster_for_comparison,
     create_function_records
 )
+try:
+    from ..semantic.progressive_encoder import (
+        ProgressiveParams,
+        progressive_refine_lsh_pairs
+    )
+    PROGRESSIVE_AVAILABLE = True
+except ImportError:
+    PROGRESSIVE_AVAILABLE = False
 
 
 class LSHDuplicateAnalyzer(Analyzer):
@@ -68,6 +76,14 @@ class LSHDuplicateAnalyzer(Analyzer):
         self.max_comparisons = lsh_config.get('max_comparisons', 10_000)
         self.min_function_size = lsh_config.get('min_function_size', 3)  # Min lines
         
+        # Progressive refinement settings
+        self.use_progressive = lsh_config.get('use_progressive', False) and PROGRESSIVE_AVAILABLE
+        if self.use_progressive:
+            self.progressive_params = ProgressiveParams(
+                min_l2_jaccard=lsh_config.get('progressive_l2_threshold', 0.35),
+                min_l3_similarity=lsh_config.get('progressive_l3_threshold', 0.25)
+            )
+        
     def run(self, ctx: AnalysisContext) -> List[Issue]:
         """
         Run LSH-accelerated duplicate detection.
@@ -108,6 +124,29 @@ class LSHDuplicateAnalyzer(Analyzer):
             f"{stats.non_singleton_buckets} non-singleton buckets, "
             f"{len(candidate_pairs)} candidate pairs"
         )
+        
+        # Apply progressive refinement if enabled
+        if self.use_progressive and candidate_pairs:
+            self.logger.info("Applying 3-level progressive refinement...")
+            
+            # Build function map for progressive encoder
+            func_map = {fr.id: fr for fr in function_records}
+            
+            # Refine through L2/L3 progressive encoding
+            refined_pairs, prog_stats = progressive_refine_lsh_pairs(
+                candidate_pairs,
+                func_map,
+                params=self.progressive_params
+            )
+            
+            self.logger.info(
+                f"Progressive refinement: {len(candidate_pairs)} → "
+                f"{prog_stats.l2_screened_pairs} (L2) → "
+                f"{prog_stats.l3_screened_pairs} (L3) → "
+                f"{prog_stats.final_pairs} final"
+            )
+            
+            candidate_pairs = refined_pairs
         
         # Safety check on number of comparisons
         if len(candidate_pairs) > self.max_comparisons:

@@ -449,6 +449,15 @@ class Config:
             "show_timing": False,
             "suppress_warnings": False
         },
+        "lsh_duplicates": {
+            "enabled": True,  # Enable by default for O(n·k) performance
+            "num_hashes": 100,
+            "bands": 20,
+            "rows_per_band": 5,
+            "exact_match_threshold": 0.95,
+            "semantic_match_threshold": 0.85,
+            "use_progressive": False  # Enable to use 3-level progressive refinement
+        },
         "placeholders": {
             "allow": [],
             "block": [],
