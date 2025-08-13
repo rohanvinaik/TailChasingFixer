@@ -395,7 +395,11 @@ def analyze_run(
     patterns: List[PatternType] = typer.Option([PatternType.ALL], "--pattern", "-p", help="Pattern types to detect"),
     severity_threshold: int = typer.Option(1, "--severity", "-s", help="Minimum severity level"),
     confidence_threshold: float = typer.Option(0.8, "--confidence", "-c", help="Minimum confidence score"),
-    include_clean_code: bool = typer.Option(False, "--include-clean", help="Include analysis of clean code sections")
+    include_clean_code: bool = typer.Option(False, "--include-clean", help="Include analysis of clean code sections"),
+    # Timeout configuration options
+    analyzer_timeout: Optional[float] = typer.Option(None, "--analyzer-timeout", help="Analyzer timeout in seconds (0 = disabled)"),
+    group_timeout: Optional[float] = typer.Option(None, "--group-timeout", help="Per-group timeout in seconds"),
+    watchdog_timeout: Optional[float] = typer.Option(None, "--watchdog-timeout", help="Watchdog timeout in seconds (0 = disabled)")
 ):
     """
     🔍 Run comprehensive tail-chasing analysis.
@@ -411,6 +415,15 @@ def analyze_run(
     # Initialize analysis components
     results = []
     analysis_start = time.time()
+    
+    # Set timeout environment variables if provided via CLI
+    import os
+    if analyzer_timeout is not None:
+        os.environ["TAILCHASING_ANALYZER_TIMEOUT_SEC"] = str(analyzer_timeout)
+    if group_timeout is not None:
+        os.environ["TAILCHASING_GROUP_TIMEOUT_SEC"] = str(group_timeout)
+    if watchdog_timeout is not None:
+        os.environ["TAILCHASING_WATCHDOG_SEC"] = str(watchdog_timeout)
     
     with Progress(
         SpinnerColumn(),

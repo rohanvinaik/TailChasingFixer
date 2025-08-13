@@ -678,6 +678,11 @@ class LargeCodebaseConfig:
     max_bucket_size: int = 100
     comparison_timeout: float = 5.0  # seconds per bucket
 
+    # Timeout configuration
+    analyzer_timeout_sec: float = 120.0  # Total analyzer timeout 
+    group_timeout_sec: float = 8.0       # Per-group timeout
+    watchdog_timeout_sec: float = 0.0    # Watchdog timeout (0 = disabled)
+
     # Memory management
     use_disk_cache: bool = True
     cache_dir: str = ".tailchasing_cache"
@@ -769,6 +774,9 @@ class LargeCodebaseConfig:
             parallel_buckets=get_bool("PARALLEL_BUCKETS", True),
             max_bucket_size=get_int("MAX_BUCKET_SIZE", 100),
             comparison_timeout=get_float("COMPARISON_TIMEOUT", 5.0),
+            analyzer_timeout_sec=get_float("ANALYZER_TIMEOUT_SEC", 120.0),
+            group_timeout_sec=get_float("GROUP_TIMEOUT_SEC", 8.0),
+            watchdog_timeout_sec=get_float("WATCHDOG_SEC", 0.0),
             use_disk_cache=get_bool("USE_DISK_CACHE", True),
             cache_dir=get_str("CACHE_DIR", ".tailchasing_cache"),
             max_memory_mb=get_int("MAX_MEMORY_MB", 2000),
@@ -815,6 +823,13 @@ class LargeCodebaseConfig:
                     pc.bucket_timeout_sec = float(self.comparison_timeout)
             except Exception:
                 pass
+        # timeout configuration
+        for attr, val in [
+            ("timeout_seconds", self.analyzer_timeout_sec),
+            ("group_timeout_seconds", self.group_timeout_sec),
+        ]:
+            if hasattr(analyzer, attr):
+                setattr(analyzer, attr, val)
         # sampling knobs (if present)
         for attr, val in [
             ("max_sample_size", self.max_sample_size),

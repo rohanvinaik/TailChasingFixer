@@ -5,6 +5,7 @@ This module provides a comprehensive watchdog system to prevent analyzer hangs,
 track execution times, and provide fallback mechanisms for long-running operations.
 """
 
+import os
 import time
 import threading
 import multiprocessing
@@ -31,6 +32,9 @@ from ..core.issues import Issue
 
 logger = logging.getLogger(__name__)
 
+# Configurable watchdog timeout (0 = disabled)
+DEFAULT_WATCHDOG_SEC = float(os.getenv("TAILCHASING_WATCHDOG_SEC", "0"))
+
 
 @dataclass
 class AnalyzerExecutionStats:
@@ -52,7 +56,7 @@ class AnalyzerExecutionStats:
 @dataclass
 class WatchdogConfig:
     """Configuration for watchdog timeout and heartbeat settings."""
-    analyzer_timeout: float = 30.0  # seconds
+    analyzer_timeout: float = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", "120"))  # seconds
     heartbeat_interval: float = 2.0  # seconds
     heartbeat_timeout_multiplier: float = 3.0  # timeout = interval * multiplier
     enable_fallback: bool = True
@@ -393,7 +397,10 @@ class AnalyzerWatchdog:
             heartbeat_thread.start()
             
             try:
-                return future.result(timeout=self.config.analyzer_timeout)
+                if self.config.analyzer_timeout and self.config.analyzer_timeout > 0:
+                    return future.result(timeout=self.config.analyzer_timeout)
+                else:
+                    return future.result()
             except Exception:
                 future.cancel()
                 raise

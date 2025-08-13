@@ -145,6 +145,11 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
         self.similarity_threshold = self.config.get('similarity_threshold', 0.85)
         self.statistical_significance_threshold = self.config.get('statistical_significance', 0.05)
         
+        # Timeout configuration
+        import os
+        self.timeout_seconds = self.config.get('timeout_seconds', 
+                                              float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 120.0)))
+        
         # Caches for performance
         self._encoding_cache: Dict[str, SemanticChannelEncoding] = {}
         self._similarity_cache: Dict[Tuple[str, str], SemanticSimilarity] = {}
@@ -162,10 +167,17 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
         Returns:
             List of Issue objects representing semantic duplicates
         """
+        import time
+        start_time = time.time()
         issues = []
         
         try:
             logger.info(f"Running multimodal semantic analysis on {len(ctx.ast_index)} files")
+            
+            # Check initial timeout
+            if self.timeout_seconds > 0 and (time.time() - start_time) > self.timeout_seconds:
+                logger.warning(f"Timeout reached before encoding ({time.time() - start_time:.1f}s)")
+                return []
             
             # Extract and encode all functions
             logger.debug("Encoding functions with multimodal semantic vectors")
@@ -175,9 +187,19 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
                 logger.debug("Not enough functions for semantic analysis")
                 return issues
             
+            # Check timeout after encoding
+            if self.timeout_seconds > 0 and (time.time() - start_time) > self.timeout_seconds:
+                logger.warning(f"Timeout reached after encoding ({time.time() - start_time:.1f}s)")
+                return []
+            
             # Build background distribution for significance testing
             logger.debug("Building background similarity distribution")
             self._build_background_distribution(function_encodings)
+            
+            # Check timeout after background distribution
+            if self.timeout_seconds > 0 and (time.time() - start_time) > self.timeout_seconds:
+                logger.warning(f"Timeout reached after background distribution ({time.time() - start_time:.1f}s)")
+                return []
             
             # Detect semantic clones
             logger.debug("Detecting semantic clones")
@@ -185,6 +207,11 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
             
             # Convert to issues
             for clone_group in semantic_clones:
+                # Check timeout during issue creation
+                if self.timeout_seconds > 0 and (time.time() - start_time) > self.timeout_seconds:
+                    logger.warning(f"Timeout reached during issue creation ({time.time() - start_time:.1f}s)")
+                    break
+                    
                 issue = self._create_semantic_clone_issue(clone_group, ctx)
                 if issue:
                     issues.append(issue)

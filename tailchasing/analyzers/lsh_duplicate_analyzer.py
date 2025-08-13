@@ -7,6 +7,7 @@ from O(n²) to O(n·k) where k << n.
 
 import ast
 import logging
+import os
 import time
 from pathlib import Path
 from typing import List, Dict, Optional, Any, Set, Tuple
@@ -76,6 +77,10 @@ class LSHDuplicateAnalyzer(Analyzer):
         self.max_comparisons = lsh_config.get('max_comparisons', 10_000)
         self.min_function_size = lsh_config.get('min_function_size', 3)  # Min lines
         
+        # Timeout configuration from environment or config
+        self.timeout_seconds = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 
+                                              lsh_config.get('timeout_seconds', 120.0)))
+        
         # Progressive refinement settings
         self.use_progressive = lsh_config.get('use_progressive', False) and PROGRESSIVE_AVAILABLE
         if self.use_progressive:
@@ -110,6 +115,11 @@ class LSHDuplicateAnalyzer(Analyzer):
             
         self.logger.info(f"Analyzing {len(function_records)} functions with LSH")
         
+        # Check timeout before LSH clustering
+        if self.timeout_seconds > 0 and (time.time() - start_time) > self.timeout_seconds:
+            self.logger.warning(f"Timeout reached before LSH clustering ({time.time() - start_time:.1f}s)")
+            return []
+        
         # Run LSH pre-clustering
         self.logger.info("Running MinHash LSH pre-clustering...")
         candidate_pairs, stats = precluster_for_comparison(
@@ -124,6 +134,11 @@ class LSHDuplicateAnalyzer(Analyzer):
             f"{stats.non_singleton_buckets} non-singleton buckets, "
             f"{len(candidate_pairs)} candidate pairs"
         )
+        
+        # Check timeout before progressive refinement
+        if self.timeout_seconds > 0 and (time.time() - start_time) > self.timeout_seconds:
+            self.logger.warning(f"Timeout reached before progressive refinement ({time.time() - start_time:.1f}s)")
+            return []
         
         # Apply progressive refinement if enabled
         if self.use_progressive and candidate_pairs:

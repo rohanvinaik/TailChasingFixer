@@ -3,6 +3,7 @@ Enhanced semantic analyzer using multimodal approach.
 """
 
 import ast
+import os
 from typing import List, Tuple
 from .base_advanced import SemanticAwareAnalyzer
 from ...core.issues import Issue
@@ -18,7 +19,12 @@ class EnhancedSemanticAnalyzer(SemanticAwareAnalyzer):
         """Initialize enhanced semantic specific configuration."""
         super()._initialize_specific_config()
         self.set_threshold('similarity', 0.85)
-        self.enhancer = SemanticDuplicateEnhancer()
+        
+        # Configure enhancer with timeout settings
+        enhancer_config = {
+            'timeout_seconds': float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 120.0))
+        }
+        self.enhancer = SemanticDuplicateEnhancer(enhancer_config)
     
     @property
     def similarity_threshold(self):

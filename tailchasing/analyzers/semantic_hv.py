@@ -13,6 +13,7 @@ Designed for O(n·log(n)) complexity on 100k+ function codebases.
 import ast
 import logging
 import math
+import os
 import random
 import re
 import time
@@ -149,9 +150,14 @@ class SemanticHVAnalyzer(Analyzer):
         
         # Performance limits
         self.max_comparisons = config.get("max_comparisons", 10000) if config else 10000
-        self.timeout_seconds = config.get("timeout_seconds", 30.0) if config else 30.0
+        # Read timeout from environment variable or config, with fallback
+        self.timeout_seconds = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 
+                                              config.get("timeout_seconds", 30.0) if config else 30.0))
         self.max_bucket_size = config.get("max_bucket_size", 100) if config else 100
         self.enable_cross_module = config.get("enable_cross_module", False) if config else False
+        
+        # Group timeout budget (configurable per group)
+        self.group_timeout_seconds = float(os.getenv("TAILCHASING_GROUP_TIMEOUT_SEC", 8.0))
     
     def run(self, ctx: AnalysisContext) -> List[Issue]:
         """
@@ -376,7 +382,7 @@ class SemanticHVAnalyzer(Analyzer):
         
         import time
         group_start = time.time()
-        GROUP_BUDGET = 8.0  # seconds; tune or read from config
+        GROUP_BUDGET = self.group_timeout_seconds  # Use configurable timeout
         
         # Apply intelligent sampling for large groups
         sampled_functions = functions
