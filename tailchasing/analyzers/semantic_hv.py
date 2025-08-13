@@ -70,6 +70,13 @@ try:
 except Exception:
     MINHASH_AVAILABLE = False
 
+# Process-level cache for precomputed Level-1/2 signatures
+_SIGNATURE_CACHE: Dict[str, Dict[str, Any]] = {
+    'level1': {},  # id -> BitSig
+    'level2': {},  # id -> BitSig  
+    'level3': {},  # id -> BitSig
+}
+
 
 @dataclass
 class HierarchicalStats:
@@ -192,6 +199,7 @@ class SemanticHVAnalyzer(Analyzer):
         candidate_pairs = []
         
         for module_path, functions in module_groups.items():
+            # Skip tiny modules entirely - no point in LSH overhead
             if len(functions) < 2:
                 continue
             
@@ -472,33 +480,49 @@ class SemanticHVAnalyzer(Analyzer):
         issues = []
         l2_candidates = []
         
-        # Level 2 screening
-        l2_cache = {}
+        # Level 1 gating (compute L2 only if L1 ≥ 0.35)
+        L1_GATE = 0.35
+        
         for f1, f2 in candidate_pairs:
-            # Get or compute L2 signatures
-            if f1.id not in l2_cache:
-                l2_cache[f1.id] = encode_level2(f1, width=128)
-            if f2.id not in l2_cache:
-                l2_cache[f2.id] = encode_level2(f2, width=128)
+            # Get or compute L1 signatures (from cache)
+            if f1.id not in _SIGNATURE_CACHE['level1']:
+                _SIGNATURE_CACHE['level1'][f1.id] = encode_level1(f1, width=32)
+            if f2.id not in _SIGNATURE_CACHE['level1']:
+                _SIGNATURE_CACHE['level1'][f2.id] = encode_level1(f2, width=32)
+            
+            # Check L1 similarity first - only proceed if promising
+            l1_similarity = _SIGNATURE_CACHE['level1'][f1.id].jaccard(_SIGNATURE_CACHE['level1'][f2.id])
+            if l1_similarity < L1_GATE:
+                continue  # Skip L2 computation entirely
+            
+            # Get or compute L2 signatures (from cache)
+            if f2.id not in _SIGNATURE_CACHE['level2']:
+                _SIGNATURE_CACHE['level2'][f2.id] = encode_level2(f2, width=128)
+            if f1.id not in _SIGNATURE_CACHE['level2']:
+                _SIGNATURE_CACHE['level2'][f1.id] = encode_level2(f1, width=128)
             
             # Check L2 similarity
-            similarity = l2_cache[f1.id].jaccard(l2_cache[f2.id])
-            if similarity >= self.progressive_params.min_l2_jaccard:
-                l2_candidates.append((f1, f2, similarity))
+            l2_similarity = _SIGNATURE_CACHE['level2'][f1.id].jaccard(_SIGNATURE_CACHE['level2'][f2.id])
+            if l2_similarity >= self.progressive_params.min_l2_jaccard:
+                l2_candidates.append((f1, f2, l2_similarity))
         
         stats.l2_candidates = len(l2_candidates)
         
+        # Log cache efficiency
+        if self.config.get('verbose_logging', False):
+            cache_sizes = {k: len(v) for k, v in _SIGNATURE_CACHE.items()}
+            self.logger.debug(f"Signature cache sizes: {cache_sizes}")
+        
         # Level 3 refinement (full hypervector)
-        l3_cache = {}
         for f1, f2, l2_sim in l2_candidates:
-            # Get or compute L3 signatures
-            if f1.id not in l3_cache:
-                l3_cache[f1.id] = encode_level3(f1, width=1024)
-            if f2.id not in l3_cache:
-                l3_cache[f2.id] = encode_level3(f2, width=1024)
+            # Get or compute L3 signatures (from cache)
+            if f1.id not in _SIGNATURE_CACHE['level3']:
+                _SIGNATURE_CACHE['level3'][f1.id] = encode_level3(f1, width=1024)
+            if f2.id not in _SIGNATURE_CACHE['level3']:
+                _SIGNATURE_CACHE['level3'][f2.id] = encode_level3(f2, width=1024)
             
             # Check L3 similarity
-            similarity = l3_cache[f1.id].jaccard(l3_cache[f2.id])
+            similarity = _SIGNATURE_CACHE['level3'][f1.id].jaccard(_SIGNATURE_CACHE['level3'][f2.id])
             
             if similarity >= self.exact_threshold:
                 issue = self._create_issue(f1, f2, similarity, "exact")
