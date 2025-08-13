@@ -48,11 +48,11 @@ class LSHDuplicateAnalyzer(Analyzer):
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize the analyzer with configuration."""
-        super().__init__(config)
+        self.config = config or {}
         self.logger = logging.getLogger(__name__)
         
         # LSH parameters
-        lsh_config = (config or {}).get('lsh', {})
+        lsh_config = self.config.get('lsh', {})
         self.lsh_params = LSHParams(
             num_hashes=lsh_config.get('num_hashes', 100),
             bands=lsh_config.get('bands', 20),
