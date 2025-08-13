@@ -82,10 +82,12 @@ class OutputManager:
         self.watch_mode = watch_mode
         
         # Setup console
+        # Use stderr for progress/spinners to avoid conflicts with stdout output
         self.console = Console(
             force_terminal=use_color,
             force_jupyter=False,
-            file=sys.stdout if not output_file else open(output_file, 'w')
+            file=sys.stderr if not output_file else open(output_file, 'w'),
+            legacy_windows=False  # Ensure proper ANSI support
         )
         
         # Progress tracking
@@ -196,7 +198,9 @@ class OutputManager:
             TaskProgressColumn() if total else TextColumn(""),
             TimeElapsedColumn(),
             console=self.console,
-            transient=True
+            transient=True,
+            refresh_per_second=10,  # Lower refresh rate to reduce artifacts
+            disable=not self.console.is_terminal  # Disable in non-terminal environments
         ) as progress:
             task_id = progress.add_task(description, total=total or 100)
             
@@ -210,6 +214,15 @@ class OutputManager:
         """Start a spinner for long-running operations."""
         if self.output_format != OutputFormat.TEXT or self.verbosity == VerbosityLevel.QUIET:
             return None
+        
+        # Disable spinner in CI/CD environments to avoid artifacts
+        import os
+        if os.environ.get('CI') or os.environ.get('GITHUB_ACTIONS'):
+            # Just log the message without spinner in CI
+            if self.verbosity.value >= VerbosityLevel.NORMAL.value:
+                sys.stderr.write(f"{message}\n")
+                sys.stderr.flush()
+            return None
             
         if not self.progress:
             self.progress = Progress(
@@ -217,7 +230,9 @@ class OutputManager:
                 TextColumn("[progress.description]{task.description}"),
                 TimeElapsedColumn(),
                 console=self.console,
-                transient=True
+                transient=True,
+                refresh_per_second=10,  # Lower refresh rate to reduce artifacts
+                disable=not self.console.is_terminal  # Disable in non-terminal environments
             )
             self.progress.start()
             
@@ -230,15 +245,32 @@ class OutputManager:
         if not self.progress:
             return
             
-        if task_id:
-            self.progress.stop_task(task_id)
-        elif message and message in self.current_tasks:
-            self.progress.stop_task(self.current_tasks[message])
-            del self.current_tasks[message]
+        try:
+            if task_id is not None:
+                self.progress.update(task_id, visible=False)  # Hide the task
+                self.progress.stop_task(task_id)
+                self.progress.remove_task(task_id)  # Remove the task completely
+            elif message and message in self.current_tasks:
+                task_id = self.current_tasks[message]
+                self.progress.update(task_id, visible=False)  # Hide the task
+                self.progress.stop_task(task_id)
+                self.progress.remove_task(task_id)  # Remove the task completely
+                del self.current_tasks[message]
+        except KeyError:
+            # Task might already be removed
+            pass
             
         if not self.current_tasks and self.progress:
+            # Refresh one last time to clear the display
+            self.progress.refresh()
             self.progress.stop()
             self.progress = None
+            # Force clear any remaining artifacts
+            self.console.clear_live()
+            # Additional cleanup for terminal
+            if self.console.is_terminal:
+                sys.stderr.write('\r\033[K\033[?25h')  # Clear line and show cursor
+                sys.stderr.flush()
             
     def output_issues(self, issues: List[Issue], title: str = "Issues Found"):
         """
@@ -602,7 +634,18 @@ class OutputManager:
     def finish(self):
         """Finish output and close resources."""
         if self.progress:
+            # Make all tasks invisible before stopping
+            for task_id in list(self.current_tasks.values()):
+                try:
+                    self.progress.update(task_id, visible=False)
+                except KeyError:
+                    pass
             self.progress.stop()
+            self.progress = None
+            # Clear any remaining artifacts
+            if self.console.is_terminal:
+                sys.stderr.write('\r\033[K\033[?25h')  # Clear line and show cursor
+                sys.stderr.flush()
         if self.live:
             self.live.stop()
         if self.output_file and hasattr(self.console.file, 'close'):
