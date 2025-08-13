@@ -355,6 +355,28 @@ class ChromatinContactAnalyzer(Analyzer):
         self._contact_matrix: Optional[ContactMatrix] = None
         self._loop_anchors: List[LoopAnchor] = []
     
+    def _safe_node_span(self, node: ast.AST) -> tuple[int, int]:
+        """Return (line_start, line_end) for a node, tolerating nodes missing lineno.
+        Falls back to children's lines or 1 if unavailable."""
+        start = getattr(node, 'lineno', None)
+        end = getattr(node, 'end_lineno', None)
+        try:
+            body = getattr(node, 'body', []) or []
+        except Exception:
+            body = []
+        if start is None:
+            if body:
+                start = getattr(body[0], 'lineno', None)
+        if end is None:
+            if body:
+                last = body[-1]
+                end = getattr(last, 'end_lineno', getattr(last, 'lineno', None))
+        if start is None:
+            start = 1
+        if end is None:
+            end = start
+        return int(start), int(end)
+    
     def run(self, ctx: AnalysisContext) -> List[Issue]:
         """
         Run chromatin contact analysis.
@@ -514,12 +536,13 @@ class ChromatinContactAnalyzer(Analyzer):
                             if class_name:
                                 break
                     
+                    line_start, line_end = self._safe_node_span(node)
                     element = CodeElement(
                         file_path=file_path,
                         name=node.name,
                         node_type='method' if class_name else 'function',
-                        line_start=node.lineno,
-                        line_end=getattr(node, 'end_lineno', node.lineno),
+                        line_start=line_start,
+                        line_end=line_end,
                         ast_node=node,
                         module_path=module_path,
                         class_name=class_name
@@ -527,12 +550,13 @@ class ChromatinContactAnalyzer(Analyzer):
                     elements.append(element)
                 
                 elif isinstance(node, ast.ClassDef):
+                    line_start, line_end = self._safe_node_span(node)
                     element = CodeElement(
                         file_path=file_path,
                         name=node.name,
                         node_type='class',
-                        line_start=node.lineno,
-                        line_end=getattr(node, 'end_lineno', node.lineno),
+                        line_start=line_start,
+                        line_end=line_end,
                         ast_node=node,
                         module_path=module_path
                     )
