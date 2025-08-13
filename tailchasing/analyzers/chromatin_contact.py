@@ -14,8 +14,11 @@ from pathlib import Path
 import networkx as nx
 from collections import defaultdict
 import logging
-from scipy.cluster.hierarchy import linkage, fcluster
-from scipy.spatial.distance import pdist, squareform
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy.spatial.distance')
+    from scipy.cluster.hierarchy import linkage, fcluster
+    from scipy.spatial.distance import pdist, squareform
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -939,12 +942,20 @@ class ChromatinContactAnalyzer(Analyzer):
                 np.fill_diagonal(distance_matrix, 0)
                 distance_matrix = np.maximum(distance_matrix, 0)
                 
+                # Add small noise to prevent singular matrices that cause warnings
+                # This is a common technique to avoid numerical issues in clustering
+                distance_matrix += np.random.RandomState(42).rand(*distance_matrix.shape) * 1e-10
+                
                 # Use scipy's squareform to convert to condensed form
                 # This handles edge cases better than using pdist directly
                 condensed_distances = squareform(distance_matrix, checks=False)
                 
                 if len(condensed_distances) > 0 and not np.isnan(condensed_distances).any():
-                    linkage_matrix = linkage(condensed_distances, method='ward')
+                    # Suppress warnings for the linkage calculation
+                    import warnings
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings('ignore', category=RuntimeWarning)
+                        linkage_matrix = linkage(condensed_distances, method='average')  # Use average instead of ward
                     clusters = fcluster(linkage_matrix, t=0.7, criterion='distance')
                     
                     # Split TAD based on clusters
