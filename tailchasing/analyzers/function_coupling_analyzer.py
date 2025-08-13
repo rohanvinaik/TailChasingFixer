@@ -1,9 +1,9 @@
 """
-ChromatinContactAnalyzer: Polymer physics model for code architecture analysis.
+FunctionCouplingAnalyzer: Analyzes coupling between functions in code.
 
-This analyzer applies chromatin contact mapping concepts to identify regions of
-code that are likely to interact and cause tail-chasing patterns through
-"polymer distance" calculations that combine multiple distance metrics.
+This analyzer identifies regions of code that are likely to interact and cause 
+tail-chasing patterns through coupling analysis that combines multiple distance 
+metrics to detect tightly coupled functions.
 """
 
 import ast
@@ -300,19 +300,19 @@ class PolymerDistanceCalculator:
         return float(unique_parts)
 
 
-class ChromatinContactAnalyzer(Analyzer):
+class FunctionCouplingAnalyzer(Analyzer):
     """
-    Analyzer that models code architecture using chromatin contact mapping.
+    Analyzer that detects function coupling in code architecture.
     
-    This analyzer applies polymer physics principles to identify regions of code
-    that are likely to interact and potentially cause tail-chasing patterns.
+    This analyzer identifies regions of code that are tightly coupled and 
+    potentially cause tail-chasing patterns through excessive interdependencies.
     """
     
-    name = "chromatin_contact"
+    name = "function_coupling"
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
-        Initialize the chromatin contact analyzer.
+        Initialize the function coupling analyzer.
         
         Args:
             config: Configuration dictionary
@@ -320,10 +320,10 @@ class ChromatinContactAnalyzer(Analyzer):
         super().__init__(config)
         
         # Load configuration
-        chromatin_config = (config or {}).get('chromatin_contact', {})
+        coupling_config = (config or {}).get('function_coupling', {})
         
         # Distance weights
-        weight_config = chromatin_config.get('weights', {})
+        weight_config = coupling_config.get('weights', {})
         self.weights = DistanceWeights(
             token=weight_config.get('token', 0.3),
             ast=weight_config.get('ast', 0.25),
@@ -332,7 +332,7 @@ class ChromatinContactAnalyzer(Analyzer):
         )
         
         # Contact parameters
-        contact_config = chromatin_config.get('contact_params', {})
+        contact_config = coupling_config.get('contact_params', {})
         self.contact_params = ContactParameters(
             kappa=contact_config.get('kappa', 1.0),
             alpha=contact_config.get('alpha', 1.5),
@@ -341,8 +341,8 @@ class ChromatinContactAnalyzer(Analyzer):
         )
         
         # Thresholds
-        self.contact_threshold = chromatin_config.get('contact_threshold', 0.3)
-        self.thrash_threshold = chromatin_config.get('thrash_threshold', 0.2)
+        self.contact_threshold = coupling_config.get('contact_threshold', 0.3)
+        self.thrash_threshold = coupling_config.get('thrash_threshold', 0.2)
         
         # Initialize calculator
         self.distance_calculator = PolymerDistanceCalculator(self.weights)
@@ -390,12 +390,12 @@ class ChromatinContactAnalyzer(Analyzer):
         Returns:
             List of detected issues
         """
-        logger.info("Starting chromatin contact analysis")
+        logger.info("Starting function coupling analysis")
         
         # Extract code elements
         self._elements = self._extract_code_elements(ctx)
         if len(self._elements) < 2:
-            logger.info("Not enough code elements for chromatin analysis")
+            logger.info("Not enough code elements for coupling analysis")
             return []
         
         logger.info(f"Analyzing {len(self._elements)} code elements")
@@ -432,7 +432,7 @@ class ChromatinContactAnalyzer(Analyzer):
                         )
                         issues.append(issue)
         
-        logger.info(f"Found {len(issues)} chromatin contact issues")
+        logger.info(f"Found {len(issues)} function coupling issues")
         return issues
     
     def polymer_distance(self, elem1: CodeElement, elem2: CodeElement) -> float:
@@ -688,7 +688,7 @@ class ChromatinContactAnalyzer(Analyzer):
         elem1_desc = f"{elem1.class_name}.{elem1.name}" if elem1.class_name else elem1.name
         elem2_desc = f"{elem2.class_name}.{elem2.name}" if elem2.class_name else elem2.name
         
-        message = f"High chromatin contact risk between {elem1_desc} and {elem2_desc}"
+        message = f"High coupling risk between {elem1_desc} and {elem2_desc}"
         
         # Evidence for debugging and analysis
         evidence = {
@@ -711,7 +711,7 @@ class ChromatinContactAnalyzer(Analyzer):
         }
         
         return Issue(
-            kind="chromatin_contact_risk",
+            kind="function_coupling_risk",
             message=message,
             severity=severity,
             file=elem1.file_path,

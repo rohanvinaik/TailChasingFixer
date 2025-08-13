@@ -54,12 +54,12 @@ try:
 except ImportError:
     CIRCULAR_IMPORT_RESOLVER_AVAILABLE = False
 
-# Import phantom triage analyzer
+# Import phantom function detector
 try:
-    from .analyzers.phantom_triage import PhantomTriageAnalyzer
-    PHANTOM_TRIAGE_AVAILABLE = True
+    from .analyzers.phantom_function_detector import PhantomFunctionDetector
+    PHANTOM_FUNCTION_DETECTOR_AVAILABLE = True
 except ImportError:
-    PHANTOM_TRIAGE_AVAILABLE = False
+    PHANTOM_FUNCTION_DETECTOR_AVAILABLE = False
 
 # Import context thrashing analyzer
 try:
@@ -68,12 +68,12 @@ try:
 except ImportError:
     CONTEXT_THRASHING_AVAILABLE = False
 
-# Import chromatin contact analyzer
+# Import function coupling analyzer
 try:
-    from .analyzers.chromatin_contact import ChromatinContactAnalyzer
-    CHROMATIN_CONTACT_AVAILABLE = True
+    from .analyzers.function_coupling_analyzer import FunctionCouplingAnalyzer
+    FUNCTION_COUPLING_AVAILABLE = True
 except ImportError:
-    CHROMATIN_CONTACT_AVAILABLE = False
+    FUNCTION_COUPLING_AVAILABLE = False
 
 # Import enhanced placeholder analyzer
 try:
@@ -89,12 +89,12 @@ try:
 except ImportError:
     ENHANCED_MISSING_SYMBOLS_AVAILABLE = False
 
-# Import catalytic analyzer
+# Import semantic duplicate analyzer (accelerated)
 try:
-    from .catalytic.catalytic_analyzer import CatalyticDuplicateAnalyzer
-    CATALYTIC_ANALYZER_AVAILABLE = True
+    from .semantic_accelerated.semantic_duplicate_analyzer import SemanticDuplicateAnalyzer
+    SEMANTIC_ACCELERATED_AVAILABLE = True
 except ImportError:
-    CATALYTIC_ANALYZER_AVAILABLE = False
+    SEMANTIC_ACCELERATED_AVAILABLE = False
 
 
 # Default analyzers that are always available
@@ -160,20 +160,20 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
     if circular_config.get("enabled", True) and CIRCULAR_IMPORT_RESOLVER_AVAILABLE:
         analyzers.append(CircularImportResolver(config))
     
-    # Add phantom triage analyzer if enabled
+    # Add phantom function detector if enabled
     phantom_config = config.get("placeholders", {})
-    if phantom_config.get("triage_enabled", True) and PHANTOM_TRIAGE_AVAILABLE:
-        analyzers.append(PhantomTriageAnalyzer(config))
+    if phantom_config.get("detector_enabled", True) and PHANTOM_FUNCTION_DETECTOR_AVAILABLE:
+        analyzers.append(PhantomFunctionDetector(config))
     
     # Add context thrashing analyzer if enabled
     context_config = config.get("context_thrashing", {})
     if context_config.get("enabled", True) and CONTEXT_THRASHING_AVAILABLE:
         analyzers.append(ContextThrashingAnalyzer(config))
     
-    # Add chromatin contact analyzer if enabled
-    chromatin_config = config.get("chromatin_contact", {})
-    if chromatin_config.get("enabled", True) and CHROMATIN_CONTACT_AVAILABLE:
-        analyzers.append(ChromatinContactAnalyzer(config))
+    # Add function coupling analyzer if enabled
+    coupling_config = config.get("function_coupling", {})
+    if coupling_config.get("enabled", True) and FUNCTION_COUPLING_AVAILABLE:
+        analyzers.append(FunctionCouplingAnalyzer(config))
     
     # Add enhanced placeholder analyzer if enabled
     enhanced_placeholders_config = config.get("enhanced_placeholders", {})
@@ -189,12 +189,12 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
         analyzers = [a for a in analyzers if a.name != "missing_symbols"]
         analyzers.append(EnhancedMissingSymbolAnalyzer())
     
-    # Add catalytic analyzer if enabled
-    catalytic_config = config.get("catalytic", {})
-    if catalytic_config.get("enabled", True) and CATALYTIC_ANALYZER_AVAILABLE:
-        # This replaces traditional O(N²) duplicate detection with O(N) catalytic approach
+    # Add semantic duplicate analyzer if enabled (accelerated version)
+    semantic_config = config.get("semantic_accelerated", {})
+    if semantic_config.get("enabled", True) and SEMANTIC_ACCELERATED_AVAILABLE:
+        # This replaces traditional O(N²) duplicate detection with O(N) accelerated approach
         analyzers = [a for a in analyzers if a.name not in ["duplicates", "fast_duplicates"]]
-        analyzers.insert(1, CatalyticDuplicateAnalyzer())  # Insert after import_graph
+        analyzers.insert(1, SemanticDuplicateAnalyzer())  # Insert after import_graph
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])

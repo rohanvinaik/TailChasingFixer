@@ -233,7 +233,7 @@ def main():
     )
     
     parser.add_argument(
-        "--phantom-triage-report",
+        "--phantom-function-report",
         action="store_true",
         help="Generate phantom stub triage report with P0/P1/P3 classification"
     )
@@ -907,7 +907,7 @@ def main():
             
             # Wrap analyzer with watchdog
             # Special handling for ChromatinContactAnalyzer with TF-IDF fallback
-            if analyzer.name == "chromatin_contact":
+            if analyzer.name == "function_coupling":
                 # Enable enhanced fallback for chromatin contact analysis
                 original_config = watchdog.config.enable_fallback
                 watchdog.config.enable_fallback = True
@@ -1058,7 +1058,7 @@ def main():
         sys.stdout.write(regression_report + "\n")
     
     # Generate phantom triage report if requested
-    if args.phantom_triage_report:
+    if args.phantom_function_report:
         sys.stdout.write(f"\n{'=' * 60}\n")
         sys.stdout.write("PHANTOM STUB TRIAGE REPORT\n")
         sys.stdout.write(f"{'=' * 60}\n")
@@ -1066,7 +1066,7 @@ def main():
         # Find phantom triage analyzer
         phantom_analyzer = None
         for analyzer in analyzers:
-            if hasattr(analyzer, 'name') and analyzer.name == 'phantom_triage':
+            if hasattr(analyzer, 'name') and analyzer.name == 'phantom_function_detector':
                 phantom_analyzer = analyzer
                 break
         

@@ -281,10 +281,10 @@ class PhantomStubGenerator:
     return None  # Placeholder for experimental feature'''
 
 
-class PhantomTriageAnalyzer(Analyzer):
-    """Enhanced phantom stub analyzer with security triage."""
+class PhantomFunctionDetector(Analyzer):
+    """Enhanced phantom function/stub detector with security triage."""
     
-    name = "phantom_triage"
+    name = "phantom_function_detector"
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         super().__init__(config)

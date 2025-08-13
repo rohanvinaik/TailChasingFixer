@@ -1,7 +1,8 @@
 """
-Catalytic analyzer for efficient duplicate detection.
+Semantic duplicate analyzer for efficient duplicate detection.
 
-Integrates the catalytic hypervector system with the TailChasingFixer framework.
+Integrates accelerated hypervector system with the TailChasingFixer framework
+for fast semantic duplicate detection.
 """
 
 import ast
@@ -18,9 +19,9 @@ from .catalytic_index import CatalyticIndex
 from .similarity_pipeline import SimilarityPipeline, QueryResult
 
 
-class CatalyticDuplicateAnalyzer(Analyzer):
+class SemanticDuplicateAnalyzer(Analyzer):
     """
-    Analyzer using catalytic hypervector similarity for duplicate detection.
+    Analyzer using accelerated semantic similarity for duplicate detection.
     
     Features:
     - O(N) complexity instead of O(N²)
@@ -29,7 +30,7 @@ class CatalyticDuplicateAnalyzer(Analyzer):
     - Working memory <100MB for 100k+ functions
     """
     
-    name = "catalytic_duplicates"
+    name = "semantic_duplicates"
     
     def __init__(self):
         """Initialize the analyzer."""
