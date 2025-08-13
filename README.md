@@ -28,13 +28,17 @@ This tool detects these patterns using advanced semantic analysis and provides a
 - **Cargo Cult Detection** - Identifies copied boilerplate and misused patterns
 - **🧬 Chromatin-Inspired Analysis** - Uses polymer physics models from chromatin biology
 - **🔬 Loop Extrusion Detection** - Identifies code organization patterns using TAD-like boundaries
+- **LLM Filler Detection** - Identifies placeholder content and filler patterns from LLMs
+- **Function Coupling Analysis** - Detects tightly coupled functions that should be refactored
 
 ### 🔧 Intelligent Auto-Fixing
 - **Automated Fix Generation** - Creates safe, tested fixes for detected issues
 - **Fix Planning & Orchestration** - Dependency analysis and execution ordering
+- **Fix Planner Fallback** - Automatically generates fixes even without structured suggestions
 - **Risk Assessment** - Evaluates fix safety with LOW/MEDIUM/HIGH/CRITICAL ratings
 - **Rollback Strategies** - Generates undo plans for every fix
 - **Fix Validation** - Syntax, import, and test preservation checks
+- **Analysis Caching** - Reuses cached analysis results to avoid redundant processing
 
 ### 📊 Rich Reporting & Visualization
 - **Interactive HTML Reports** - Self-contained with embedded D3.js visualizations
@@ -43,6 +47,8 @@ This tool detects these patterns using advanced semantic analysis and provides a
 - **Temporal Animations** - Evolution of issues over time
 - **Multiple Formats** - Text, JSON, HTML, Markdown, GraphML
 - **Natural Language Explanations** - Human-readable issue descriptions with remediation steps
+- **Detailed JSON Reports** - Complete analysis results saved to `.tailchasing_cache/detailed_report.json`
+- **Full Issue Inspection** - View all detected issues, not just summaries
 
 ### ⚡ Performance & Scalability
 - **Parallel Processing** - Multi-threaded/process execution for large codebases
@@ -89,6 +95,12 @@ tailchasing . --show-suggestions
 
 # Generate automated fix script
 tailchasing . --generate-fixes
+
+# View detailed analysis report (all issues)
+cat .tailchasing_cache/detailed_report.json | python -m json.tool | less
+
+# Auto-fix critical issues
+tailchasing . --auto-fix --severity=high
 ```
 
 ## 📦 Installation

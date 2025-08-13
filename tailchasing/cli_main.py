@@ -1137,44 +1137,6 @@ def main():
             )
             cache.save(art)
             logger.info("Saved analysis artifact for reuse")
-            
-            # Also save a detailed JSON report for user inspection
-            import json
-            detailed_report_path = Path(".tailchasing_cache") / "detailed_report.json"
-            with open(detailed_report_path, 'w') as f:
-                report_data = {
-                    "summary": {
-                        "total_issues": len(issue_collection.issues),
-                        "risk_score": global_score,
-                        "affected_modules": len(module_scores),
-                        "fixable_issues": len(fixable_issues_dict),
-                        "analysis_time": analysis_end_time - analysis_start_time
-                    },
-                    "issues_by_type": {},
-                    "issues": []
-                }
-                
-                # Count issues by type
-                from collections import Counter
-                issue_counts = Counter(issue.kind for issue in issue_collection.issues)
-                report_data["issues_by_type"] = dict(issue_counts.most_common())
-                
-                # Add all issues with full details
-                for issue in issue_collection.issues:
-                    issue_dict = {
-                        'kind': issue.kind,
-                        'file': issue.file,
-                        'line': issue.line,
-                        'message': issue.message,
-                        'severity': issue.severity,
-                        'evidence': issue.evidence,
-                        'suggestions': issue.suggestions if issue.suggestions else [],
-                        'is_fixable': issue.kind in fixable_types
-                    }
-                    report_data["issues"].append(issue_dict)
-                
-                json.dump(report_data, f, indent=2)
-                logger.info(f"Saved detailed report to {detailed_report_path}")
                 
         except Exception as e:
             logger.warning(f"Could not save analysis artifact: {e}")
@@ -1442,6 +1404,51 @@ def main():
     # Debug: Log the actual count
     logger.debug(f"Total fixable issues after select_fixable_issues: {len(fixable)}")
     logger.debug(f"Total fixable_issues_dict: {len(fixable_issues_dict)}")
+    
+    # Save a detailed JSON report for user inspection
+    try:
+        import json
+        from collections import Counter
+        
+        detailed_report_path = Path(".tailchasing_cache") / "detailed_report.json"
+        detailed_report_path.parent.mkdir(exist_ok=True)
+        
+        report_data = {
+            "summary": {
+                "total_issues": len(issue_collection.issues),
+                "risk_score": global_score,
+                "affected_modules": len(module_scores),
+                "fixable_issues": len(fixable_issues_dict),
+                "analysis_time": getattr(issue_collection, 'analysis_time', 0)
+            },
+            "issues_by_type": {},
+            "issues": []
+        }
+        
+        # Count issues by type
+        issue_counts = Counter(issue.kind for issue in issue_collection.issues)
+        report_data["issues_by_type"] = dict(issue_counts.most_common())
+        
+        # Add all issues with full details
+        for issue in issue_collection.issues:
+            issue_dict = {
+                'kind': issue.kind,
+                'file': issue.file,
+                'line': issue.line,
+                'message': issue.message,
+                'severity': issue.severity,
+                'evidence': getattr(issue, 'evidence', {}),
+                'suggestions': getattr(issue, 'suggestions', []),
+                'is_fixable': issue.kind in fixable_types
+            }
+            report_data["issues"].append(issue_dict)
+        
+        with open(detailed_report_path, 'w') as f:
+            json.dump(report_data, f, indent=2)
+        
+        logger.info(f"Saved detailed report to {detailed_report_path}")
+    except Exception as e:
+        logger.warning(f"Could not save detailed report: {e}")
     
     # Always check if fix generation would be helpful (unless pure JSON mode)
     if not (args.json and len(config.get("report.formats", [])) == 1) and fixable:
