@@ -116,7 +116,8 @@ class SemanticHVAnalyzer(Analyzer):
         self.semantic_threshold = config.get("semantic_threshold", 0.85) if config else 0.85
         
         # Performance limits
-        self.max_comparisons = config.get("max_comparisons", 50000) if config else 50000
+        self.max_comparisons = config.get("max_comparisons", 10000) if config else 10000
+        self.timeout_seconds = config.get("timeout_seconds", 30.0) if config else 30.0
         self.enable_cross_module = config.get("enable_cross_module", False) if config else False
     
     def run(self, ctx: AnalysisContext) -> List[Issue]:
@@ -167,6 +168,12 @@ class SemanticHVAnalyzer(Analyzer):
         for module_path, functions in module_groups.items():
             if len(functions) < 2:
                 continue
+            
+            # Check timeout
+            elapsed = time.time() - start_time
+            if elapsed > self.timeout_seconds:
+                self.logger.warning(f"Timeout reached ({elapsed:.1f}s), stopping analysis")
+                break
             
             # Run LSH on this group
             group_pairs = self._process_group_with_lsh(functions, module_path)
@@ -333,9 +340,16 @@ class SemanticHVAnalyzer(Analyzer):
         if not LSH_AVAILABLE or len(functions) < 2:
             return []
         
+        # Apply intelligent sampling for large groups
+        sampled_functions = functions
+        if len(functions) > 500:  # Large group threshold
+            self.logger.info(f"Large group in {module_path} ({len(functions)} functions), applying intelligent sampling")
+            sampled_functions = self.sample_functions_intelligently(functions, max_sample=500)
+            self.logger.info(f"Sampled {len(sampled_functions)} functions from {len(functions)}")
+        
         # Run LSH pre-clustering
         pairs, stats = precluster_for_comparison(
-            functions,
+            sampled_functions,
             params=self.lsh_params,
             feat_cfg=FeatureConfig(
                 use_ast_3grams=True,
@@ -345,7 +359,7 @@ class SemanticHVAnalyzer(Analyzer):
         )
         
         # Convert ID pairs back to function records
-        func_map = {f.id: f for f in functions}
+        func_map = {f.id: f for f in sampled_functions}
         result = []
         
         for id1, id2 in pairs:
