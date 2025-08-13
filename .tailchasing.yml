@@ -99,6 +99,12 @@ import_anxiety:
   min_imports: 5
   unused_ratio_threshold: 2
 
+# Function coupling detection
+function_coupling:
+  enabled: true
+  contact_threshold: 0.3
+  thrash_threshold: 0.2
+
 # Auto-fix settings
 auto_fix:
   enable: true
