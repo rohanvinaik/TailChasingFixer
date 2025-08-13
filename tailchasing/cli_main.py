@@ -32,11 +32,10 @@ logger = get_logger(__name__)
 
 def setup_logging(verbose: bool = False):
     """Configure logging."""
+    # Only set the root logger level without adding handlers
+    # The individual module loggers already have their own handlers
     level = logging.DEBUG if verbose else logging.WARNING
-    logging.basicConfig(
-        level=level,
-        format="%(levelname)s: %(message)s"
-    )
+    logging.getLogger().setLevel(level)
 
 
 def main():

@@ -147,6 +147,7 @@ def setup_logging(
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level.upper()))
     logger.handlers.clear()  # Clear any existing handlers
+    logger.propagate = False  # Prevent propagation to root logger to avoid duplicates
     
     # Add sensitive data filter if enabled
     if redact_sensitive:
@@ -224,6 +225,8 @@ def get_logger(name: str, **kwargs) -> logging.Logger:
     # Check if logger already exists and is configured
     logger = logging.getLogger(name)
     if logger.handlers:
+        # Ensure propagate is False even for existing loggers
+        logger.propagate = False
         return logger
         
     # Set up new logger

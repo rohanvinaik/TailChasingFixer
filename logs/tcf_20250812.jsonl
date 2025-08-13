@@ -481,3 +481,7 @@
 {"timestamp": "2025-08-13T01:08:56.880728Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 789, "message": "Running analyzers"}
 {"timestamp": "2025-08-13T01:08:56.888581Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 894, "message": "Running import_graph analyzer"}
 {"timestamp": "2025-08-13T01:08:57.089627Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 894, "message": "Running catalytic_duplicates analyzer"}
+{"timestamp": "2025-08-13T02:23:30.047219Z", "level": "INFO", "module": "<string>", "function": "<module>", "line": 1, "message": "Test message"}
+{"timestamp": "2025-08-13T02:23:37.991357Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 256, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T02:23:59.830019Z", "level": "INFO", "module": "<string>", "function": "<module>", "line": 1, "message": "Test 1"}
+{"timestamp": "2025-08-13T02:23:59.830120Z", "level": "INFO", "module": "<string>", "function": "<module>", "line": 1, "message": "Test 2"}
