@@ -71,7 +71,11 @@ Thumbs.db
 
 # Project specific
 .tailchasing_cache/
+.tailchasing_checkpoints/
+.tailchasing_history.db
 tailchasing_report.*
+output/
+*.db
 
 # Additional cleanup patterns
 *.pyc
