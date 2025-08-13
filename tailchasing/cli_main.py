@@ -880,9 +880,9 @@ def main():
             skip_semantic = True
             
             # Jump to reporting phase
-            global_score = RiskScorer(config.to_dict()).calculate_global_score(issue_collection.issues)
-            module_scores = RiskScorer(config.to_dict()).calculate_module_scores(issue_collection.issues)
-            risk_level = RiskScorer(config.to_dict()).get_risk_level(global_score)
+            scorer = RiskScorer(config.to_dict())
+            module_scores, global_score = scorer.calculate_scores(issue_collection.issues)
+            risk_level = scorer.get_risk_level(global_score, config.get("risk_thresholds", {}))
             
             # Jump to reporting section by setting a flag
             cached_analysis_used = True
