@@ -98,18 +98,23 @@ def main():
         "--quiet",
         "-q",
         action="store_true",
-        help="Quiet mode - only show errors and critical info"
+        help="Quiet mode - only show summary and critical issues"
     )
     verbosity_group.add_argument(
         "--verbose",
         "-v",
         action="store_true",
-        help="Verbose mode - show detailed output"
+        help="Verbose mode - include all debug info, timing, memory usage"
     )
     verbosity_group.add_argument(
         "--debug",
         action="store_true",
         help="Debug mode - show all debug information"
+    )
+    verbosity_group.add_argument(
+        "--verbosity",
+        choices=["quiet", "normal", "verbose", "json"],
+        help="Set output verbosity level explicitly"
     )
     
     # Output format
@@ -513,15 +518,49 @@ def main():
     
     args = parser.parse_args()
     
+    # Find project root early to load config
+    root_path = Path(args.path).absolute()
+    if not root_path.exists():
+        sys.stderr.write(f"Error: Path does not exist: {root_path}\n")
+        sys.exit(1)
+    
+    # Load configuration early for verbosity settings
+    if args.config:
+        config = Config.from_file(args.config)
+    else:
+        config = Config.find_and_load(root_path)
+    
     # Determine verbosity level
-    if args.quiet:
+    if args.verbosity:
+        # Explicit verbosity setting
+        verbosity_map = {
+            "quiet": VerbosityLevel.QUIET,
+            "normal": VerbosityLevel.NORMAL,
+            "verbose": VerbosityLevel.VERBOSE,
+            "json": VerbosityLevel.QUIET  # JSON mode is quiet for text output
+        }
+        verbosity = verbosity_map[args.verbosity]
+        
+        # Override output format if json verbosity
+        if args.verbosity == "json":
+            args.output_format = "json"
+    elif args.quiet:
         verbosity = VerbosityLevel.QUIET
     elif args.verbose:
         verbosity = VerbosityLevel.VERBOSE
     elif args.debug:
         verbosity = VerbosityLevel.DEBUG
     else:
-        verbosity = VerbosityLevel.NORMAL
+        # Check config for default verbosity
+        output_config = config.get("output", {})
+        verbosity_str = output_config.get("verbosity", "normal")
+        verbosity_map = {
+            "quiet": VerbosityLevel.QUIET,
+            "normal": VerbosityLevel.NORMAL,
+            "verbose": VerbosityLevel.VERBOSE,
+            "json": VerbosityLevel.QUIET
+        }
+        verbosity = verbosity_map.get(verbosity_str, VerbosityLevel.NORMAL)
     
     # Setup logging (for backward compatibility)
     setup_logging(args.debug or args.verbose)
@@ -568,12 +607,8 @@ def main():
             else:
                 output_manager.log("Memory monitoring disabled (psutil not available)", VerbosityLevel.VERBOSE)
     
-    # Find project root
-    root_path = Path(args.path).absolute()
-    if not root_path.exists():
-        logger.error(f"Path does not exist: {root_path}")
-        sys.stderr.write(f"Error: Path does not exist: {root_path}\n")
-        sys.exit(1)
+    # Project root already loaded earlier
+    logger.info(f"Analyzing path: {root_path}")
     
     # Initialize cache manager
     from .core.cache import CacheManager
@@ -612,11 +647,7 @@ def main():
             sys.exit(1)
         sys.exit(0)
         
-    # Load configuration
-    if args.config:
-        config = Config.from_file(args.config)
-    else:
-        config = Config.find_and_load(root_path)
+    # Configuration already loaded earlier
         
     # Override config with CLI arguments
     if args.exclude:
@@ -1368,9 +1399,20 @@ def main():
     # Generate and log watchdog execution report (for non-batch mode)
     if not use_batching:
         watchdog_report = watchdog.get_execution_report()
-        logger.info(f"Analyzer execution report: {watchdog_report['summary']}")
+        summary = watchdog_report['summary']
         
-    # Show detailed watchdog report if verbose
+        # Show clean summary instead of verbose dictionary dump
+        total_duration = summary.get('total_duration', 0)
+        total_issues = summary.get('total_issues', 0)
+        files_count = len(files) if 'files' in locals() else 0
+        
+        logger.info(f"✓ Analysis completed in {total_duration:.1f}s ({files_count} files, {total_issues} issues found)")
+        
+        # Only show clean summary to stdout if not verbose
+        if not args.watchdog_verbose:
+            sys.stdout.write(f"\n✓ Analysis completed in {total_duration:.1f}s ({files_count} files, {total_issues} issues found)\n")
+        
+    # Show detailed watchdog report ONLY if verbose flag is set
     if args.watchdog_verbose and not use_batching:
         sys.stdout.write("\nWatchdog Execution Report:\n")
         sys.stdout.write("-" * 40 + "\n")
@@ -1419,9 +1461,33 @@ def main():
         # Clean up memory monitor
         memory_monitor.cleanup()
     
+    # Show Next Steps section if issues were found
+    if issue_collection and issue_collection.issues:
+        sys.stdout.write("\n📝 NEXT STEPS\n")
+        sys.stdout.write("-" * 40 + "\n")
+        
+        # Determine the root path for commands
+        cmd_path = str(root_path) if root_path != Path.cwd() else "."
+        
+        sys.stdout.write(f"1. View detailed report: tailchasing {cmd_path} --format=html\n")
+        sys.stdout.write(f"2. Generate fixes: tailchasing {cmd_path} --generate-fixes\n")
+        sys.stdout.write(f"3. Fix critical issues: tailchasing {cmd_path} --auto-fix --severity=high\n")
+        
+        # Add context-specific suggestions
+        critical_count = sum(1 for issue in issue_collection.issues if issue.severity >= 4)
+        if critical_count > 0:
+            sys.stdout.write(f"\n⚠️  You have {critical_count} critical issues that should be addressed immediately.\n")
+        
+        fixable_count = len(fixable) if 'fixable' in locals() and fixable else 0
+        if fixable_count > 0:
+            sys.stdout.write(f"✨ {fixable_count} issues can be automatically fixed.\n")
+    
     # Flush cache before exiting
     if cache_enabled:
         cache_manager.flush()
+    
+    # Clean up output manager (clear any remaining spinners)
+    output_manager.finish()
     
     # Check fail threshold
     if args.fail_on is not None:

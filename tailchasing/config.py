@@ -442,6 +442,13 @@ class Config:
             "warn": 15,
             "fail": 30
         },
+        "output": {
+            "verbosity": "normal",  # Options: quiet, normal, verbose, json
+            "show_progress": True,
+            "show_memory_stats": False,
+            "show_timing": False,
+            "suppress_warnings": False
+        },
         "placeholders": {
             "allow": [],
             "block": [],

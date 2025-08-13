@@ -443,17 +443,58 @@ class Reporter:
         if severity_dist:
             lines.extend(ReportFormatter.format_severity_distribution(severity_dist))
         
-        # Issue type distribution
+        # Group issues by category with severity breakdown
+        lines.append("\n🔍 ISSUES BY CATEGORY")
+        
+        # Define issue categories
+        categories = {
+            'Coupling Problems': ['circular_import', 'function_coupling_risk', 'import_anxiety'],
+            'Duplicate Functions': ['duplicate_function', 'semantic_duplicate_function', 'context_window_thrashing'],
+            'Phantom Functions': ['phantom_function', 'phantom_stub_triage', 'missing_symbol'],
+            'Code Quality': ['hallucination_cascade', 'wrapper_abstraction', 'prototype_fragmentation', 'cargo_cult', 'tdd_antipattern']
+        }
+        
         distribution = self.scorer.get_issue_distribution(issues)
-        if distribution:
-            lines.append("\n📋 ISSUE TYPES")
-            # Sort by count and show top 10
-            for issue_type, count in sorted(distribution.items(), key=lambda x: -x[1])[:10]:
-                # Format issue type name nicely
-                formatted_type = issue_type.replace('_', ' ').title()
-                lines.append(f"  • {formatted_type}: {count}")
-            if len(distribution) > 10:
-                lines.append(f"  ... and {len(distribution) - 10} more types")
+        
+        for category_name, issue_types in categories.items():
+            # Count issues in this category
+            category_issues = []
+            for issue in issues:
+                if issue.kind in issue_types:
+                    category_issues.append(issue)
+            
+            if category_issues:
+                # Count by severity
+                severity_counts = defaultdict(int)
+                for issue in category_issues:
+                    severity_counts[issue.severity] += 1
+                
+                # Format the category line
+                total = len(category_issues)
+                lines.append(f"├─ {category_name} ({total} issues)")
+                
+                # Show severity breakdown
+                if severity_counts.get(4, 0) > 0:  # Critical
+                    lines.append(f"│  ├─ 🔴 Critical: {severity_counts[4]} issues")
+                if severity_counts.get(3, 0) > 0:  # High
+                    lines.append(f"│  ├─ 🟠 High: {severity_counts[3]} issues")
+                if severity_counts.get(2, 0) > 0:  # Medium
+                    lines.append(f"│  ├─ 🟡 Medium: {severity_counts[2]} issues")
+                if severity_counts.get(1, 0) > 0:  # Low
+                    lines.append(f"│  └─ 🟢 Low: {severity_counts[1]} issues")
+        
+        # Add any uncategorized issues
+        categorized_types = set()
+        for types in categories.values():
+            categorized_types.update(types)
+        
+        uncategorized = []
+        for issue in issues:
+            if issue.kind not in categorized_types:
+                uncategorized.append(issue)
+        
+        if uncategorized:
+            lines.append(f"└─ Other Issues ({len(uncategorized)} issues)")
         
         # Top risky modules with formatted table
         top_modules = self.scorer.get_top_modules(module_scores, limit=10)
