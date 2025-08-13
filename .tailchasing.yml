@@ -105,6 +105,13 @@ function_coupling:
   contact_threshold: 0.3
   thrash_threshold: 0.2
 
+# LLM filler data detection
+llm_filler:
+  enabled: true
+  min_sequence_length: 3
+  entropy_threshold: 1.5
+  repetition_threshold: 0.7
+
 # Auto-fix settings
 auto_fix:
   enable: true

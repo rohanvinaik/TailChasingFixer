@@ -255,6 +255,31 @@ class IssueExplainer:
             'impact': 'Changes to one function likely break the other, makes refactoring difficult',
             'fix': 'Reduce coupling through interface segregation or dependency injection'
         },
+        'llm_filler_text': {
+            'problem': 'Lorem ipsum or synthetic placeholder text detected',
+            'impact': 'Placeholder text in production code indicates incomplete implementation',
+            'fix': 'Replace with real data or remove if not needed'
+        },
+        'llm_filler_sequence': {
+            'problem': 'Sequential placeholder data pattern detected (item1, item2, etc)',
+            'impact': 'Generic test data may not represent real-world scenarios',
+            'fix': 'Use realistic data that matches actual use cases'
+        },
+        'llm_filler_dict': {
+            'problem': 'Dictionary with generic placeholder keys/values',
+            'impact': 'Placeholder data structures indicate incomplete implementation',
+            'fix': 'Define proper data models with meaningful field names'
+        },
+        'llm_filler_docstring': {
+            'problem': 'Generic placeholder documentation or TODO',
+            'impact': 'Poor documentation makes code harder to understand and maintain',
+            'fix': 'Write specific, meaningful documentation'
+        },
+        'llm_filler_json': {
+            'problem': 'JSON data contains placeholder content',
+            'impact': 'Mock data in production can cause unexpected behavior',
+            'fix': 'Replace with actual configuration or data'
+        },
         'wrapper_abstraction': {
             'problem': 'Unnecessary wrapper function that adds no value',
             'impact': 'Adds complexity without benefit, makes debugging harder',
@@ -451,7 +476,8 @@ class Reporter:
             'Coupling Problems': ['circular_import', 'function_coupling_risk', 'import_anxiety'],
             'Duplicate Functions': ['duplicate_function', 'semantic_duplicate_function', 'context_window_thrashing'],
             'Phantom Functions': ['phantom_function', 'phantom_stub_triage', 'missing_symbol'],
-            'Code Quality': ['hallucination_cascade', 'wrapper_abstraction', 'prototype_fragmentation', 'cargo_cult', 'tdd_antipattern']
+            'Code Quality': ['hallucination_cascade', 'wrapper_abstraction', 'prototype_fragmentation', 'cargo_cult', 'tdd_antipattern'],
+            'LLM Filler Data': ['llm_filler_text', 'llm_filler_sequence', 'llm_filler_dict', 'llm_filler_docstring', 'llm_filler_json']
         }
         
         distribution = self.scorer.get_issue_distribution(issues)

@@ -103,6 +103,13 @@ try:
 except ImportError:
     LSH_DUPLICATE_AVAILABLE = False
 
+# Import LLM filler detector
+try:
+    from .analyzers.llm_filler_detector import LLMFillerDetector
+    LLM_FILLER_AVAILABLE = True
+except ImportError:
+    LLM_FILLER_AVAILABLE = False
+
 
 # Default analyzers that are always available
 DEFAULT_ANALYZERS = [
@@ -208,6 +215,11 @@ def load_analyzers(config: Dict[str, Any]) -> List[Analyzer]:
         # This replaces traditional O(N²) duplicate detection with O(N) accelerated approach
         analyzers = [a for a in analyzers if a.name not in ["duplicates", "fast_duplicates"]]
         analyzers.insert(1, SemanticDuplicateAnalyzer())  # Insert after import_graph
+    
+    # Add LLM filler detector if enabled
+    llm_filler_config = config.get("llm_filler", {})
+    if llm_filler_config.get("enabled", True) and LLM_FILLER_AVAILABLE:
+        analyzers.append(LLMFillerDetector(llm_filler_config))
     
     # Check if any analyzers are disabled in config
     disabled = config.get("disabled_analyzers", [])
