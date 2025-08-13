@@ -5,6 +5,8 @@
 
 A comprehensive tool that detects and fixes LLM-assisted *tail-chasing* anti-patterns - a software development anti-pattern where LLMs repeatedly make superficial or circular fixes in response to immediate errors, without addressing underlying architectural issues.
 
+> **📢 Version 2.0**: Major improvements based on real-world feedback! Significantly reduced false positives with scope-aware analysis, mock recognition, and pattern whitelisting. The improved analyzers are now the default.
+
 ## 🎯 What is Tail-Chasing?
 
 Tail-chasing occurs when AI assistants get stuck in unproductive loops while generating code:
@@ -20,15 +22,18 @@ This tool detects these patterns using advanced semantic analysis and provides a
 
 ## ✨ Key Features
 
-### 🔍 Advanced Detection
+### 🔍 Advanced Detection (Version 2.0 - Improved Accuracy)
+- **Scope-Aware Duplicate Detection** - Understands class hierarchies and namespaces, not just text matching
+- **Mock-Aware Placeholder Detection** - Distinguishes test doubles from incomplete code
+- **Runtime-Aware Symbol Analysis** - Understands when `__file__` and runtime symbols are available
+- **Pattern Whitelist System** - Configurable patterns for legitimate code structures
 - **Semantic Hypervector Analysis** - Deep semantic duplicate detection using 8192-dimensional vectors
 - **Statistical Significance Testing** - Z-scores and FDR correction for reliable results
 - **Multi-Channel Analysis** - Structure, data flow, control flow, identifiers, literals, operations
 - **Smart Filtering** - Reduces false positives by understanding legitimate patterns
-- **Cargo Cult Detection** - Identifies copied boilerplate and misused patterns
+- **Improved LLM Detection** - Better distinguishes actual LLM artifacts from legitimate documentation
 - **🧬 Chromatin-Inspired Analysis** - Uses polymer physics models from chromatin biology
 - **🔬 Loop Extrusion Detection** - Identifies code organization patterns using TAD-like boundaries
-- **LLM Filler Detection** - Identifies placeholder content and filler patterns from LLMs
 - **Function Coupling Analysis** - Detects tightly coupled functions that should be refactored
 
 ### 🔧 Intelligent Auto-Fixing
@@ -195,7 +200,7 @@ pip install -e . --force-reinstall
 ### Basic Commands
 
 ```bash
-# Analyze current directory
+# Analyze current directory (now with improved accuracy by default!)
 tailchasing .
 
 # Analyze specific directory
@@ -206,6 +211,9 @@ tailchasing . --html --json --output ./reports
 
 # Show verbose progress
 tailchasing . --verbose
+
+# Use legacy analyzers if needed
+tailchasing . --config .tailchasing.legacy.yml
 ```
 
 ### Fix Generation

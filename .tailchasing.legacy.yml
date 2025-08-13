@@ -1,0 +1,193 @@
+# Tail-Chasing Detector Configuration
+
+paths:
+  include:
+    - .
+  exclude:
+    - tests
+    - vscode-extension
+    - examples
+    - scripts
+    - __pycache__
+    - .git
+    - build
+    - dist
+    - "*.egg-info"
+    # Backup and temporary files
+    - "*.bak"
+    - "*.backup"
+    - "*.orig"
+    - "*~"
+    - "*.tmp"
+    - "*.temp"
+    - "*.swp"
+    - "*.swo"
+    # Linter caches
+    - ".mypy_cache"
+    - ".pylint.d"
+    - ".ruff_cache"
+    # Generated files
+    - "*_pb2.py"
+    - "*_pb2_grpc.py"
+    - "*.generated.py"
+
+risk_thresholds:
+  warn: 15
+  fail: 30
+
+# Enable advanced analyzers
+enable_advanced_analyzers: true
+
+# Issue types to ignore for self-analysis
+ignore_issue_types:
+  - missing_symbol  # Some analyzers import from base but aren't used directly
+
+# Disabled analyzers (optional)
+disabled_analyzers: []  # All analyzers enabled - function_coupling has optimizations for large codebases
+
+# Scoring weights
+scoring_weights:
+  circular_import: 3
+  duplicate_function: 2
+  phantom_function: 2
+  missing_symbol: 2
+  hallucinated_import: 3
+  wrapper_abstraction: 1
+  semantic_duplicate_function: 3
+  semantic_duplicate_multimodal: 4  # Higher weight for advanced detection
+  prototype_fragmentation: 3
+  semantic_stagnant_placeholder: 2
+  rename_cascade_chain: 4
+  context_window_thrashing: 3
+  hallucination_cascade: 5  # Highest priority
+  import_anxiety: 1
+  fix_induced_regression: 4
+
+# Semantic analysis settings
+semantic:
+  enable: true
+  hv_dim: 8192
+  bipolar: true
+  random_seed: 42
+  min_functions: 30  # Lower threshold for our own codebase
+  z_threshold: 3.0  # Increase to reduce false positives
+  fdr_q: 0.01  # More conservative FDR
+  max_pairs_to_analyze: 50  # Limit pairs to prevent timeout
+  max_pairwise_comparisons: 10000  # Limit comparisons
+  
+  # Smart filtering to reduce false positives
+  smart_filter:
+    enable: true
+    filter_backup_files: true  # Ignore duplicates in backup files
+    filter_linter_files: true  # Ignore duplicates in linter-generated files
+    filter_generated_code: true  # Ignore duplicates in generated code
+  
+  channel_weights:
+    NAME_TOKENS: 1.0
+    DOC_TOKENS: 0.8
+    CALLS: 1.2
+    CONTROL: 0.7
+    ARG_SIG: 0.9
+    LITERALS: 0.6
+    DECORATORS: 0.8
+    IMPORTS: 0.9
+    EXCEPTIONS: 0.7
+    COMPLEXITY: 0.5
+
+# Enhanced semantic analysis settings
+enhanced_semantic:
+  enable: true
+  vector_dim: 8192
+  similarity_threshold: 0.85
+  channel_weights:
+    data_flow: 1.5
+    return_patterns: 1.3
+    error_handling: 1.2
+    loop_patterns: 1.1
+    name_tokens: 0.8
+
+# Context thrashing detection
+context_thrashing:
+  min_distance: 500  # Minimum line distance
+  similarity_threshold: 0.6
+  max_similarity: 0.95
+
+# Hallucination cascade detection
+hallucination_cascade:
+  min_cascade_size: 3
+  max_time_span_days: 2
+  external_ref_threshold: 0.2
+
+# Import anxiety detection
+import_anxiety:
+  min_imports: 5
+  unused_ratio_threshold: 2
+
+# Function coupling detection
+function_coupling:
+  enabled: true
+  contact_threshold: 0.3
+  thrash_threshold: 0.2
+
+# LLM filler data detection
+llm_filler:
+  enabled: true
+  min_sequence_length: 3
+  entropy_threshold: 1.5
+  repetition_threshold: 0.7
+
+# Auto-fix settings
+auto_fix:
+  enable: true
+  backup_before_fix: true
+  max_risk_level: "medium"  # Don't auto-apply high-risk fixes
+  apply_safe_fixes_only: true
+
+# Visualization settings
+visualization:
+  enable_html_reports: true
+  include_dependency_graph: true
+  include_timeline: true
+  include_heatmap: true
+  include_similarity_matrix: true
+
+# Git integration
+git:
+  enable: false  # Disable for now to avoid complexity
+  analyze_history: false
+  track_issue_evolution: false
+
+# Natural language explanations
+explanations:
+  enable: true
+  detail_level: "comprehensive"  # brief, standard, comprehensive
+  include_suggestions: true
+  include_examples: true
+
+# Catalytic hypervector analysis settings
+catalytic:
+  enabled: true
+  hv_threshold: 0.88  # Hypervector similarity threshold
+  ast_threshold: 0.85  # AST skeleton similarity threshold
+  min_similarity: 0.9  # Minimum similarity for duplicate detection
+  max_candidates: 50  # Maximum candidates per query
+  
+# Performance settings
+performance:
+  parallel_processing: true  # Enable parallel processing for speed
+  cache_results: true
+  max_file_size_mb: 10
+  timeout_seconds: 300
+  analyzer_timeout: 30  # Reduced to prevent long hangs
+  heartbeat_interval: 2  # More frequent heartbeats
+  max_memory_mb: 4096  # Memory limit
+  batch_size: 100  # Process files in batches
+
+# Report settings
+report:
+  formats:
+    - text
+    - json
+  output_dir: ./
+  include_fix_suggestions: true
+  include_explanations: true
