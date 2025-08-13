@@ -148,7 +148,7 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
         # Timeout configuration
         import os
         self.timeout_seconds = self.config.get('timeout_seconds', 
-                                              float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 120.0)))
+                                              float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 600.0)))
         
         # Caches for performance
         self._encoding_cache: Dict[str, SemanticChannelEncoding] = {}

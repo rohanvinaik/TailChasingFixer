@@ -79,7 +79,7 @@ class LSHDuplicateAnalyzer(Analyzer):
         
         # Timeout configuration from environment or config
         self.timeout_seconds = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 
-                                              lsh_config.get('timeout_seconds', 120.0)))
+                                              lsh_config.get('timeout_seconds', 600.0)))
         
         # Progressive refinement settings
         self.use_progressive = lsh_config.get('use_progressive', False) and PROGRESSIVE_AVAILABLE

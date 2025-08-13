@@ -22,7 +22,7 @@ class EnhancedSemanticAnalyzer(SemanticAwareAnalyzer):
         
         # Configure enhancer with timeout settings
         enhancer_config = {
-            'timeout_seconds': float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 120.0))
+            'timeout_seconds': float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 600.0))
         }
         self.enhancer = SemanticDuplicateEnhancer(enhancer_config)
     

@@ -152,12 +152,12 @@ class SemanticHVAnalyzer(Analyzer):
         self.max_comparisons = config.get("max_comparisons", 10000) if config else 10000
         # Read timeout from environment variable or config, with fallback
         self.timeout_seconds = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", 
-                                              config.get("timeout_seconds", 30.0) if config else 30.0))
+                                              config.get("timeout_seconds", 600.0) if config else 600.0))
         self.max_bucket_size = config.get("max_bucket_size", 100) if config else 100
         self.enable_cross_module = config.get("enable_cross_module", False) if config else False
         
         # Group timeout budget (configurable per group)
-        self.group_timeout_seconds = float(os.getenv("TAILCHASING_GROUP_TIMEOUT_SEC", 8.0))
+        self.group_timeout_seconds = float(os.getenv("TAILCHASING_GROUP_TIMEOUT_SEC", 120.0))
     
     def run(self, ctx: AnalysisContext) -> List[Issue]:
         """

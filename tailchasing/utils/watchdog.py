@@ -56,7 +56,7 @@ class AnalyzerExecutionStats:
 @dataclass
 class WatchdogConfig:
     """Configuration for watchdog timeout and heartbeat settings."""
-    analyzer_timeout: float = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", "120"))  # seconds
+    analyzer_timeout: float = float(os.getenv("TAILCHASING_ANALYZER_TIMEOUT_SEC", "600"))  # seconds
     heartbeat_interval: float = 2.0  # seconds
     heartbeat_timeout_multiplier: float = 3.0  # timeout = interval * multiplier
     enable_fallback: bool = True

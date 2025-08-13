@@ -524,7 +524,7 @@ class Config:
         },
         "resource_limits": {
             "max_duplicate_pairs": 200000,
-            "analyzer_timeout_seconds": 120,
+            "analyzer_timeout_seconds": 600,  # Increased to 10 minutes
             "heartbeat_interval_seconds": 5,
             "max_memory_mb": 8192,
             "lsh_bucket_cap": 2000,
@@ -676,11 +676,11 @@ class LargeCodebaseConfig:
     # Performance
     parallel_buckets: bool = True
     max_bucket_size: int = 100
-    comparison_timeout: float = 5.0  # seconds per bucket
+    comparison_timeout: float = 60.0  # seconds per bucket - much more generous
 
-    # Timeout configuration
-    analyzer_timeout_sec: float = 120.0  # Total analyzer timeout 
-    group_timeout_sec: float = 8.0       # Per-group timeout
+    # Timeout configuration - Much more generous timeouts for large codebases
+    analyzer_timeout_sec: float = 600.0  # Total analyzer timeout (10 minutes)
+    group_timeout_sec: float = 120.0     # Per-group timeout (2 minutes)
     watchdog_timeout_sec: float = 0.0    # Watchdog timeout (0 = disabled)
 
     # Memory management
@@ -773,9 +773,9 @@ class LargeCodebaseConfig:
             minhash_permutations=get_int("MINHASH_PERMUTATIONS", 100),
             parallel_buckets=get_bool("PARALLEL_BUCKETS", True),
             max_bucket_size=get_int("MAX_BUCKET_SIZE", 100),
-            comparison_timeout=get_float("COMPARISON_TIMEOUT", 5.0),
-            analyzer_timeout_sec=get_float("ANALYZER_TIMEOUT_SEC", 120.0),
-            group_timeout_sec=get_float("GROUP_TIMEOUT_SEC", 8.0),
+            comparison_timeout=get_float("COMPARISON_TIMEOUT", 60.0),
+            analyzer_timeout_sec=get_float("ANALYZER_TIMEOUT_SEC", 600.0),
+            group_timeout_sec=get_float("GROUP_TIMEOUT_SEC", 120.0),
             watchdog_timeout_sec=get_float("WATCHDOG_SEC", 0.0),
             use_disk_cache=get_bool("USE_DISK_CACHE", True),
             cache_dir=get_str("CACHE_DIR", ".tailchasing_cache"),
