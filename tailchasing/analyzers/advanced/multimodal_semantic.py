@@ -15,7 +15,10 @@ from collections import defaultdict, Counter
 from typing import Dict, List, Tuple, Set, Optional, Any, Union
 from dataclasses import dataclass, field
 import numpy as np
-from scipy.spatial.distance import cosine, euclidean
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy.spatial.distance')
+    from scipy.spatial.distance import cosine, euclidean
 from scipy import stats
 
 from ..base import BaseAnalyzer, AnalysisContext  
@@ -282,13 +285,24 @@ class SemanticDuplicateEnhancer(BaseAnalyzer):
                 if len(vector1) == 0 or len(vector2) == 0:
                     channel_sim = 0.0
                 else:
-                    # Use cosine similarity as primary metric
-                    try:
-                        channel_sim = 1 - cosine(vector1, vector2)
-                        if np.isnan(channel_sim):
-                            channel_sim = 0.0
-                    except:
+                    # Check for zero vectors to avoid division by zero warning
+                    norm1 = np.linalg.norm(vector1)
+                    norm2 = np.linalg.norm(vector2)
+                    
+                    if norm1 == 0 or norm2 == 0:
+                        # Zero vector - no meaningful similarity
                         channel_sim = 0.0
+                    else:
+                        # Use cosine similarity as primary metric
+                        try:
+                            import warnings
+                            with warnings.catch_warnings():
+                                warnings.filterwarnings('ignore', category=RuntimeWarning)
+                                channel_sim = 1 - cosine(vector1, vector2)
+                            if np.isnan(channel_sim):
+                                channel_sim = 0.0
+                        except:
+                            channel_sim = 0.0
                 
                 channel_similarities[channel] = channel_sim
                 weighted_similarities.append(channel_sim * self.channel_weights[channel])

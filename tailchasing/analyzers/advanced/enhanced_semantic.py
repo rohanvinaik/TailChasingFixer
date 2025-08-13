@@ -36,6 +36,17 @@ class EnhancedSemanticAnalyzer(SemanticAwareAnalyzer):
         if len(functions) < 2:
             return []  # Need at least 2 functions to compare
         
+        # Apply reasonable limit to prevent timeout on large codebases
+        MAX_FUNCTIONS = 500  # Limit to prevent O(n²) explosion
+        if len(functions) > MAX_FUNCTIONS:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Large codebase ({len(functions)} functions), limiting enhanced semantic analysis to {MAX_FUNCTIONS} functions")
+            # Sort by function size (complexity) and take the largest ones
+            # as they're more likely to be duplicated
+            functions.sort(key=lambda x: len(ast.dump(x[1])), reverse=True)
+            functions = functions[:MAX_FUNCTIONS]
+        
         # Set the threshold on the enhancer if needed
         if hasattr(self.enhancer, 'similarity_threshold'):
             self.enhancer.similarity_threshold = self.similarity_threshold
