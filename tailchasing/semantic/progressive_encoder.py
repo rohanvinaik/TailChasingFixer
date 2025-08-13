@@ -341,7 +341,12 @@ def encode_level3(fr: FunctionRecord, *, width: int = 1024) -> BitSig:
         
         # Use the real hypervector encoder
         hv_space = HVSpace(dim=width)
-        hv = encode_function(fr.node, hv_space)
+        # Create a basic config for the encoder
+        config = {
+            'channels': ['tokens', 'structure', 'data_flow'],
+            'weights': {'tokens': 0.4, 'structure': 0.3, 'data_flow': 0.3}
+        }
+        hv = encode_function(fr.node, fr.file or 'unknown', hv_space, config)
         
         # Convert hypervector to bit signature
         # Map positive values to 1, negative to 0
