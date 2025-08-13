@@ -35,6 +35,20 @@ try:
     LSH_AVAILABLE = True
 except ImportError:
     LSH_AVAILABLE = False
+    # Fallback classes for MinHash compatibility
+    @dataclass(frozen=True)
+    class FunctionRecord:
+        id: str
+        source: str
+        node: ast.AST
+        file: Optional[str] = None
+    
+    @dataclass
+    class LSHParams:
+        num_hashes: int = 64
+        bands: int = 16
+        rows_per_band: int = 4
+        seed: int = 0x5EED_1DEE
 
 try:
     from ..semantic.progressive_encoder import (
@@ -47,6 +61,14 @@ try:
     PROGRESSIVE_AVAILABLE = True
 except ImportError:
     PROGRESSIVE_AVAILABLE = False
+
+# Fallback to lightweight MinHash+LSH if the semantic.index LSH isn't available
+MINHASH_AVAILABLE = False
+try:
+    from ..semantic.minhash import MinHashIndex  # self-contained LSH
+    MINHASH_AVAILABLE = True
+except Exception:
+    MINHASH_AVAILABLE = False
 
 
 @dataclass
@@ -87,7 +109,10 @@ class SemanticHVAnalyzer(Analyzer):
         
         # Check dependencies
         if not LSH_AVAILABLE:
-            self.logger.warning("LSH index not available, falling back to simpler analysis")
+            if MINHASH_AVAILABLE:
+                self.logger.info("LSH index not available, using MinHash LSH fallback")
+            else:
+                self.logger.warning("No LSH backend available, falling back to simpler analysis")
         if not PROGRESSIVE_AVAILABLE:
             self.logger.warning("Progressive encoder not available, using basic comparison")
         
@@ -337,7 +362,7 @@ class SemanticHVAnalyzer(Analyzer):
         Returns:
             List of candidate pairs
         """
-        if not LSH_AVAILABLE or len(functions) < 2:
+        if len(functions) < 2:
             return []
         
         # Apply intelligent sampling for large groups
@@ -347,16 +372,35 @@ class SemanticHVAnalyzer(Analyzer):
             sampled_functions = self.sample_functions_intelligently(functions, max_sample=500)
             self.logger.info(f"Sampled {len(sampled_functions)} functions from {len(functions)}")
         
-        # Run LSH pre-clustering
-        pairs, stats = precluster_for_comparison(
-            sampled_functions,
-            params=self.lsh_params,
-            feat_cfg=FeatureConfig(
-                use_ast_3grams=True,
-                use_imports=True,
-                use_call_patterns=True
+        # --- Run LSH pre-clustering ---
+        pairs: List[Tuple[str, str]] = []
+
+        if LSH_AVAILABLE:
+            # existing path (precluster_for_comparison)
+            pairs, _stats = precluster_for_comparison(
+                sampled_functions,
+                params=self.lsh_params,
+                feat_cfg=FeatureConfig(use_ast_3grams=True, use_imports=True, use_call_patterns=True),
             )
-        )
+        elif MINHASH_AVAILABLE:
+            # fallback path using MinHashIndex
+            idx = MinHashIndex(num_perm=max(64, self.lsh_params.num_hashes), threshold=0.5)
+            idx.add_functions(sampled_functions)
+            # brute candidate build from index: query each function against the index, collect ids > itself
+            id_to_func = {f.id: f for f in sampled_functions}
+            seen = set()
+            for f in sampled_functions:
+                for cand_id in idx.query_similar(f, threshold=0.5):
+                    if cand_id == f.id:
+                        continue
+                    a, b = sorted((f.id, cand_id))
+                    if (a, b) not in seen:
+                        seen.add((a, b))
+                        pairs.append((a, b))
+        else:
+            # last resort: no LSH at all
+            self.logger.warning("No LSH backend available; skipping LSH pre-clustering for this group")
+            pairs = []
         
         # Convert ID pairs back to function records
         func_map = {f.id: f for f in sampled_functions}
