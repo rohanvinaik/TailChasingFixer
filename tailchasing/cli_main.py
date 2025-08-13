@@ -1750,6 +1750,12 @@ def main():
         sys.stdout.write(f"3. View HTML report: tailchasing {cmd_path} --html report.html\n")
         sys.stdout.write(f"4. Fix critical issues: tailchasing {cmd_path} --auto-fix --severity=high\n")
         
+        sys.stdout.write("\n📊 DIAGNOSTIC FILES (if running on TailChasingFixer itself):\n")
+        sys.stdout.write(f"   • Human-readable report: cat ISSUE_REPORT.md\n")
+        sys.stdout.write(f"   • CSV for spreadsheets: open DETAILED_ISSUES.csv\n") 
+        sys.stdout.write(f"   • Structured JSON data: cat issues_database.json | python -m json.tool\n")
+        sys.stdout.write(f"   • Cached analysis: .tailchasing_cache/detailed_report.json\n")
+        
         # Add context-specific suggestions
         critical_count = sum(1 for issue in issue_collection.issues if issue.severity >= 4)
         if critical_count > 0:

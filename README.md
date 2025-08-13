@@ -238,6 +238,42 @@ tailchasing . --disable semantic_hv --disable cargo_cult
 tailchasing . --config .tailchasing.yml
 ```
 
+### Accessing Analysis Results & Diagnostic Files
+
+After running an analysis, several diagnostic files are generated:
+
+#### Standard Output Files
+```bash
+# View cached detailed analysis report (always generated)
+cat .tailchasing_cache/detailed_report.json | python -m json.tool | less
+
+# Generated fix scripts (when using --generate-fixes)
+./tailchasing_fixes.py          # Interactive fix script
+./tailchasing_suggestions.md    # Detailed suggestions documentation
+```
+
+#### Special Diagnostic Files (TailChasingFixer Self-Analysis)
+When analyzing the TailChasingFixer codebase itself, additional diagnostic files are created:
+
+```bash
+# Human-readable markdown report with issue breakdown
+cat ISSUE_REPORT.md
+
+# CSV file for spreadsheet analysis (Excel/Google Sheets)
+open DETAILED_ISSUES.csv  # macOS
+# or
+xdg-open DETAILED_ISSUES.csv  # Linux  
+# or import into your spreadsheet application
+
+# Complete structured JSON database of all issues
+cat issues_database.json | python -m json.tool | less
+```
+
+These files contain:
+- **ISSUE_REPORT.md**: Executive summary, categorized issues, priority fixes, metrics
+- **DETAILED_ISSUES.csv**: File-by-file breakdown with line numbers, functions, severities
+- **issues_database.json**: Complete structured data for programmatic access
+
 ### CI/CD Integration
 
 ```bash
