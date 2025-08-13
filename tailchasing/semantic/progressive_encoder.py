@@ -340,7 +340,7 @@ def encode_level3(fr: FunctionRecord, *, width: int = 1024) -> BitSig:
         from .encoder import encode_function
         
         # Use the real hypervector encoder
-        hv_space = HVSpace(dimensions=width)
+        hv_space = HVSpace(dim=width)
         hv = encode_function(fr.node, hv_space)
         
         # Convert hypervector to bit signature
