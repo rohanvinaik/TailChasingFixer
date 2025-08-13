@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
@@ -10,6 +10,102 @@ import numpy as np
 
 from .issues import Issue, IssueCollection
 from .scoring import RiskScorer
+
+
+class ReportFormatter:
+    """Helper class for creating professional formatted reports."""
+    
+    @staticmethod
+    def create_header(title: str, width: int = 60) -> List[str]:
+        """Create a professional header with box-drawing characters."""
+        lines = []
+        # Calculate padding for centered title
+        padding = (width - len(title) - 2) // 2
+        padded_title = f"{' ' * padding}{title}{' ' * (width - len(title) - padding - 2)}"
+        
+        lines.append(f"╔{'═' * (width - 2)}╗")
+        lines.append(f"║{padded_title}║")
+        lines.append(f"╚{'═' * (width - 2)}╝")
+        return lines
+    
+    @staticmethod
+    def create_summary_box(stats: Dict[str, Any], risk_level: str, 
+                          fixable_count: int = 0) -> List[str]:
+        """Create a formatted summary box with emoji indicators."""
+        lines = []
+        
+        # Risk level emoji and color
+        risk_emoji = {
+            "CRITICAL": "🔴",
+            "WARNING": "⚠️",
+            "OK": "✅"
+        }.get(risk_level, "📊")
+        
+        lines.append("\n📊 SUMMARY")
+        lines.append("├─ Files Analyzed: " + str(stats.get('files_analyzed', 0)))
+        lines.append("├─ Issues Found: " + str(stats.get('total_issues', 0)))
+        lines.append(f"├─ Risk Score: {stats.get('risk_score', 0):.2f} ({risk_emoji} {risk_level})")
+        
+        if fixable_count > 0:
+            lines.append(f"├─ Fixable Issues: {fixable_count} ✨")
+        
+        lines.append(f"└─ Affected Modules: {stats.get('affected_modules', 0)}")
+        
+        return lines
+    
+    @staticmethod
+    def format_severity_distribution(distribution: Dict[int, int]) -> List[str]:
+        """Format severity distribution with emoji indicators."""
+        lines = []
+        lines.append("\n📈 SEVERITY DISTRIBUTION")
+        
+        severity_info = {
+            4: ("🔴 Critical", "red"),
+            3: ("🟠 High", "orange"),
+            2: ("🟡 Medium", "yellow"),
+            1: ("🟢 Low", "green")
+        }
+        
+        for severity in sorted(distribution.keys(), reverse=True):
+            count = distribution[severity]
+            label, _ = severity_info.get(severity, (f"Level {severity}", "gray"))
+            
+            # Create a simple bar chart
+            bar_length = min(30, count)
+            bar = "█" * bar_length
+            
+            lines.append(f"  {label:15} {count:4} {bar}")
+        
+        return lines
+    
+    @staticmethod
+    def format_module_risk_table(top_modules: List[Tuple[str, float]], limit: int = 10) -> List[str]:
+        """Format top risk modules as a table."""
+        lines = []
+        lines.append("\n🎯 TOP RISK MODULES")
+        lines.append("┌" + "─" * 58 + "┐")
+        lines.append("│ " + "Score".ljust(10) + "│ " + "Module".ljust(45) + "│")
+        lines.append("├" + "─" * 10 + "┼" + "─" * 47 + "┤")
+        
+        for module, score in top_modules[:limit]:
+            # Truncate module name if too long
+            if len(module) > 44:
+                module = "..." + module[-41:]
+            
+            # Add risk indicator
+            if score >= 50:
+                indicator = "🔴"
+            elif score >= 30:
+                indicator = "🟠"
+            elif score >= 20:
+                indicator = "🟡"
+            else:
+                indicator = "🟢"
+                
+            lines.append(f"│ {indicator} {score:6.1f} │ {module:45} │")
+        
+        lines.append("└" + "─" * 10 + "┴" + "─" * 47 + "┘")
+        return lines
 
 
 class PathSanitizer:
@@ -299,16 +395,21 @@ class Reporter:
                     
         return results
         
-    def render_text(self, issues: List[Issue]) -> str:
-        """Render a text report."""
+    def render_text(self, issues: List[Issue], files_analyzed: int = 0) -> str:
+        """Render a professionally formatted text report.
+        
+        Args:
+            issues: List of issues found
+            files_analyzed: Number of files analyzed (optional)
+            
+        Returns:
+            Formatted text report
+        """
         lines = []
         
-        # Header
-        lines.append("=" * 60)
-        lines.append("TAIL-CHASING ANALYSIS REPORT")
-        lines.append("=" * 60)
-        lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append("")
+        # Professional header with box drawing
+        lines.extend(ReportFormatter.create_header("TAIL-CHASING ANALYSIS REPORT"))
+        lines.append(f"\n⏰ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         # Calculate scores
         module_scores, global_score = self.scorer.calculate_scores(issues)
@@ -317,52 +418,75 @@ class Reporter:
             self.config.get("risk_thresholds", {})
         )
         
-        # Summary
-        lines.append("SUMMARY")
-        lines.append("-" * 30)
-        lines.append(f"Total Issues: {len(issues)}")
-        lines.append(f"Global Risk Score: {global_score} ({risk_level})")
-        lines.append(f"Affected Modules: {len(module_scores)}")
-        lines.append("")
+        # Count fixable issues
+        fixable_types = {
+            'duplicate_function', 'semantic_duplicate_function', 
+            'phantom_function', 'missing_symbol', 'circular_import',
+            'wrapper_abstraction', 'import_anxiety'
+        }
+        fixable_count = sum(1 for issue in issues if issue.kind in fixable_types)
         
-        # Issue distribution
+        # Professional summary box
+        summary_stats = {
+            'files_analyzed': files_analyzed,
+            'total_issues': len(issues),
+            'risk_score': global_score,
+            'affected_modules': len(module_scores)
+        }
+        lines.extend(ReportFormatter.create_summary_box(summary_stats, risk_level, fixable_count))
+        
+        # Severity distribution with emoji and bars
+        severity_dist = defaultdict(int)
+        for issue in issues:
+            severity_dist[issue.severity] += 1
+        
+        if severity_dist:
+            lines.extend(ReportFormatter.format_severity_distribution(severity_dist))
+        
+        # Issue type distribution
         distribution = self.scorer.get_issue_distribution(issues)
         if distribution:
-            lines.append("ISSUE DISTRIBUTION")
-            lines.append("-" * 30)
-            for issue_type, count in sorted(distribution.items(), key=lambda x: -x[1]):
-                lines.append(f"  {issue_type}: {count}")
-            lines.append("")
+            lines.append("\n📋 ISSUE TYPES")
+            # Sort by count and show top 10
+            for issue_type, count in sorted(distribution.items(), key=lambda x: -x[1])[:10]:
+                # Format issue type name nicely
+                formatted_type = issue_type.replace('_', ' ').title()
+                lines.append(f"  • {formatted_type}: {count}")
+            if len(distribution) > 10:
+                lines.append(f"  ... and {len(distribution) - 10} more types")
         
-        # Top risky modules
+        # Top risky modules with formatted table
         top_modules = self.scorer.get_top_modules(module_scores, limit=10)
         if top_modules:
-            lines.append("TOP RISK MODULES")
-            lines.append("-" * 30)
+            # Sanitize module paths for the table
+            sanitized_modules = []
             for module, score in top_modules:
-                lines.append(f"  {score:6.1f} - {module}")
-            lines.append("")
+                sanitized_path = self.sanitizer.sanitize(module)
+                sanitized_modules.append((sanitized_path, score))
+            lines.extend(ReportFormatter.format_module_risk_table(sanitized_modules))
         
-        # Detailed issues with enhanced formatting
-        lines.append("DETAILED ISSUES")
-        lines.append("-" * 30)
+        # Detailed issues section with emoji headers
+        lines.append("\n\n🔍 DETAILED ISSUES")
+        lines.append("─" * 60)
         
         # Group by severity
         by_severity = defaultdict(list)
         for issue in issues:
             by_severity[issue.severity].append(issue)
             
+        severity_info = {
+            4: ("🔴 CRITICAL", "═"),
+            3: ("🟠 HIGH", "─"),
+            2: ("🟡 MEDIUM", "─"),
+            1: ("🟢 LOW", "·")
+        }
+        
         for severity in sorted(by_severity.keys(), reverse=True):
             severity_issues = by_severity[severity]
-            severity_label = {
-                4: "CRITICAL",
-                3: "HIGH",
-                2: "MEDIUM",
-                1: "LOW"
-            }.get(severity, f"SEVERITY-{severity}")
+            label, separator = severity_info.get(severity, (f"SEVERITY-{severity}", "─"))
             
-            lines.append(f"\n{severity_label} ({len(severity_issues)} issues):")
-            lines.append("=" * 50)
+            lines.append(f"\n{label} ({len(severity_issues)} issues)")
+            lines.append(separator * 50)
             
             for issue in severity_issues[:20]:  # Limit to first 20 per severity
                 # Sanitize the issue paths
@@ -386,7 +510,7 @@ class Reporter:
                         lines.append(f"    • {suggestion}")
                         
             if len(severity_issues) > 20:
-                lines.append(f"\n  ... and {len(severity_issues) - 20} more {severity_label} issues")
+                lines.append(f"\n  ... and {len(severity_issues) - 20} more {label} issues")
                 
         # Footer
         lines.append("")
