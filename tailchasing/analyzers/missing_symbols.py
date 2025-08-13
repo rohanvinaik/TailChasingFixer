@@ -86,7 +86,7 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
         visitor.visit(tree)
         
         # Limit number of missing references to process per file for performance
-        max_refs_per_file = 50
+        max_refs_per_file = 20
         refs_processed = 0
         
         for ref in visitor.missing_references:

@@ -405,6 +405,12 @@ def main():
     )
     
     parser.add_argument(
+        "--view-report",
+        action="store_true",
+        help="View the detailed analysis report from the last run"
+    )
+    
+    parser.add_argument(
         "--generate-missing-stubs",
         action="store_true",
         help="Generate typed skeleton functions for missing symbols"
@@ -602,6 +608,45 @@ def main():
         use_color=not args.no_color,
         watch_mode=args.watch
     )
+    
+    # Handle --view-report flag
+    if args.view_report:
+        report_path = Path(".tailchasing_cache") / "detailed_report.json"
+        if report_path.exists():
+            import json
+            with open(report_path) as f:
+                report = json.load(f)
+            
+            # Print formatted report
+            print("\n" + "="*60)
+            print("DETAILED ANALYSIS REPORT")
+            print("="*60)
+            print(f"\nSummary:")
+            print(f"  Total Issues: {report['summary']['total_issues']}")
+            print(f"  Risk Score: {report['summary']['risk_score']:.2f}")
+            print(f"  Affected Modules: {report['summary']['affected_modules']}")
+            print(f"  Fixable Issues: {report['summary']['fixable_issues']}")
+            print(f"  Analysis Time: {report['summary']['analysis_time']:.1f}s")
+            
+            print(f"\nIssues by Type:")
+            for issue_type, count in report['issues_by_type'].items():
+                print(f"  {issue_type}: {count}")
+            
+            print(f"\nDetailed Issues (showing first 20):")
+            for i, issue in enumerate(report['issues'][:20], 1):
+                print(f"\n{i}. [{issue['kind']}] {issue['file']}:{issue['line']}")
+                print(f"   {issue['message']}")
+                print(f"   Severity: {issue['severity']}, Fixable: {issue['is_fixable']}")
+                if issue['suggestions']:
+                    print(f"   Suggestions: {len(issue['suggestions'])} available")
+            
+            if len(report['issues']) > 20:
+                print(f"\n... and {len(report['issues']) - 20} more issues")
+                print("\nTo see all issues, view the JSON file directly:")
+                print("  cat .tailchasing_cache/detailed_report.json | python -m json.tool | less")
+        else:
+            print("No detailed report found. Run tailchasing first to generate a report.")
+        return 0
     
     # Initialize profiler if requested
     profiler = PerformanceProfiler(enabled=args.profile) if args.profile else None
@@ -1092,6 +1137,45 @@ def main():
             )
             cache.save(art)
             logger.info("Saved analysis artifact for reuse")
+            
+            # Also save a detailed JSON report for user inspection
+            import json
+            detailed_report_path = Path(".tailchasing_cache") / "detailed_report.json"
+            with open(detailed_report_path, 'w') as f:
+                report_data = {
+                    "summary": {
+                        "total_issues": len(issue_collection.issues),
+                        "risk_score": global_score,
+                        "affected_modules": len(module_scores),
+                        "fixable_issues": len(fixable_issues_dict),
+                        "analysis_time": analysis_end_time - analysis_start_time
+                    },
+                    "issues_by_type": {},
+                    "issues": []
+                }
+                
+                # Count issues by type
+                from collections import Counter
+                issue_counts = Counter(issue.kind for issue in issue_collection.issues)
+                report_data["issues_by_type"] = dict(issue_counts.most_common())
+                
+                # Add all issues with full details
+                for issue in issue_collection.issues:
+                    issue_dict = {
+                        'kind': issue.kind,
+                        'file': issue.file,
+                        'line': issue.line,
+                        'message': issue.message,
+                        'severity': issue.severity,
+                        'evidence': issue.evidence,
+                        'suggestions': issue.suggestions if issue.suggestions else [],
+                        'is_fixable': issue.kind in fixable_types
+                    }
+                    report_data["issues"].append(issue_dict)
+                
+                json.dump(report_data, f, indent=2)
+                logger.info(f"Saved detailed report to {detailed_report_path}")
+                
         except Exception as e:
             logger.warning(f"Could not save analysis artifact: {e}")
     
@@ -1337,8 +1421,11 @@ def main():
     # Convert issues to dict format and filter fixable ones in one pass
     fixable_issues_dict = []
     if issue_collection.issues:
+        fixable_count_by_type = {}
         for issue in issue_collection.issues:
             if issue.kind in fixable_types:
+                # Track count by type for debugging
+                fixable_count_by_type[issue.kind] = fixable_count_by_type.get(issue.kind, 0) + 1
                 issue_dict = {
                     'kind': getattr(issue, 'kind', 'unknown'),
                     'file': getattr(issue, 'file', ''),
@@ -1347,9 +1434,14 @@ def main():
                     'suggestions': getattr(issue, 'suggestions', [])  # Pre-generated above for efficiency
                 }
                 fixable_issues_dict.append(issue_dict)
+        logger.debug(f"Fixable issues by type before filtering: {fixable_count_by_type}")
     
     # Select fixable issues with null-safe handling (reuse the dict conversion)
     fixable = select_fixable_issues(fixable_issues_dict) if fixable_issues_dict else []
+    
+    # Debug: Log the actual count
+    logger.debug(f"Total fixable issues after select_fixable_issues: {len(fixable)}")
+    logger.debug(f"Total fixable_issues_dict: {len(fixable_issues_dict)}")
     
     # Always check if fix generation would be helpful (unless pure JSON mode)
     if not (args.json and len(config.get("report.formats", [])) == 1) and fixable:
@@ -1640,9 +1732,10 @@ def main():
         # Determine the root path for commands
         cmd_path = str(root_path) if root_path != Path.cwd() else "."
         
-        sys.stdout.write(f"1. View detailed report: tailchasing {cmd_path} --format=html\n")
+        sys.stdout.write(f"1. View detailed report: cat .tailchasing_cache/detailed_report.json | python -m json.tool | less\n")
         sys.stdout.write(f"2. Generate fixes: tailchasing {cmd_path} --generate-fixes\n")
-        sys.stdout.write(f"3. Fix critical issues: tailchasing {cmd_path} --auto-fix --severity=high\n")
+        sys.stdout.write(f"3. View HTML report: tailchasing {cmd_path} --html report.html\n")
+        sys.stdout.write(f"4. Fix critical issues: tailchasing {cmd_path} --auto-fix --severity=high\n")
         
         # Add context-specific suggestions
         critical_count = sum(1 for issue in issue_collection.issues if issue.severity >= 4)
