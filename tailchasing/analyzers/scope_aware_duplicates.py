@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
 from ..core.utils import safe_get_lineno
+from .pattern_whitelist import is_whitelisted
 
 
 @dataclass
@@ -53,9 +54,13 @@ class FunctionSignature:
             'get', 'set', 'update', 'delete', 'create', 'read', 'write',
             'connect', 'disconnect', 'start', 'stop', 'run', 'execute',
             'process', 'handle', 'validate', 'serialize', 'deserialize',
-            'encode', 'decode', 'parse', 'format', 'render', 'compile'
+            'encode', 'decode', 'parse', 'format', 'render', 'compile',
+            'save', 'load', 'open', 'close', 'init', 'cleanup', 'reset',
+            'to_dict', 'from_dict', 'to_json', 'from_json', 'dict_for_update',
+            'transform', 'convert', 'export', 'import', 'fetch', 'push',
+            'pull', 'sync', 'refresh', 'reload', 'clear', 'flush'
         }
-        return self.name in interface_methods
+        return self.name in interface_methods or self.name.startswith('to_') or self.name.startswith('from_')
 
 
 class ScopeAwareDuplicateAnalyzer(BaseAnalyzer):
@@ -148,6 +153,10 @@ class ScopeAwareDuplicateAnalyzer(BaseAnalyzer):
     
     def _should_check_for_duplicates(self, sig: FunctionSignature) -> bool:
         """Determine if a function should be checked for duplicates."""
+        # Check whitelist first
+        if is_whitelisted(sig.name, 'method', sig.module, sig.class_name or ""):
+            return False
+        
         # Skip special methods
         if sig.is_special_method:
             return False
@@ -168,6 +177,11 @@ class ScopeAwareDuplicateAnalyzer(BaseAnalyzer):
         if sig.is_mock:
             return False
         
+        # Skip if method name strongly suggests delegation/utility usage
+        utility_indicators = ['dict_for_update', 'to_dict', 'from_dict', 'as_dict']
+        if sig.name in utility_indicators and sig.class_name:
+            return False  # These are expected to be similar across classes
+        
         return True
     
     def _filter_true_duplicates(self, sigs: List[FunctionSignature]) -> List[FunctionSignature]:
@@ -178,6 +192,10 @@ class ScopeAwareDuplicateAnalyzer(BaseAnalyzer):
             if len(classes) == len(sigs) and all(sig.is_interface_method for sig in sigs):
                 return []  # Different classes implementing same interface
         
+        # Check if these are delegating to a shared utility
+        if self._are_delegating_to_utility(sigs):
+            return []  # Legitimate delegation pattern
+        
         # If they're in related classes (inheritance), might be overrides
         if self._are_related_by_inheritance(sigs):
             return []  # Legitimate overrides
@@ -185,6 +203,14 @@ class ScopeAwareDuplicateAnalyzer(BaseAnalyzer):
         # Check for dataclass patterns
         if self._is_dataclass_pattern(sigs):
             return []  # Legitimate dataclass methods
+        
+        # Check for property pattern
+        if self._is_property_pattern(sigs):
+            return []  # Legitimate property methods
+        
+        # Check for serialization pattern
+        if self._is_serialization_pattern(sigs):
+            return []  # Legitimate serialization methods
         
         return sigs
     
@@ -202,6 +228,59 @@ class ScopeAwareDuplicateAnalyzer(BaseAnalyzer):
                         return True
                     if cls1 in self.class_hierarchies.get(cls2, set()):
                         return True
+        
+        return False
+    
+    def _are_delegating_to_utility(self, sigs: List[FunctionSignature]) -> bool:
+        """Check if functions are delegating to a shared utility function."""
+        # Common delegation patterns
+        delegation_patterns = [
+            'dict_for_update', 'to_dict', 'from_dict', 'serialize', 'deserialize',
+            'validate', 'clean', 'save', 'load', 'export', 'import',
+            'convert', 'transform', 'process', 'handle', 'dispatch'
+        ]
+        
+        # Check if function names suggest delegation
+        for pattern in delegation_patterns:
+            if all(pattern in sig.name.lower() for sig in sigs):
+                # If they're in different classes, likely delegating
+                if len(set(sig.class_name for sig in sigs if sig.class_name)) > 1:
+                    return True
+        
+        # Check if the function body is very small (likely just calling another function)
+        # This would need actual AST analysis of the body, for now use name heuristics
+        if all(sig.name in delegation_patterns for sig in sigs):
+            return True
+            
+        return False
+    
+    def _is_property_pattern(self, sigs: List[FunctionSignature]) -> bool:
+        """Check if functions follow property getter/setter patterns."""
+        # Already handled by is_property flag, but check for manual property patterns
+        property_prefixes = ['get_', 'set_', 'is_', 'has_', 'can_']
+        
+        for prefix in property_prefixes:
+            if all(sig.name.startswith(prefix) for sig in sigs):
+                # Different classes with same property pattern is OK
+                if len(set(sig.class_name for sig in sigs if sig.class_name)) > 1:
+                    return True
+        
+        return False
+    
+    def _is_serialization_pattern(self, sigs: List[FunctionSignature]) -> bool:
+        """Check if functions follow serialization/deserialization patterns."""
+        serialization_methods = {
+            'to_json', 'from_json', 'to_dict', 'from_dict', 'to_xml', 'from_xml',
+            'to_yaml', 'from_yaml', 'to_string', 'from_string', 'serialize', 'deserialize',
+            'dump', 'dumps', 'load', 'loads', 'dict_for_update', 'as_dict',
+            '__getstate__', '__setstate__', '__reduce__', '__reduce_ex__'
+        }
+        
+        # Check if all signatures are serialization methods
+        if all(sig.name in serialization_methods for sig in sigs):
+            # Different classes implementing serialization is expected
+            if len(set(sig.class_name for sig in sigs if sig.class_name)) > 1:
+                return True
         
         return False
     

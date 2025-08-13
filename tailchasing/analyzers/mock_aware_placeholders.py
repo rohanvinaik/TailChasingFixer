@@ -342,10 +342,24 @@ class MockAwarePlaceholderVisitor(ast.NodeVisitor):
         else:
             full_name = name
         
+        # Don't flag mocks in test files as issues
+        if self.file_context['module_type'] in ['test', 'mock', 'fixture']:
+            # Only flag if it's truly incomplete (not a valid mock)
+            if 'Mock' in full_name or 'mock' in name.lower():
+                return  # Valid mock, don't flag
+        
+        # Adjust severity based on context
+        if self.file_context['module_type'] == 'production':
+            severity = 2
+            kind = "true_placeholder"
+        else:
+            severity = 1
+            kind = "incomplete_test_helper"
+        
         issue = Issue(
-            kind="true_placeholder",
+            kind=kind,
             message=f"Placeholder {node_type}: {full_name} - {reason}",
-            severity=2 if self.file_context['module_type'] == 'production' else 1,
+            severity=severity,
             file=self.file,
             line=safe_get_lineno(node),
             symbol=full_name,
@@ -363,6 +377,6 @@ class MockAwarePlaceholderVisitor(ast.NodeVisitor):
                 "Complete the mock implementation",
                 "Add mock behavior for testing"
             ],
-            confidence=0.9
+            confidence=0.7 if self.file_context['module_type'] != 'production' else 0.9
         )
         self.issues.append(issue)
