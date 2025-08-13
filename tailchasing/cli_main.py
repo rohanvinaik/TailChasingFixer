@@ -1367,24 +1367,72 @@ def main():
     # Generate fix script if requested (reuse pre-computed fixable issues)
     if args.generate_fixes and fixable:
         try:
+            # Check if we have structured suggestions (required for lightweight fixgen)
+            structured_count = 0
+            for issue_dict in fixable:
+                suggestions = issue_dict.get("suggestions", [])
+                if suggestions and isinstance(suggestions, list):
+                    for sugg in suggestions:
+                        if isinstance(sugg, dict) and sugg.get("file") and (sugg.get("replacement") or sugg.get("original")):
+                            structured_count += 1
+                            break
             
-            # Generate interactive fix script
-            fix_path = output_dir / "tailchasing_fixes.py"
-            py_text = generate_fix_script_py(fixable)
-            fix_path.write_text(py_text, encoding="utf-8")
-            fix_path.chmod(0o755)  # Make executable
-            
-            logger.info(f"Generated interactive fix script: {fix_path}")
-            sys.stdout.write(f"Interactive fix script: {fix_path}\n")
-            sys.stdout.write(f"  Run with: python {fix_path}\n")
-            
-            # Generate suggestions markdown
-            suggestions_path = output_dir / "tailchasing_suggestions.md"
-            md_text = generate_suggestions_md(fixable)
-            suggestions_path.write_text(md_text, encoding="utf-8")
-            
-            logger.info(f"Generated detailed suggestions: {suggestions_path}")
-            sys.stdout.write(f"Detailed suggestions: {suggestions_path}\n")
+            if structured_count == 0:
+                # No structured suggestions - fall back to the Fix Planner
+                logger.info("No structured suggestions found, using Fix Planner")
+                sys.stdout.write("\nNo structured suggestions found, using Fix Planner for comprehensive fixes\n")
+                
+                from .core.fix_planner import FixPlanner
+                
+                # Create fix planner
+                fix_planner = FixPlanner(
+                    root_dir=root_path,
+                    backup_dir=getattr(args, 'backup_dir', None),
+                    interactive=False,
+                    dry_run=False
+                )
+                
+                # Create fix plan using original issues (not dict versions)
+                fix_plan = fix_planner.create_fix_plan(issue_collection.issues)
+                
+                # Generate executable script
+                fix_path = output_dir / "tailchasing_fixes.py"
+                fix_script = fix_plan.get_executable_script()
+                fix_path.write_text(fix_script, encoding="utf-8")
+                fix_path.chmod(0o755)
+                
+                logger.info(f"Generated fix script via planner: {fix_path}")
+                sys.stdout.write(f"Fix script (via planner): {fix_path}\n")
+                sys.stdout.write(f"  Run with: python {fix_path}\n")
+                sys.stdout.write(f"  Contains {len(fix_plan.actions)} fix actions\n")
+                
+                # Also generate the markdown suggestions
+                suggestions_path = output_dir / "tailchasing_suggestions.md"
+                md_text = generate_suggestions_md(fixable)
+                suggestions_path.write_text(md_text, encoding="utf-8")
+                logger.info(f"Generated detailed suggestions: {suggestions_path}")
+                sys.stdout.write(f"Detailed suggestions: {suggestions_path}\n")
+            else:
+                # Have structured suggestions - use lightweight fixgen
+                logger.info(f"Found {structured_count} issues with structured suggestions")
+                
+                # Generate interactive fix script
+                fix_path = output_dir / "tailchasing_fixes.py"
+                py_text = generate_fix_script_py(fixable)
+                fix_path.write_text(py_text, encoding="utf-8")
+                fix_path.chmod(0o755)  # Make executable
+                
+                logger.info(f"Generated interactive fix script: {fix_path}")
+                sys.stdout.write(f"Interactive fix script: {fix_path}\n")
+                sys.stdout.write(f"  Run with: python {fix_path}\n")
+                
+                # Generate suggestions markdown
+                suggestions_path = output_dir / "tailchasing_suggestions.md"
+                md_text = generate_suggestions_md(fixable)
+                suggestions_path.write_text(md_text, encoding="utf-8")
+                
+                logger.info(f"Generated detailed suggestions: {suggestions_path}")
+                sys.stdout.write(f"Detailed suggestions: {suggestions_path}\n")
             
         except ImportError as e:
             logger.warning(f"Fix generation import error: {e}")
