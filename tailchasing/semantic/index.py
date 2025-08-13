@@ -880,3 +880,187 @@ class SemanticIndex:
         
         logger = logging.getLogger(__name__)
         logger.info("Semantic index rebuild complete")
+
+
+# ----------------------------
+# Incremental, Time-Budgeted Analysis with Checkpointing
+# ----------------------------
+
+# Additional imports for incremental analysis
+from typing import Callable, Iterator, Sequence
+
+def _pair_key(a_id: str, b_id: str) -> str:
+    """Order-invariant, stable key for a pair of IDs."""
+    if a_id <= b_id:
+        lo, hi = a_id, b_id
+    else:
+        lo, hi = b_id, a_id
+    return f"{lo}||{hi}"
+
+
+class IncrementalSemanticIndex:
+    """
+    Incremental, resumable analysis:
+      - Uses LSH pre-clustering to generate candidate pairs lazily.
+      - Processes until a time budget expires.
+      - Saves a compact checkpoint of 'processed_pairs' to resume later.
+
+    You can inject a custom analyze function via `analyze_fn` that receives a pair
+    of FunctionRecord and returns any serializable result (dict/tuple/etc).
+    """
+
+    def __init__(
+        self,
+        checkpoint_file: str = ".semantic_checkpoint.pkl",
+        *,
+        analyze_fn: Optional[Callable[[FunctionRecord, FunctionRecord], object]] = None,
+        feat_cfg: FeatureConfig = FeatureConfig(),
+        lsh_params: LSHParams = LSHParams(),
+    ) -> None:
+        self.checkpoint_file = checkpoint_file
+        self.processed_pairs: Set[str] = set()
+        self._analyze_fn = analyze_fn or self._default_analyze_pair
+        self._feat_cfg = feat_cfg
+        self._lsh_params = lsh_params
+        self.load_checkpoint()
+
+    # ----------------------------
+    # Public: incremental runner
+    # ----------------------------
+    def analyze_incremental(
+        self,
+        functions: Sequence[FunctionRecord],
+        time_budget: float = 30.0,
+    ) -> Iterator[object]:
+        """
+        Analyze for up to `time_budget` seconds. Yields analysis results as they are produced.
+
+        Progress (processed pair keys) is persisted to `checkpoint_file` so subsequent
+        runs skip previously handled pairs.
+        """
+        start = time.time()
+        # Lazily enumerate candidate pairs via LSH
+        for a, b in self.generate_pairs_smart(functions):
+            # Budget check (checked at each pair)
+            if time.time() - start > time_budget:
+                self.save_checkpoint()
+                raise TimeoutError(f"Processed {len(self.processed_pairs)} pairs (checkpoint saved)")
+
+            key = _pair_key(a.id, b.id)
+            if key in self.processed_pairs:
+                continue
+
+            # Perform analysis
+            result = self._analyze_fn(a, b)
+            self.processed_pairs.add(key)
+            yield result
+
+        # Finished the stream; persist final state
+        self.save_checkpoint()
+
+    # ----------------------------
+    # Pair generation (smart via LSH)
+    # ----------------------------
+    def generate_pairs_smart(
+        self,
+        functions: Sequence[FunctionRecord],
+        *,
+        shuffle_bands: bool = True,
+    ) -> Iterator[Tuple[FunctionRecord, FunctionRecord]]:
+        """
+        Create an LSH index and yield candidate pairs (FunctionRecord, FunctionRecord).
+        Pairs are deduped across bands via a local seen set, *in addition to* the
+        persistent processed_pairs set (which spans runs).
+        """
+        if not functions or len(functions) < 2:
+            return iter(())
+
+        # Build MinHash signatures and banded buckets
+        if self._lsh_params.bands * self._lsh_params.rows_per_band != self._lsh_params.num_hashes:
+            raise ValueError("LSH params invalid: num_hashes must equal bands * rows_per_band")
+
+        hasher = MinHasher(num_hashes=self._lsh_params.num_hashes, seed=self._lsh_params.seed)
+        index = LSHIndex(params=self._lsh_params)
+
+        # Map ID -> FunctionRecord for quick lookup when emitting pairs
+        id_to_fr: Dict[str, FunctionRecord] = {fr.id: fr for fr in functions}
+
+        for fr in functions:
+            shingles = extract_shingles(fr, cfg=self._feat_cfg)
+            sig = hasher.signature(shingles)
+            index.add(fr.id, sig)
+
+        # Optionally randomize the order of bands to diversify early coverage
+        band_items = list(index.buckets.items())
+        if shuffle_bands:
+            import random
+            random.shuffle(band_items)
+
+        local_seen: Set[str] = set()  # avoid emitting the same pair twice in a single run
+
+        for (_band_id, _bucket_key), id_list in band_items:
+            if len(id_list) < 2:
+                continue
+            # Emit intra-bucket combinations
+            ids = sorted(set(id_list))
+            for i in range(len(ids)):
+                for j in range(i + 1, len(ids)):
+                    a_id, b_id = ids[i], ids[j]
+                    pkey = _pair_key(a_id, b_id)
+                    if pkey in local_seen:
+                        continue
+                    local_seen.add(pkey)
+                    # Skip pairs already done in prior runs
+                    if pkey in self.processed_pairs:
+                        continue
+                    a = id_to_fr.get(a_id)
+                    b = id_to_fr.get(b_id)
+                    if a is None or b is None:
+                        continue
+                    yield (a, b)
+
+    # ----------------------------
+    # Analysis hook (customizable)
+    # ----------------------------
+    def _default_analyze_pair(self, a: FunctionRecord, b: FunctionRecord) -> Dict[str, object]:
+        """
+        Default no-op style analysis. Replace by passing `analyze_fn` in __init__.
+        """
+        return {"pair": (a.id, b.id), "status": "processed"}
+
+    # ----------------------------
+    # Checkpointing
+    # ----------------------------
+    def load_checkpoint(self) -> None:
+        """Load processed pair keys from checkpoint (if present)."""
+        try:
+            with open(self.checkpoint_file, "rb") as f:
+                data = pickle.load(f)
+            if isinstance(data, dict) and "processed_pairs" in data:
+                self.processed_pairs = set(data["processed_pairs"])
+        except FileNotFoundError:
+            self.processed_pairs = set()
+        except Exception:
+            # Corrupt or incompatible checkpoint; start fresh
+            self.processed_pairs = set()
+
+    def save_checkpoint(self) -> None:
+        """Atomically write the checkpoint to disk."""
+        import tempfile
+        tmp_dir = os.path.dirname(self.checkpoint_file) or "."
+        os.makedirs(tmp_dir, exist_ok=True)
+        payload = {
+            "processed_pairs": list(self.processed_pairs),
+            "version": 1,
+        }
+        fd, tmp_path = tempfile.mkstemp(prefix=".semidx.", dir=tmp_dir)
+        try:
+            with os.fdopen(fd, "wb") as f:
+                pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
+            os.replace(tmp_path, self.checkpoint_file)
+        except Exception:
+            # Best-effort cleanup of the temp file on failure
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass

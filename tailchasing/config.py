@@ -623,3 +623,204 @@ class Config:
                 result[key] = value
                 
         return result
+
+
+# ----------------------------
+# Large Codebase Configuration
+# ----------------------------
+
+from typing import Literal
+
+# Optional imports (fall back to stubs if these modules aren't present yet)
+try:
+    from tailchasing.semantic.lsh_index import LSHParams  # rows_per_band * bands == num_hashes
+except Exception:  # pragma: no cover
+    @dataclass
+    class LSHParams:
+        num_hashes: int = 100
+        bands: int = 20
+        rows_per_band: int = 5
+        seed: int = 0x5EED_1DEE
+
+try:
+    from tailchasing.performance import ParallelConfig
+except Exception:  # pragma: no cover
+    @dataclass
+    class ParallelConfig:
+        max_workers: int = os.cpu_count() or 4
+        bucket_timeout_sec: float = 5.0
+        lsh_bands: int = 20
+        expected_pairs: int = 2_000_000
+        quick_gate: float = 0.30
+        medium_gate: float = 0.50
+
+SamplingStrategy = Literal["intelligent", "random", "stratified"]
+
+
+@dataclass
+class LargeCodebaseConfig:
+    """Unified config for 'large codebase mode' tuning and resource limits."""
+    # Thresholds
+    large_codebase_threshold: int = 1000     # functions
+    huge_codebase_threshold: int = 5000
+
+    # Sampling
+    max_sample_size: int = 500
+    sampling_strategy: SamplingStrategy = "intelligent"  # or "random", "stratified"
+
+    # LSH parameters
+    lsh_bands: int = 20
+    lsh_rows: int = 5
+    minhash_permutations: int = 100  # = lsh_bands * lsh_rows ideally
+
+    # Performance
+    parallel_buckets: bool = True
+    max_bucket_size: int = 100
+    comparison_timeout: float = 5.0  # seconds per bucket
+
+    # Memory management
+    use_disk_cache: bool = True
+    cache_dir: str = ".tailchasing_cache"
+    max_memory_mb: int = 2000
+
+    # Misc
+    seed: int = 0x5EED_1DEE
+
+    # --- Lifecycle helpers ---
+
+    def validate(self) -> None:
+        if self.large_codebase_threshold <= 0:
+            raise ValueError("large_codebase_threshold must be > 0")
+        if self.huge_codebase_threshold < self.large_codebase_threshold:
+            raise ValueError("huge_codebase_threshold must be >= large_codebase_threshold")
+        if self.max_sample_size <= 0:
+            raise ValueError("max_sample_size must be > 0")
+        if self.lsh_bands <= 0 or self.lsh_rows <= 0:
+            raise ValueError("lsh_bands and lsh_rows must be > 0")
+        if self.minhash_permutations != self.lsh_bands * self.lsh_rows:
+            # Not fatal, but warn via exception by default to avoid silent mismatch
+            raise ValueError(
+                f"minhash_permutations ({self.minhash_permutations}) must equal lsh_bands*lsh_rows "
+                f"({self.lsh_bands*self.lsh_rows})"
+            )
+        if self.max_bucket_size < 2:
+            raise ValueError("max_bucket_size must be >= 2")
+        if self.max_memory_mb <= 0:
+            raise ValueError("max_memory_mb must be > 0")
+
+    # --- Converters into other modules' configs ---
+
+    def to_lsh_params(self) -> LSHParams:
+        """Project into tailchasing.semantic.index.LSHParams."""
+        return LSHParams(
+            num_hashes=self.minhash_permutations,
+            bands=self.lsh_bands,
+            rows_per_band=self.lsh_rows,
+            seed=self.seed,
+        )
+
+    def to_parallel_config(self) -> ParallelConfig:
+        """Project into tailchasing.performance.ParallelConfig."""
+        import os
+        return ParallelConfig(
+            max_workers=os.cpu_count() or 4,
+            bucket_timeout_sec=float(self.comparison_timeout),
+            lsh_bands=self.lsh_bands,
+            # expected_pairs left as default; adjust upstream if needed
+        )
+
+    # --- Environment / dict loaders ---
+
+    @classmethod
+    def from_env(cls, prefix: str = "TAILCHASING_") -> "LargeCodebaseConfig":
+        """
+        Load overrides from environment variables (all optional).
+        Example vars:
+          TAILCHASING_LARGE_THRESHOLD=1500
+          TAILCHASING_SAMPLING_STRATEGY=stratified
+          TAILCHASING_LSH_BANDS=32
+        """
+        def get_int(name: str, default: int) -> int:
+            v = os.getenv(prefix + name)
+            return int(v) if v is not None else default
+
+        def get_float(name: str, default: float) -> float:
+            v = os.getenv(prefix + name)
+            return float(v) if v is not None else default
+
+        def get_bool(name: str, default: bool) -> bool:
+            v = os.getenv(prefix + name)
+            if v is None:
+                return default
+            return v.strip().lower() in ("1", "true", "yes", "on")
+
+        def get_str(name: str, default: str) -> str:
+            v = os.getenv(prefix + name)
+            return v if v is not None else default
+
+        cfg = cls(
+            large_codebase_threshold=get_int("LARGE_THRESHOLD", 1000),
+            huge_codebase_threshold=get_int("HUGE_THRESHOLD", 5000),
+            max_sample_size=get_int("MAX_SAMPLE", 500),
+            sampling_strategy=get_str("SAMPLING_STRATEGY", "intelligent"),  # type: ignore[arg-type]
+            lsh_bands=get_int("LSH_BANDS", 20),
+            lsh_rows=get_int("LSH_ROWS", 5),
+            minhash_permutations=get_int("MINHASH_PERMUTATIONS", 100),
+            parallel_buckets=get_bool("PARALLEL_BUCKETS", True),
+            max_bucket_size=get_int("MAX_BUCKET_SIZE", 100),
+            comparison_timeout=get_float("COMPARISON_TIMEOUT", 5.0),
+            use_disk_cache=get_bool("USE_DISK_CACHE", True),
+            cache_dir=get_str("CACHE_DIR", ".tailchasing_cache"),
+            max_memory_mb=get_int("MAX_MEMORY_MB", 2000),
+            seed=get_int("SEED", 0x5EED_1DEE),
+        )
+        cfg.validate()
+        return cfg
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "LargeCodebaseConfig":
+        """Create config from a (possibly partial) dict of overrides."""
+        # Start with defaults, replace provided keys
+        from dataclasses import fields as dataclass_fields
+        field_names = {f.name for f in dataclass_fields(cls)}
+        kwargs = {}
+        for k, v in data.items():
+            if k in field_names:
+                kwargs[k] = v
+        cfg = cls(**kwargs)  # type: ignore[arg-type]
+        cfg.validate()
+        return cfg
+
+    # --- Convenience ---
+
+    def as_dict(self) -> Dict[str, Any]:
+        from dataclasses import asdict
+        return asdict(self)
+
+    def apply_to_analyzer(self, analyzer: Any) -> None:
+        """
+        Convenience hook to push relevant knobs into an analyzer instance
+        (if it exposes similarly named attributes).
+        """
+        # LSH params
+        if hasattr(analyzer, "lsh_params"):
+            analyzer.lsh_params = self.to_lsh_params()
+        # parallel/timeout
+        if hasattr(analyzer, "config"):
+            try:
+                pc = analyzer.config  # e.g., ParallelConfig
+                if hasattr(pc, "lsh_bands"):
+                    pc.lsh_bands = self.lsh_bands
+                if hasattr(pc, "bucket_timeout_sec"):
+                    pc.bucket_timeout_sec = float(self.comparison_timeout)
+            except Exception:
+                pass
+        # sampling knobs (if present)
+        for attr, val in [
+            ("max_sample_size", self.max_sample_size),
+            ("sampling_strategy", self.sampling_strategy),
+            ("max_bucket_size", self.max_bucket_size),
+            ("parallel_buckets", self.parallel_buckets),
+        ]:
+            if hasattr(analyzer, attr):
+                setattr(analyzer, attr, val)
