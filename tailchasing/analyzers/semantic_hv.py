@@ -19,7 +19,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Any, Sequence, DefaultDict
+from typing import Dict, List, Optional, Set, Tuple, Any, Sequence, DefaultDict, Union
 
 from .base import Analyzer, AnalysisContext
 from ..core.issues import Issue
