@@ -85,7 +85,19 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
         visitor = ReferenceVisitor(file, defined_symbols)
         visitor.visit(tree)
         
+        # Limit number of missing references to process per file for performance
+        max_refs_per_file = 50
+        refs_processed = 0
+        
         for ref in visitor.missing_references:
+            if refs_processed >= max_refs_per_file:
+                # Log that we're skipping remaining references
+                remaining = len(visitor.missing_references) - refs_processed
+                if remaining > 0:
+                    import logging
+                    logging.debug(f"Skipping {remaining} additional missing references in {file} for performance")
+                break
+                
             symbol_name = ref["name"]
             
             # Skip normalized variable names from structural hashing
@@ -93,9 +105,13 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
                 continue
                 
             # Try to find similar symbols for suggestions
-            suggestions = self._find_similar_symbols(
-                symbol_name, defined_symbols.keys()
-            )
+            # Only do this for the first few refs to avoid performance issues
+            if refs_processed < 10:
+                suggestions = self._find_similar_symbols(
+                    symbol_name, defined_symbols.keys()
+                )
+            else:
+                suggestions = []  # Skip suggestions for later refs
             
             issue = Issue(
                 kind="missing_symbol",
@@ -114,6 +130,7 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
             )
             
             issues.append(issue)
+            refs_processed += 1
                 
         # Check for hallucinated imports
         issues.extend(self._check_hallucinated_imports(file, tree, ctx))
@@ -198,21 +215,46 @@ class MissingSymbolAnalyzer(BaseAnalyzer):
         max_results: int = 3
     ) -> List[str]:
         """Find symbols similar to the given one."""
+        # Performance optimization for large codebases
+        # Convert to list and limit search space
+        symbols_list = list(all_symbols)
+        
+        # Skip similarity search for very large symbol sets
+        if len(symbols_list) > 5000:
+            # Just do basic case-insensitive match for performance
+            suggestions = []
+            lower_symbol = symbol.lower()
+            for existing in symbols_list[:1000]:  # Check only first 1000 symbols
+                if existing.lower() == lower_symbol and existing != symbol:
+                    suggestions.append(f"Did you mean '{existing}' (case mismatch)?")
+                    break
+            return suggestions
+        
+        # For smaller sets, use difflib but with a limited sample
+        sample_size = min(2000, len(symbols_list))
+        if len(symbols_list) > sample_size:
+            import random
+            random.seed(hash(symbol))  # Deterministic sampling based on symbol
+            symbols_sample = random.sample(symbols_list, sample_size)
+        else:
+            symbols_sample = symbols_list
+        
         # Use difflib to find close matches
         close_matches = difflib.get_close_matches(
-            symbol, all_symbols, n=max_results, cutoff=0.6
+            symbol, symbols_sample, n=max_results, cutoff=0.6
         )
         
         suggestions = []
         for match in close_matches:
             suggestions.append(f"Did you mean '{match}'?")
             
-        # Also check for case mismatches
-        lower_symbol = symbol.lower()
-        for existing in all_symbols:
-            if existing.lower() == lower_symbol and existing != symbol:
-                suggestions.append(f"Did you mean '{existing}' (case mismatch)?")
-                break
+        # Also check for case mismatches (limited search)
+        if len(suggestions) < max_results:
+            lower_symbol = symbol.lower()
+            for existing in symbols_sample[:500]:  # Limit case search too
+                if existing.lower() == lower_symbol and existing != symbol:
+                    suggestions.append(f"Did you mean '{existing}' (case mismatch)?")
+                    break
                 
         return suggestions[:max_results]
         

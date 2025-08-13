@@ -2,7 +2,7 @@
 
 paths:
   include:
-    - tailchasing
+    - .
   exclude:
     - tests
     - vscode-extension
@@ -26,8 +26,7 @@ ignore_issue_types:
   - missing_symbol  # Some analyzers import from base but aren't used directly
 
 # Disabled analyzers (optional)
-disabled_analyzers: 
-  - function_coupling  # Disabled due to timeout on large codebases
+disabled_analyzers: []  # All analyzers enabled - function_coupling has optimizations for large codebases
 
 # Scoring weights
 scoring_weights:
