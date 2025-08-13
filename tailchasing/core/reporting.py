@@ -11,6 +11,94 @@ from .issues import Issue, IssueCollection
 from .scoring import RiskScorer
 
 
+class IssueExplainer:
+    """Provides detailed explanations and fixes for each issue type."""
+    
+    ISSUE_DETAILS = {
+        'duplicate_function': {
+            'problem': 'Identical function implementation found',
+            'impact': 'Code duplication increases maintenance burden, can lead to inconsistent bug fixes, and wastes developer time',
+            'fix': 'Extract common functionality to a shared module or base class'
+        },
+        'semantic_duplicate_function': {
+            'problem': 'Semantically similar function detected',
+            'impact': 'Multiple implementations of the same logic can diverge over time, creating subtle bugs and confusion',
+            'fix': 'Consolidate similar functions into a single parameterized implementation'
+        },
+        'circular_import': {
+            'problem': 'Circular dependency between modules',
+            'impact': 'Can cause import failures, makes code harder to test and refactor, violates architectural boundaries',
+            'fix': 'Extract shared code to a separate module or use dependency injection'
+        },
+        'missing_symbol': {
+            'problem': 'Reference to undefined function or variable',
+            'impact': 'Will cause runtime errors when code path is executed, indicates incomplete implementation',
+            'fix': 'Implement the missing function/variable or remove the reference'
+        },
+        'phantom_function': {
+            'problem': 'Function contains only placeholder implementation',
+            'impact': 'Silently fails or returns incorrect results, creates false sense of completeness',
+            'fix': 'Implement the actual logic or explicitly raise NotImplementedError'
+        },
+        'hallucination_cascade': {
+            'problem': 'Fictional or inconsistent subsystem detected',
+            'impact': 'Entire code sections may be non-functional, compounds errors across multiple files',
+            'fix': 'Review and reimplement the entire subsystem with correct architecture'
+        },
+        'context_window_thrashing': {
+            'problem': 'Function reimplemented multiple times',
+            'impact': 'Wastes context window in LLM interactions, creates inconsistent implementations',
+            'fix': 'Use the most complete implementation and remove duplicates'
+        },
+        'import_anxiety': {
+            'problem': 'Excessive or unused imports detected',
+            'impact': 'Slows down module loading, indicates confusion about dependencies, may hide circular dependencies',
+            'fix': 'Remove unused imports and organize remaining imports logically'
+        },
+        'function_coupling_risk': {
+            'problem': 'High coupling detected between functions',
+            'impact': 'Changes to one function likely break the other, makes refactoring difficult',
+            'fix': 'Reduce coupling through interface segregation or dependency injection'
+        },
+        'wrapper_abstraction': {
+            'problem': 'Unnecessary wrapper function that adds no value',
+            'impact': 'Adds complexity without benefit, makes debugging harder',
+            'fix': 'Remove the wrapper and call the underlying function directly'
+        },
+        'prototype_fragmentation': {
+            'problem': 'Multiple incomplete implementations of the same concept',
+            'impact': 'Confusion about which implementation to use, wasted effort on parallel development',
+            'fix': 'Choose the best implementation and remove others'
+        },
+        'cargo_cult': {
+            'problem': 'Code copied without understanding its purpose',
+            'impact': 'May not work correctly in new context, perpetuates misunderstandings',
+            'fix': 'Understand the code\'s purpose and rewrite appropriately for your use case'
+        },
+        'tdd_antipattern': {
+            'problem': 'Test-driven development antipattern detected',
+            'impact': 'Tests may not actually verify functionality, gives false confidence',
+            'fix': 'Rewrite tests to properly verify behavior, not just structure'
+        }
+    }
+    
+    @classmethod
+    def get_explanation(cls, issue_kind: str) -> Dict[str, str]:
+        """Get detailed explanation for an issue type."""
+        # Handle issue kinds with suffixes (e.g., 'duplicate_function_risk')
+        base_kind = issue_kind
+        for known_kind in cls.ISSUE_DETAILS:
+            if issue_kind.startswith(known_kind):
+                base_kind = known_kind
+                break
+                
+        return cls.ISSUE_DETAILS.get(base_kind, {
+            'problem': f'{issue_kind} detected in code',
+            'impact': 'May affect code quality and maintainability',
+            'fix': 'Review the code and apply appropriate refactoring'
+        })
+
+
 class NumpyJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder that handles numpy types."""
     def default(self, obj):
@@ -21,6 +109,26 @@ class NumpyJSONEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return super().default(obj)
+
+
+def format_issue_for_console(issue: Issue) -> str:
+    """Format a single issue for console output with explanation."""
+    location = f"{issue.file}:{issue.line}" if issue.file else "global"
+    explanation = IssueExplainer.get_explanation(issue.kind)
+    
+    lines = []
+    lines.append(f"[{issue.kind}] {location}")
+    lines.append(f"  Problem: {explanation['problem']}")
+    lines.append(f"  Details: {issue.message}")
+    lines.append(f"  Impact:  {explanation['impact']}")
+    lines.append(f"  Fix:     {explanation['fix']}")
+    
+    if issue.suggestions:
+        lines.append("  Specific suggestions:")
+        for suggestion in issue.suggestions[:2]:
+            lines.append(f"    • {suggestion}")
+    
+    return "\n".join(lines)
 
 
 class Reporter:
@@ -124,7 +232,7 @@ class Reporter:
                 lines.append(f"  {score:6.1f} - {module}")
             lines.append("")
         
-        # Detailed issues
+        # Detailed issues with enhanced formatting
         lines.append("DETAILED ISSUES")
         lines.append("-" * 30)
         
@@ -135,20 +243,37 @@ class Reporter:
             
         for severity in sorted(by_severity.keys(), reverse=True):
             severity_issues = by_severity[severity]
-            lines.append(f"\nSeverity {severity} ({len(severity_issues)} issues):")
+            severity_label = {
+                4: "CRITICAL",
+                3: "HIGH",
+                2: "MEDIUM",
+                1: "LOW"
+            }.get(severity, f"SEVERITY-{severity}")
+            
+            lines.append(f"\n{severity_label} ({len(severity_issues)} issues):")
+            lines.append("=" * 50)
             
             for issue in severity_issues[:20]:  # Limit to first 20 per severity
                 location = f"{issue.file}:{issue.line}" if issue.file else "global"
-                lines.append(f"\n  [{issue.kind}] {location}")
-                lines.append(f"  {issue.message}")
+                explanation = IssueExplainer.get_explanation(issue.kind)
                 
+                # Main issue header
+                lines.append(f"\n[{issue.kind}] {location}")
+                
+                # Enhanced formatting with problem, impact, and fix
+                lines.append(f"  Problem: {explanation['problem']}")
+                lines.append(f"  Details: {issue.message}")
+                lines.append(f"  Impact:  {explanation['impact']}")
+                lines.append(f"  Fix:     {explanation['fix']}")
+                
+                # Add specific suggestions if available
                 if issue.suggestions:
-                    lines.append("  Suggestions:")
+                    lines.append("  Specific suggestions:")
                     for suggestion in issue.suggestions[:2]:
-                        lines.append(f"    - {suggestion}")
+                        lines.append(f"    • {suggestion}")
                         
             if len(severity_issues) > 20:
-                lines.append(f"\n  ... and {len(severity_issues) - 20} more")
+                lines.append(f"\n  ... and {len(severity_issues) - 20} more {severity_label} issues")
                 
         # Footer
         lines.append("")
@@ -158,12 +283,24 @@ class Reporter:
         return "\n".join(lines)
         
     def render_json(self, issues: List[Issue]) -> str:
-        """Render a JSON report."""
+        """Render a JSON report with enhanced issue details."""
         module_scores, global_score = self.scorer.calculate_scores(issues)
+        
+        # Enhance each issue with explanations
+        enhanced_issues = []
+        for issue in issues:
+            issue_dict = issue.to_dict()
+            explanation = IssueExplainer.get_explanation(issue.kind)
+            issue_dict['explanation'] = {
+                'problem': explanation['problem'],
+                'impact': explanation['impact'],
+                'fix': explanation['fix']
+            }
+            enhanced_issues.append(issue_dict)
         
         report = {
             "metadata": {
-                "version": "1.0",
+                "version": "1.1",
                 "generated": datetime.now().isoformat(),
                 "tool": "tail-chasing-detector"
             },
@@ -178,7 +315,7 @@ class Reporter:
             },
             "distribution": self.scorer.get_issue_distribution(issues),
             "module_scores": module_scores,
-            "issues": [issue.to_dict() for issue in issues]
+            "issues": enhanced_issues
         }
         
         return json.dumps(report, indent=2, cls=NumpyJSONEncoder)
@@ -252,21 +389,34 @@ class Reporter:
                 html += f"        <tr><td>{module}</td><td>{score:.1f}</td></tr>\n"
             html += "    </table>\n"
             
-        # Issues
+        # Issues with enhanced formatting
         html += "    <h2>Issues</h2>\n"
         
         for issue in sorted(issues, key=lambda i: -i.severity)[:50]:
             location = f"{issue.file}:{issue.line}" if issue.file else "global"
+            explanation = IssueExplainer.get_explanation(issue.kind)
+            severity_label = {
+                4: "CRITICAL", 3: "HIGH", 2: "MEDIUM", 1: "LOW"
+            }.get(issue.severity, f"SEV-{issue.severity}")
+            
             html += f"""
     <div class="issue severity-{issue.severity}">
-        <strong>[{issue.kind}]</strong> {location}<br>
-        {issue.message}<br>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>[{issue.kind}]</strong> {location}
+            <span class="severity-label" style="padding: 2px 8px; background: #eee; border-radius: 3px;">{severity_label}</span>
+        </div>
+        <div style="margin-top: 10px;">
+            <div><strong>Problem:</strong> {explanation['problem']}</div>
+            <div><strong>Details:</strong> {issue.message}</div>
+            <div><strong>Impact:</strong> <span style="color: #d32f2f;">{explanation['impact']}</span></div>
+            <div><strong>Fix:</strong> <span style="color: #388e3c;">{explanation['fix']}</span></div>
 """
             if issue.suggestions:
-                html += "        <div class='suggestion'>Suggestions: "
-                html += "; ".join(issue.suggestions[:2])
-                html += "</div>\n"
-            html += "    </div>\n"
+                html += "            <div style='margin-top: 5px;'><strong>Specific suggestions:</strong><ul style='margin: 5px 0;'>"
+                for suggestion in issue.suggestions[:2]:
+                    html += f"<li>{suggestion}</li>"
+                html += "</ul></div>\n"
+            html += "        </div>\n    </div>\n"
             
         if len(issues) > 50:
             html += f"    <p><em>... and {len(issues) - 50} more issues</em></p>\n"
