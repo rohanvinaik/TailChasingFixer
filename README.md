@@ -240,39 +240,35 @@ tailchasing . --config .tailchasing.yml
 
 ### Accessing Analysis Results & Diagnostic Files
 
-After running an analysis, several diagnostic files are generated:
+After running ANY analysis, comprehensive diagnostic files are automatically generated in your project root:
 
-#### Standard Output Files
+#### Generated Diagnostic Files (All Analyses)
 ```bash
-# View cached detailed analysis report (always generated)
-cat .tailchasing_cache/detailed_report.json | python -m json.tool | less
+# 1. Human-readable markdown report with issue breakdown
+cat ISSUE_REPORT.md
 
-# Generated fix scripts (when using --generate-fixes)
+# 2. CSV file for spreadsheet analysis (Excel/Google Sheets)
+open DETAILED_ISSUES.csv       # macOS
+xdg-open DETAILED_ISSUES.csv   # Linux  
+# Or import directly into Excel/Google Sheets
+
+# 3. Complete structured JSON database of all issues
+cat issues_database.json | python -m json.tool | less
+
+# 4. Cached detailed analysis (in .tailchasing_cache/)
+cat .tailchasing_cache/detailed_report.json | python -m json.tool
+```
+
+#### Generated Fix Scripts (with --generate-fixes)
+```bash
 ./tailchasing_fixes.py          # Interactive fix script
 ./tailchasing_suggestions.md    # Detailed suggestions documentation
 ```
 
-#### Special Diagnostic Files (TailChasingFixer Self-Analysis)
-When analyzing the TailChasingFixer codebase itself, additional diagnostic files are created:
-
-```bash
-# Human-readable markdown report with issue breakdown
-cat ISSUE_REPORT.md
-
-# CSV file for spreadsheet analysis (Excel/Google Sheets)
-open DETAILED_ISSUES.csv  # macOS
-# or
-xdg-open DETAILED_ISSUES.csv  # Linux  
-# or import into your spreadsheet application
-
-# Complete structured JSON database of all issues
-cat issues_database.json | python -m json.tool | less
-```
-
-These files contain:
-- **ISSUE_REPORT.md**: Executive summary, categorized issues, priority fixes, metrics
-- **DETAILED_ISSUES.csv**: File-by-file breakdown with line numbers, functions, severities
-- **issues_database.json**: Complete structured data for programmatic access
+#### File Contents
+- **ISSUE_REPORT.md**: Executive summary, categorized issues by type, most affected files, priority actions, metrics
+- **DETAILED_ISSUES.csv**: Complete file-by-file breakdown with exact line numbers, function names, severities, and suggested fixes
+- **issues_database.json**: Comprehensive structured data including statistics, file analysis, module risk scores, and complete issue details
 
 ### CI/CD Integration
 

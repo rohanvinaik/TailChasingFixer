@@ -26,6 +26,7 @@ from .core.resource_monitor import MemoryMonitor, AdaptiveConfig, AdaptiveProces
 from .cli.output_manager import OutputManager, VerbosityLevel, OutputFormat
 from .cli.profiler import PerformanceProfiler
 from .core.fixgen import select_fixable_issues, generate_fix_script_py, generate_suggestions_md
+from .core.diagnostic_reporter import DiagnosticReporter
 from .core.analysis_cache import IssueCache, AnalysisArtifact, build_repo_fingerprint, config_fingerprint
 
 
@@ -1453,8 +1454,25 @@ def main():
             json.dump(report_data, f, indent=2)
         
         logger.info(f"Saved detailed report to {detailed_report_path}")
+        
+        # Generate comprehensive diagnostic reports for ALL analyses
+        diagnostic_reporter = DiagnosticReporter(root_path)
+        diagnostic_reports = diagnostic_reporter.generate_all_reports(
+            issues=issue_collection.issues if issue_collection else [],
+            risk_score=global_score,
+            module_scores=module_scores,
+            fixable_issues=fixable,
+            analysis_time=getattr(issue_collection, 'analysis_time', 0)
+        )
+        
+        # Log generated reports
+        sys.stdout.write("\n📊 Diagnostic Reports Generated:\n")
+        sys.stdout.write("-" * 40 + "\n")
+        for report_type, report_path in diagnostic_reports.items():
+            sys.stdout.write(f"  • {report_type.upper()}: {report_path.name}\n")
+        
     except Exception as e:
-        logger.warning(f"Could not save detailed report: {e}")
+        logger.warning(f"Could not save reports: {e}")
     
     # Always check if fix generation would be helpful (unless pure JSON mode)
     if not (args.json and len(config.get("report.formats", [])) == 1) and fixable:
@@ -1745,16 +1763,13 @@ def main():
         # Determine the root path for commands
         cmd_path = str(root_path) if root_path != Path.cwd() else "."
         
-        sys.stdout.write(f"1. View detailed report: cat .tailchasing_cache/detailed_report.json | python -m json.tool | less\n")
+        sys.stdout.write(f"1. Review diagnostic reports:\n")
+        sys.stdout.write(f"   • Human-readable: cat ISSUE_REPORT.md\n")
+        sys.stdout.write(f"   • Spreadsheet: open DETAILED_ISSUES.csv\n")
+        sys.stdout.write(f"   • JSON database: cat issues_database.json | python -m json.tool\n")
         sys.stdout.write(f"2. Generate fixes: tailchasing {cmd_path} --generate-fixes\n")
         sys.stdout.write(f"3. View HTML report: tailchasing {cmd_path} --html report.html\n")
         sys.stdout.write(f"4. Fix critical issues: tailchasing {cmd_path} --auto-fix --severity=high\n")
-        
-        sys.stdout.write("\n📊 DIAGNOSTIC FILES (if running on TailChasingFixer itself):\n")
-        sys.stdout.write(f"   • Human-readable report: cat ISSUE_REPORT.md\n")
-        sys.stdout.write(f"   • CSV for spreadsheets: open DETAILED_ISSUES.csv\n") 
-        sys.stdout.write(f"   • Structured JSON data: cat issues_database.json | python -m json.tool\n")
-        sys.stdout.write(f"   • Cached analysis: .tailchasing_cache/detailed_report.json\n")
         
         # Add context-specific suggestions
         critical_count = sum(1 for issue in issue_collection.issues if issue.severity >= 4)
