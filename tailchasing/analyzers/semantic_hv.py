@@ -143,6 +143,7 @@ class SemanticHVAnalyzer(Analyzer):
         # Performance limits
         self.max_comparisons = config.get("max_comparisons", 10000) if config else 10000
         self.timeout_seconds = config.get("timeout_seconds", 30.0) if config else 30.0
+        self.max_bucket_size = config.get("max_bucket_size", 100) if config else 100
         self.enable_cross_module = config.get("enable_cross_module", False) if config else False
     
     def run(self, ctx: AnalysisContext) -> List[Issue]:
@@ -365,6 +366,10 @@ class SemanticHVAnalyzer(Analyzer):
         if len(functions) < 2:
             return []
         
+        import time
+        group_start = time.time()
+        GROUP_BUDGET = 8.0  # seconds; tune or read from config
+        
         # Apply intelligent sampling for large groups
         sampled_functions = functions
         if len(functions) > 500:  # Large group threshold
@@ -384,23 +389,48 @@ class SemanticHVAnalyzer(Analyzer):
             )
         elif MINHASH_AVAILABLE:
             # fallback path using MinHashIndex
-            idx = MinHashIndex(num_perm=max(64, self.lsh_params.num_hashes), threshold=0.5)
+            idx = MinHashIndex(num_perm=64, threshold=0.5)  # Fixed 64 for speed
             idx.add_functions(sampled_functions)
-            # brute candidate build from index: query each function against the index, collect ids > itself
-            id_to_func = {f.id: f for f in sampled_functions}
+
+            # --- FAST candidate build from LSH buckets (no per-item queries) ---
+            pairs = []
             seen = set()
-            for f in sampled_functions:
-                for cand_id in idx.query_similar(f, threshold=0.5):
-                    if cand_id == f.id:
+            MAX_BUCKET = getattr(self, "max_bucket_size", 100)
+            
+            # Access buckets from the index's LSH (safe: it's an internal struct we control)
+            bucket_count = 0
+            for id_list in idx.lsh._buckets.values():  # list[str]
+                if len(id_list) < 2:
+                    continue
+                bucket_count += 1
+                uniq = sorted(set(id_list))
+                
+                # slice big buckets to prevent combinatorial explosion
+                for s in range(0, len(uniq), MAX_BUCKET):
+                    chunk = uniq[s:s+MAX_BUCKET]
+                    if len(chunk) < 2:
                         continue
-                    a, b = sorted((f.id, cand_id))
-                    if (a, b) not in seen:
-                        seen.add((a, b))
-                        pairs.append((a, b))
+                    
+                    # pairwise combinations in chunk
+                    for a_i in range(len(chunk)):
+                        for b_i in range(a_i + 1, len(chunk)):
+                            a, b = chunk[a_i], chunk[b_i]
+                            key = (a, b) if a <= b else (b, a)
+                            if key in seen:
+                                continue
+                            seen.add(key)
+                            pairs.append(key)
+            
+            self.logger.info(f"LSH buckets: {bucket_count}, candidate pairs: {len(pairs)} after dedup")
         else:
             # last resort: no LSH at all
             self.logger.warning("No LSH backend available; skipping LSH pre-clustering for this group")
             pairs = []
+        
+        # Check time budget after candidate generation
+        if time.time() - group_start > GROUP_BUDGET:
+            self.logger.info(f"Group {module_path} exceeded budget; skipping detailed screening")
+            return []
         
         # Convert ID pairs back to function records
         func_map = {f.id: f for f in sampled_functions}
@@ -599,6 +629,26 @@ class SemanticHVAnalyzer(Analyzer):
         """
         if not functions:
             return []
+        
+        # Cheap pre-trim for very large groups before any AST-heavy scoring
+        HUGE = 5000  # or use LargeCodebaseConfig.huge_codebase_threshold if available
+        if len(functions) > HUGE:
+            # 1) Keep at most 200 by name groups (quick)
+            g_name = self.group_by_name_similarity(functions)
+            pre = self.sample_from_groups(g_name, n=200, picked_ids=set(), prefer_complex=False)
+            # 2) Add up to 200 by signature (quick)
+            g_sig = self.group_by_signature(functions)
+            pre_ids = {f.id for f in pre}
+            pre += self.sample_from_groups(g_sig, n=200, picked_ids=pre_ids, prefer_complex=False)
+            # 3) Fill to ~max_sample with random (no cost)
+            if len(pre) < max_sample:
+                pool = [f for f in functions if f.id not in {f.id for f in pre}]
+                need = min(max_sample - len(pre), max(0, len(pool)))
+                if need:
+                    import random
+                    pre.extend(random.sample(pool, need))
+            # From here on, operate on the pre-trimmed set only
+            functions = pre
 
         # Compute target counts (safe rounding with leftovers filled later)
         n1 = int(round(max_sample * 0.40))
