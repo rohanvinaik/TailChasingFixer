@@ -419,3 +419,30 @@
 {"timestamp": "2025-08-13T13:51:45.070403Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running missing_symbols analyzer"}
 {"timestamp": "2025-08-13T13:51:46.639255Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running git_chains analyzer"}
 {"timestamp": "2025-08-13T13:51:46.639724Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-13T13:56:37.526322Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 256, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T13:56:37.533820Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T13:56:37.533939Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 632, "message": "Analyzing path: /Users/***REDACTED***"}
+{"timestamp": "2025-08-13T13:56:37.536613Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 721, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-13T13:56:37.557334Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 743, "message": "Found 171 Python files"}
+{"timestamp": "2025-08-13T13:56:39.143943Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 801, "message": "Successfully parsed 171 files"}
+{"timestamp": "2025-08-13T13:56:39.144248Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 814, "message": "Building symbol table"}
+{"timestamp": "2025-08-13T13:56:39.475932Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 898, "message": "Running analyzers"}
+{"timestamp": "2025-08-13T13:56:39.476513Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-13T13:56:39.674852Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running lsh_duplicates analyzer"}
+{"timestamp": "2025-08-13T13:56:52.649536Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running missing_symbols analyzer"}
+{"timestamp": "2025-08-13T13:56:54.205043Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running git_chains analyzer"}
+{"timestamp": "2025-08-13T13:56:54.205448Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running semantic_hv analyzer"}
+{"timestamp": "2025-08-13T13:57:24.225519Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running hallucination_cascade analyzer"}
+{"timestamp": "2025-08-13T13:57:39.983222Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running context_thrashing analyzer"}
+{"timestamp": "2025-08-13T13:57:42.009943Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running import_anxiety analyzer"}
+{"timestamp": "2025-08-13T13:57:42.443480Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running enhanced_semantic analyzer"}
+{"timestamp": "2025-08-13T13:58:41.188114Z", "level": "INFO", "module": "logging_setup", "function": "log_operation", "line": 256, "message": "Starting operation: cli_main", "operation": "cli_main"}
+{"timestamp": "2025-08-13T13:58:41.195367Z", "level": "INFO", "module": "resource_monitor", "function": "__init__", "line": 131, "message": "Memory monitor initialized with 52428MB limit"}
+{"timestamp": "2025-08-13T13:58:41.195499Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 632, "message": "Analyzing path: /Users/***REDACTED***"}
+{"timestamp": "2025-08-13T13:58:41.197442Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 721, "message": "Collecting Python files from /Users/***REDACTED***"}
+{"timestamp": "2025-08-13T13:58:41.217835Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 743, "message": "Found 171 Python files"}
+{"timestamp": "2025-08-13T13:58:42.731113Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 801, "message": "Successfully parsed 171 files"}
+{"timestamp": "2025-08-13T13:58:42.731415Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 814, "message": "Building symbol table"}
+{"timestamp": "2025-08-13T13:58:43.061849Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 898, "message": "Running analyzers"}
+{"timestamp": "2025-08-13T13:58:43.062373Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running import_graph analyzer"}
+{"timestamp": "2025-08-13T13:58:43.260864Z", "level": "INFO", "module": "cli_main", "function": "main", "line": 1009, "message": "Running lsh_duplicates analyzer"}

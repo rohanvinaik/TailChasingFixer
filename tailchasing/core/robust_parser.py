@@ -540,8 +540,8 @@ class RobustParser:
         # Extract just the filename from the full path
         filename = file_path.name if hasattr(file_path, 'name') else str(file_path).split('/')[-1]
         logger.warning(f"⚠️  Partially analyzed: {filename} (syntax errors found)")
-        if result.issues:
-            logger.info(f"   Still detected {len(result.issues)} issues in parseable sections")
+        if result.syntax_issues:
+            logger.info(f"   Found {len(result.syntax_issues)} syntax issues in file")
         
         return result
     
