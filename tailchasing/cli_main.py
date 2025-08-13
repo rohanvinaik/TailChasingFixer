@@ -19,7 +19,7 @@ from .analyzers.base import AnalysisContext
 from .analyzers.root_cause_clustering import RootCauseClusterer
 from .core.issue_provenance import IssueProvenanceTracker
 from .plugins import load_analyzers
-from .core.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
+from .utils.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
 from .core.batch_processor import BatchProcessor, ProcessingStats
 from .core.resource_monitor import MemoryMonitor, AdaptiveConfig, AdaptiveProcessor
 from .cli.output_manager import OutputManager, VerbosityLevel, OutputFormat
@@ -837,10 +837,9 @@ def main():
             heartbeat_interval=args.heartbeat_interval,
             heartbeat_timeout_multiplier=3.0,
             enable_fallback=not args.disable_fallback,
-            verbose=args.watchdog_verbose
+            verbose_logging=args.watchdog_verbose
         )
         watchdog = AnalyzerWatchdog(watchdog_config)
-        watchdog.start()
     
     # Normal processing (non-batch mode)
     if not skip_normal_processing:
@@ -907,17 +906,16 @@ def main():
                     analyzer.config.dimensions = optimal_dims
                     output_manager.log(f"Set {analyzer.name} dimensions to {optimal_dims}", VerbosityLevel.VERBOSE)
             
-            # Set up fallback for semantic analyzers
-            fallback_func = None
-            if analyzer.name in ['semantic_hv', 'enhanced_semantic', 'semantic_duplicate']:
-                fallback_func = lambda *args, **kwargs: SemanticAnalysisFallback.tfidf_fallback(*args, **kwargs)
-            
             # Wrap analyzer with watchdog
-            wrapped_analyzer = watchdog.wrap_analyzer(
-                analyzer.name,
-                analyzer.run,
-                fallback_func
-            )
+            # Special handling for ChromatinContactAnalyzer with TF-IDF fallback
+            if analyzer.name == "chromatin_contact":
+                # Enable enhanced fallback for chromatin contact analysis
+                original_config = watchdog.config.enable_fallback
+                watchdog.config.enable_fallback = True
+                wrapped_analyzer = watchdog.wrap_analyzer(analyzer, analyzer.name)
+                watchdog.config.enable_fallback = original_config
+            else:
+                wrapped_analyzer = watchdog.wrap_analyzer(analyzer, analyzer.name)
             
             # Execute analyzer with monitoring
             try:
@@ -1368,30 +1366,35 @@ def main():
         sys.stdout.write(f"Cached files: {stats['cached_files']}\n")
         sys.stdout.write(f"Parse time saved: {stats['bytes_saved_mb']:.2f} MB processed\n")
     
-    # Show watchdog report if verbose (for non-batch mode)
-    if args.watchdog_verbose and not use_batching:
+    # Generate and log watchdog execution report (for non-batch mode)
+    if not use_batching:
         watchdog_report = watchdog.get_execution_report()
+        logger.info(f"Analyzer execution report: {watchdog_report['summary']}")
+        
+    # Show detailed watchdog report if verbose
+    if args.watchdog_verbose and not use_batching:
         sys.stdout.write("\nWatchdog Execution Report:\n")
         sys.stdout.write("-" * 40 + "\n")
-        sys.stdout.write(f"Total executions: {watchdog_report['total_executions']}\n")
-        sys.stdout.write(f"Total duration: {watchdog_report['total_duration']:.2f}s\n")
-        sys.stdout.write(f"Timeouts: {watchdog_report['timeout_count']}\n")
-        sys.stdout.write(f"Errors: {watchdog_report['error_count']}\n")
+        summary = watchdog_report['summary']
+        sys.stdout.write(f"Total analyzers: {summary['total_analyzers']}\n")
+        sys.stdout.write(f"Total duration: {summary['total_duration']:.2f}s\n")
+        sys.stdout.write(f"Average duration: {summary['average_duration']:.2f}s\n")
+        sys.stdout.write(f"Timeouts: {summary['total_timeouts']}\n")
+        sys.stdout.write(f"Errors: {summary['total_errors']}\n")
+        sys.stdout.write(f"Issues found: {summary['total_issues']}\n")
         
         if watchdog_report['slowest_analyzers']:
             sys.stdout.write("\nSlowest Analyzers:\n")
-            for slow in watchdog_report['slowest_analyzers']:
-                status = " (TIMEOUT)" if slow['timed_out'] else ""
-                sys.stdout.write(f"  - {slow['analyzer']}: {slow['duration']:.2f}s{status}\n")
-                if slow['file']:
-                    sys.stdout.write(f"    File: {slow['file']}\n")
-                if slow['function']:
-                    sys.stdout.write(f"    Function: {slow['function']}\n")
+            for name, duration in watchdog_report['slowest_analyzers']:
+                details = watchdog_report['analyzer_details'].get(name, {})
+                status = " (TIMEOUT)" if details.get('timeouts', 0) > 0 else ""
+                sys.stdout.write(f"  - {name}: {duration:.2f}s{status}\n")
         
         if watchdog_report['most_problematic']:
             sys.stdout.write("\nMost Problematic Analyzers:\n")
-            for prob in watchdog_report['most_problematic']:
-                sys.stdout.write(f"  - {prob['analyzer']}: {prob['problem_count']} issues\n")
+            for name, problem_count in watchdog_report['most_problematic']:
+                if problem_count > 0:
+                    sys.stdout.write(f"  - {name}: {problem_count} issues\n")
     
     # Show batch processing report if used
     if use_batching and args.show_batch_progress:
@@ -1400,7 +1403,7 @@ def main():
     
     # Stop watchdog (for non-batch mode)
     if not use_batching:
-        watchdog.stop()
+        watchdog.shutdown()
     
     # Show performance profile if requested
     if profiler:
