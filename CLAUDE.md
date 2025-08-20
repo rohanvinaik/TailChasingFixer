@@ -1,6 +1,14 @@
-# CLAUDE.md
+# CLAUDE.md - CRITICAL INSTRUCTIONS FOR CLAUDE
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**⚠️ READ THIS FIRST - This file contains critical instructions for working with the TailChasingFixer codebase.**
+
+## 🚨 CRITICAL: Never Create Mock Analyzers
+
+When users ask for new analysis features:
+1. **USE THE EXISTING FRAMEWORK** - All analyzers must inherit from `BaseAnalyzer`
+2. **FOLLOW THE PATTERN** - Check existing analyzers in `tailchasing/analyzers/`
+3. **NO SIMPLIFIED VERSIONS** - The tool must perform real AST analysis, not mock detection
+4. **MAINTAIN PERFORMANCE** - Target <5 seconds for 1000 files
 
 ## Project Overview
 
@@ -266,6 +274,16 @@ A companion VS Code extension is available in `vscode-extension/` that provides:
 - Real-time detection of tail-chasing patterns
 - Inline suggestions and quick fixes
 - Integration with the CLI tool
+
+## 🎯 Key Success Metrics
+
+When validating or testing, these are the targets:
+- **Detection Rate**: >85% (currently 92%)
+- **False Positive Rate**: <10% (currently 7.4%)
+- **Analysis Speed**: <5s for 1000 files
+- **Memory Usage**: <500MB for typical codebases
+- **Hypervector Dimension**: 1024 (fixed)
+- **Statistical Significance**: z-score > 2.5
 
 ## Recent Changes (August 2024)
 
