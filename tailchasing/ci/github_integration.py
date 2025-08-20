@@ -8,19 +8,14 @@ merge blocking, fix suggestions, and automated fix commits.
 import json
 import logging
 import os
-import re
 import hashlib
 import hmac
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from datetime import datetime
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
 from pathlib import Path
 import subprocess
-from urllib.parse import urlparse
-import base64
 
 from .pipeline_analyzer import PipelineAnalyzer, PRAnalysis
-from ..core.issues import Issue
 from ..fixers.suggestion_generator import SuggestionGenerator
 from ..fixers.fix_applier import FixApplier
 from ..llm_integration.feedback_generator import FeedbackGenerator

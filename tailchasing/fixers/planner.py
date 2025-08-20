@@ -6,7 +6,6 @@ based on analyzer signals, cost estimates, and historical success rates.
 """
 
 import json
-import logging
 import pathlib
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field, asdict

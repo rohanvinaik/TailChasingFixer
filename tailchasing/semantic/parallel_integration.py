@@ -16,7 +16,6 @@ from ..performance.parallel_analyzer import (
     SharedMemoryConfig,
     EncodingConfig
 )
-from ..catalytic.hv_encoder import HypervectorEncoder
 from ..core.issues import Issue, IssueSeverity
 from .similarity import SimilarityAnalyzer
 

@@ -14,16 +14,15 @@ import logging
 import os
 import re
 import subprocess
-from collections import defaultdict, Counter
-from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Union, Any
+from collections import Counter
+from typing import Dict, List, Optional, Set, Any
 import importlib.util
 
 from ..base import BaseAnalyzer, AnalysisContext
 from ...core.issues import Issue
 from .pattern_types import (
     TailChasingPattern, PatternEvidence, PatternSeverity, 
-    PatternConfidence, PatternCluster
+    PatternCluster
 )
 
 logger = logging.getLogger(__name__)

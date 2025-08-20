@@ -2,9 +2,8 @@
 Enhanced semantic analyzer using multimodal approach.
 """
 
-import ast
 import os
-from typing import List, Tuple
+from typing import List
 from .base_advanced import SemanticAwareAnalyzer
 from ...core.issues import Issue
 from .multimodal_semantic import SemanticDuplicateEnhancer

@@ -5,7 +5,7 @@ description = "Detects LLM-assisted tail-chasing anti-patterns in Python codebas
 authors = [{name="Rohan Vinaik", email="your.email@example.com"}]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -13,7 +13,6 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -40,7 +39,20 @@ dependencies = [
 "Documentation" = "https://tail-chasing-detector.readthedocs.io"
 
 [project.optional-dependencies]
-dev = ["pytest", "coverage", "ruff", "mypy", "black", "isort"]
+dev = [
+    "pytest>=7.0",
+    "coverage>=7.0", 
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+    "black>=23.0",
+    "isort>=5.12",
+    "hypothesis>=6.100",
+    "typer>=0.12",
+    "requests>=2.31",
+    "psutil>=5.9",
+    "gitpython>=3.1",
+    "pre-commit>=3.0"
+]
 visualization = [
     "plotly>=5.0",
     "matplotlib>=3.5",
@@ -55,8 +67,7 @@ ml = [
 performance = [
     "numba>=0.57",
     "ray>=2.0",
-    "dask>=2023.1",
-    "psutil>=5.9.0"
+    "dask>=2023.1"
 ]
 cli = [
     "rich>=13.0",

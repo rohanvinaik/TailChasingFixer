@@ -7,17 +7,15 @@ and graceful degradation for reliable code generation.
 
 import time
 import hashlib
-import json
-from typing import Dict, List, Optional, Any, Union, Tuple
-from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
 from enum import Enum
-import logging
 
-from .adapters.base import LLMAdapter, LLMResponse, ModelTier, CostTracker, RetryConfig
+from .adapters.base import LLMAdapter, LLMResponse, ModelTier, CostTracker
 from .adapters.openai_adapter import OpenAIAdapter
 from .adapters.anthropic_adapter import AnthropicAdapter
 from .adapters.ollama_adapter import OllamaAdapter
-from .prompts import TailChasingPrompts, PromptContext, create_context_aware_prompt
+from .prompts import TailChasingPrompts, PromptContext
 from ..core.issues import Issue
 from ..utils.logging_setup import get_logger
 

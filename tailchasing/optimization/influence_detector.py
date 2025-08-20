@@ -9,9 +9,8 @@ inspired scouting approach to efficiently estimate influence without full analys
 import ast
 import networkx as nx
 from typing import Dict, List, Set, Tuple, Optional, Any
-from collections import defaultdict, Counter
+from collections import defaultdict
 from dataclasses import dataclass, field
-import numpy as np
 
 from ..core.symbols import SymbolTable
 from ..utils.logging_setup import get_logger

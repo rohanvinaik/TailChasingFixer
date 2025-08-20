@@ -1,14 +1,13 @@
 """Report generation for tail-chasing analysis."""
 
 import json
-import os
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 import numpy as np
 
-from .issues import Issue, IssueCollection
+from .issues import Issue
 from .scoring import RiskScorer
 
 

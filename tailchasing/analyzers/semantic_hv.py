@@ -37,13 +37,8 @@ try:
     LSH_AVAILABLE = True
 except ImportError:
     LSH_AVAILABLE = False
-    # Fallback classes for MinHash compatibility
-    @dataclass(frozen=True)
-    class FunctionRecord:
-        id: str
-        source: str
-        node: ast.AST
-        file: Optional[str] = None
+    # Import FunctionRecord from consolidated types
+    from ..core.types import FunctionRecord
     
     @dataclass
     class LSHParams:

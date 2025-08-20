@@ -6,13 +6,12 @@ Combines hypervector similarity with exact AST matching for high precision.
 
 import ast
 import hashlib
-from typing import List, Optional, Tuple, Dict, Any, Set
+from typing import List, Optional, Tuple, Dict, Any
 from dataclasses import dataclass
-import numpy as np
 from difflib import SequenceMatcher
 import logging
 
-from .hv_encoder import HypervectorEncoder, ASTNormalizer, EncodingConfig
+from .hv_encoder import HypervectorEncoder, ASTNormalizer
 from .catalytic_index import CatalyticIndex, IndexMetadata
 
 

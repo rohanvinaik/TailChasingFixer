@@ -18,12 +18,10 @@ regardless of their position in dependency graphs.
 import ast
 import time
 import asyncio
-from typing import Dict, List, Set, Tuple, Optional, Any, Union
+from typing import Dict, List, Set, Optional, Any
 from dataclasses import dataclass, field
 from collections import defaultdict
-from pathlib import Path
 from enum import Enum
-import numpy as np
 
 from ..core.issues import Issue
 from ..utils.logging_setup import get_logger

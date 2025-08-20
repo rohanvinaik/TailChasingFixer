@@ -9,6 +9,13 @@ import ast
 from typing import Optional, Set, Dict, Any, List
 from abc import ABC, abstractmethod
 
+# Public API exports
+__all__ = [
+    'BaseASTVisitor',
+    'CollectingVisitor', 
+    'AnalysisVisitor'
+]
+
 
 class BaseASTVisitor(ast.NodeVisitor, ABC):
     """

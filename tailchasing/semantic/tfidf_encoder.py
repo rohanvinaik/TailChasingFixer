@@ -216,7 +216,6 @@ class TFIDFResult:
             return self.vectors  # already dense list-of-lists
         # scipy sparse matrix path
         try:  # pragma: no cover
-            import numpy as np
             return self.vectors.toarray().tolist()
         except Exception:
             # last resort: manual iteration

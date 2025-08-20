@@ -5,12 +5,10 @@ Implements sophisticated transformations for context window thrashing,
 hallucination cascades, and other complex patterns.
 """
 
-import ast
 import logging
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Any, Optional
+from typing import Dict, List, Set, Any, Optional
 from collections import defaultdict
-import hashlib
 
 try:
     import libcst as cst

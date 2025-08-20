@@ -9,7 +9,7 @@ metrics to detect tightly coupled functions.
 import ast
 import numpy as np
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Set, Any, Union
+from typing import Dict, List, Optional, Tuple, Set, Any
 from pathlib import Path
 import networkx as nx
 from collections import defaultdict
@@ -18,7 +18,7 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy.spatial.distance')
     from scipy.cluster.hierarchy import linkage, fcluster
-    from scipy.spatial.distance import pdist, squareform
+    from scipy.spatial.distance import squareform
 import matplotlib.pyplot as plt
 import seaborn as sns
 

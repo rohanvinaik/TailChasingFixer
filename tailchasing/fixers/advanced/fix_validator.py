@@ -12,14 +12,10 @@ import importlib.util
 import logging
 import os
 import subprocess
-import sys
-import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Set, Tuple, Union
+from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, field
 import hashlib
-import json
-import re
 
 from ...core.ast_analyzer import ASTAnalyzer
 from ...analyzers.base import AnalysisContext

@@ -10,14 +10,11 @@ sufficient external integration.
 from __future__ import annotations
 import ast
 import logging
-import os
 import subprocess
-import re
-from collections import defaultdict, Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Any, Iterator
+from typing import Dict, List, Optional, Set, Any
 import hashlib
 import statistics
 
@@ -30,7 +27,6 @@ except ImportError:
 from ..base import BaseAnalyzer, AnalysisContext
 from ...core.issues import Issue
 from ...core.utils import safe_get_lineno, safe_get_end_lineno
-from .pattern_types import TailChasingPattern, PatternEvidence, PatternSeverity
 
 logger = logging.getLogger(__name__)
 

@@ -4,13 +4,9 @@ Watchdog system to prevent analyzer hangs and track execution times.
 
 import time
 import threading
-import multiprocessing
-import signal
 import traceback
-from typing import Any, Dict, List, Optional, Callable, Tuple
-from dataclasses import dataclass, field
-from datetime import datetime
-from pathlib import Path
+from typing import Any, Dict, List, Optional, Callable
+from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from queue import Queue, Empty
 import logging
@@ -405,9 +401,7 @@ class SemanticAnalysisFallback:
         logger.info("Falling back to TF-IDF analysis")
         
         try:
-            from ..analyzers.advanced.enhanced_semantic import EnhancedSemanticAnalyzer as SemanticDuplicateAnalyzer
             from sklearn.feature_extraction.text import TfidfVectorizer
-            import numpy as np
             
             # Create a simplified TF-IDF analyzer
             issues = []

@@ -5,9 +5,6 @@ Handles validation test generation, test case creation, and verification strateg
 Extracted from fix_strategies.py to reduce context window thrashing.
 """
 
-import ast
-import inspect
-import re
 from typing import List, Dict, Any, Optional
 
 from .base import BaseFixStrategy, Action, Patch, RiskLevel

@@ -3,12 +3,11 @@
 import json
 import logging
 import logging.handlers
-import os
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 
 
 class SensitiveDataFilter(logging.Filter):

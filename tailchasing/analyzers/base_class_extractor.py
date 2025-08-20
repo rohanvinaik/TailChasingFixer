@@ -8,7 +8,7 @@ be extracted into base classes or shared utilities.
 import ast
 import hashlib
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple, Any
+from typing import Dict, List, Optional, Set, Tuple
 from dataclasses import dataclass, field
 
 from ..core.issues import Issue

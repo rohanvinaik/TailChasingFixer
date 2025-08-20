@@ -5,10 +5,8 @@ Because nobody wants their __init__.py files flagged as tail-chasing! 🙄
 """
 
 import ast
-import os
 from pathlib import Path
-from typing import List, Tuple, Set, Dict
-import re
+from typing import List, Tuple, Dict
 
 class SemanticDuplicateFilter:
     """

@@ -15,20 +15,16 @@ Key optimizations:
 
 import ast
 import hashlib
-import mmap
-import os
 import time
 import psutil
 import multiprocessing as mp
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Set, Any, Iterator, Union, Callable
+from typing import Dict, List, Optional, Tuple, Any, Callable
 import logging
-import pickle
 import tempfile
 import threading
-from collections import defaultdict
 
 import numpy as np
 from tqdm import tqdm
@@ -50,7 +46,6 @@ except ImportError:
 
 # Import existing components
 from ..catalytic.hv_encoder import HypervectorEncoder, EncodingConfig, ASTNormalizer
-from ..catalytic.catalytic_index import CatalyticIndex, IndexMetadata, LSHIndex
 from ..semantic.hv_space import HVSpace
 
 logger = logging.getLogger(__name__)

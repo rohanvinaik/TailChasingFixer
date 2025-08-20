@@ -6,7 +6,7 @@ Provides clean separation of state tracking from business logic.
 
 import time
 import hashlib
-from typing import List, Set, Optional, Dict, Any, Protocol
+from typing import List, Set, Dict, Any, Protocol
 from dataclasses import dataclass, field
 from enum import Enum
 

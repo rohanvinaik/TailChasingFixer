@@ -7,7 +7,7 @@ cargo-cult programming patterns where code is copied without understanding.
 
 import ast
 import re
-from typing import Dict, Optional, Set, List, Union
+from typing import Dict, Optional, Set, List
 from pathlib import Path
 from collections import defaultdict
 

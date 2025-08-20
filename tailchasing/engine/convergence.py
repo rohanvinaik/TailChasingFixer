@@ -14,11 +14,10 @@ import difflib
 import subprocess
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Set, Optional, Tuple, Any, Protocol, Union
+from typing import Dict, List, Set, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from enum import Enum
 import json
-import logging
 from collections import defaultdict
 
 from ..core.issues import Issue

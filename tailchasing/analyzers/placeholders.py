@@ -1,7 +1,7 @@
 """Placeholder and phantom function analyzer."""
 
 import ast
-from typing import List, Optional, Iterable
+from typing import List, Iterable
 
 from .base import BaseAnalyzer, AnalysisContext
 from .base_visitor import BaseASTVisitor

@@ -5,8 +5,7 @@ Identifies clusters of semantically similar functions that may represent
 fragmented implementations of the same concept.
 """
 
-from typing import List, Dict, Set, Tuple, Optional
-import numpy as np
+from typing import List, Dict
 from collections import defaultdict
 
 from .hv_space import HVSpace

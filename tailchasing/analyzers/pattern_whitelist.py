@@ -5,9 +5,8 @@ This module allows users to configure patterns that should not be flagged
 as issues, even if they appear to be duplicates or other problems.
 """
 
-from typing import Set, List, Dict, Any, Optional
-from dataclasses import dataclass, field
-from pathlib import Path
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
 import re
 
 

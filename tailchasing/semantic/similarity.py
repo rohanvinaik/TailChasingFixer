@@ -5,7 +5,7 @@ import hashlib
 import math
 import threading
 from dataclasses import dataclass
-from typing import Any, Iterable, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Union
 
 # Optional: import your FunctionRecord for better typing; falls back gracefully
 try:

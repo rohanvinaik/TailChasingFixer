@@ -6,12 +6,9 @@ dependency graphs, temporal animations, and similarity heatmaps.
 """
 
 import json
-import base64
-import colorsys
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any, Set
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, field
+from datetime import datetime
 import numpy as np
 import logging
 

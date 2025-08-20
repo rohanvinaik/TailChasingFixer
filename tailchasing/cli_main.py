@@ -5,8 +5,6 @@ import argparse
 import logging
 import time
 from pathlib import Path
-from typing import List, Optional
-from datetime import datetime
 
 from . import __version__
 from .config import Config
@@ -20,9 +18,9 @@ from .analyzers.base import AnalysisContext
 from .analyzers.root_cause_clustering import RootCauseClusterer
 from .core.issue_provenance import IssueProvenanceTracker
 from .plugins import load_analyzers
-from .utils.watchdog import AnalyzerWatchdog, WatchdogConfig, SemanticAnalysisFallback
-from .core.batch_processor import BatchProcessor, ProcessingStats
-from .core.resource_monitor import MemoryMonitor, AdaptiveConfig, AdaptiveProcessor
+from .utils.watchdog import AnalyzerWatchdog, WatchdogConfig
+from .core.batch_processor import BatchProcessor
+from .core.resource_monitor import MemoryMonitor, AdaptiveConfig
 from .cli.output_manager import OutputManager, VerbosityLevel, OutputFormat
 from .cli.profiler import PerformanceProfiler
 from .core.fixgen import select_fixable_issues, generate_fix_script_py, generate_suggestions_md

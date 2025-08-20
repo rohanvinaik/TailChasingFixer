@@ -8,12 +8,10 @@ calculate risk trajectories, and identify AI-assistance patterns.
 import json
 import logging
 import subprocess
-from typing import Dict, List, Optional, Any, Tuple, Set
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from collections import defaultdict
-import difflib
 import re
 
 from ..core.detector import TailChasingDetector

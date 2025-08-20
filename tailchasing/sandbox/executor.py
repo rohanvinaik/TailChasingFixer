@@ -5,22 +5,19 @@ Provides isolated execution environment with resource limits to safely test code
 """
 
 import os
-import sys
 import shutil
 import tempfile
 import subprocess
 import resource
-import signal
 import time
 import traceback
 import threading
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from enum import Enum
 import psutil
-import logging
 
 from ..utils.logging_setup import get_logger
 from ..engine.convergence import PatchInfo

@@ -7,23 +7,17 @@ from ChromatinContactAnalyzer to identify optimal locations for shared modules
 and minimize long-range import dependencies.
 """
 
-import ast
 import networkx as nx
 import numpy as np
-from typing import Dict, List, Set, Tuple, Optional, Any, Union
-from dataclasses import dataclass, field
-from pathlib import Path
+from typing import Dict, List, Set, Tuple, Optional
+from dataclasses import dataclass
 import logging
-import re
 from collections import defaultdict
 
 from ..analyzers.chromatin_contact import (
     ChromatinContactAnalyzer, 
-    CodeElement, 
-    ContactMatrix,
-    TAD
+    CodeElement
 )
-from ..core.issues import Issue
 
 
 @dataclass(frozen=True)

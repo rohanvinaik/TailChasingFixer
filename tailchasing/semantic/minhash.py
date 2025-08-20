@@ -5,19 +5,11 @@ import ast
 import hashlib
 import math
 import random
-from dataclasses import dataclass
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
+from typing import Dict, Iterable, List, Sequence, Set, Tuple
 
 # --- Optional import: align with your existing FunctionRecord, but fall back if missing ---
-try:
-    from tailchasing.semantic.lsh_index import FunctionRecord  # type: ignore
-except Exception:  # pragma: no cover
-    @dataclass(frozen=True)
-    class FunctionRecord:  # minimal stub
-        id: str
-        source: str
-        node: ast.AST
-        file: Optional[str] = None
+# Import FunctionRecord from consolidated types
+from ..core.types import FunctionRecord
 
 
 # =========================

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, Tuple, TypeVar
+from typing import Callable, Dict, Generic, Iterable, List, Optional, Tuple, TypeVar
 
 T = TypeVar("T")
 DistanceFunc = Callable[[T, T], float]

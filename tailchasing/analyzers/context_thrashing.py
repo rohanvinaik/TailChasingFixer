@@ -2,8 +2,8 @@
 
 import ast
 import difflib
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple, Any
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Any
 from collections import defaultdict
 import re
 

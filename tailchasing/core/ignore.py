@@ -7,7 +7,7 @@ and directories from TailChasing analysis.
 
 import logging
 from pathlib import Path
-from typing import List, Optional, Set, Union
+from typing import List, Optional, Union
 
 try:
     import pathspec

@@ -6,8 +6,6 @@ and circular dependencies. Extracted from fix_strategies.py to reduce
 context window thrashing between import-related functions.
 """
 
-import ast
-import re
 from typing import List, Dict, Any, Optional
 
 from .base import BaseFixStrategy, Action, Patch, SimplePatch, RiskLevel

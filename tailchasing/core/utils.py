@@ -1,7 +1,6 @@
 """Utility functions for the tail-chasing detector."""
 
 import ast
-import os
 from pathlib import Path
 from typing import Optional, Union
 

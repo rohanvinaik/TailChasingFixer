@@ -8,17 +8,14 @@ anxiety and class import sprees.
 
 from __future__ import annotations
 import ast
-import re
 import logging
 from collections import defaultdict, Counter
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple, Any, Union
-import statistics
+from typing import Dict, List, Optional, Any
 from pathlib import Path
 
 from ..base import BaseAnalyzer, AnalysisContext
 from ...core.issues import Issue
-from .pattern_types import TailChasingPattern, PatternEvidence, PatternSeverity
 
 logger = logging.getLogger(__name__)
 

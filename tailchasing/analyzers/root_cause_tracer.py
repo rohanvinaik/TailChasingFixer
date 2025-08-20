@@ -3,13 +3,11 @@ Interactive root cause tracing for tail-chasing chains.
 Provides visualization and tracing of how errors propagate through LLM fixes.
 """
 
-import ast
 import json
-from typing import Dict, List, Tuple, Optional, Set
+from typing import Dict, List, Optional, Set
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from collections import defaultdict
-import os
 from ..core.issues import Issue
 
 

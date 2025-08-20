@@ -9,8 +9,7 @@ This analyzer distinguishes between:
 
 import ast
 import re
-from typing import List, Dict, Any, Optional
-from collections import defaultdict
+from typing import List
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue

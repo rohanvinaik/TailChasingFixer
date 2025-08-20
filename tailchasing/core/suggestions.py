@@ -4,10 +4,8 @@ Enhanced fix suggestions generator for TailChasingFixer.
 This module provides detailed, actionable code suggestions for each type of issue.
 """
 
-import ast
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Optional
 from pathlib import Path
-import textwrap
 
 
 class FixSuggestionGenerator:

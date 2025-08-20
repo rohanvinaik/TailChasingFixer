@@ -9,7 +9,7 @@ automatic codemod generation for proper import forwarding.
 import ast
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Set, Optional, Tuple, Union, Any
+from typing import Dict, List, Optional, Tuple, Any
 from pathlib import Path
 from collections import defaultdict
 import textwrap

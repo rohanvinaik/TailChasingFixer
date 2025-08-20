@@ -10,10 +10,10 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from ..core.issues import Issue
-from .auto_fix_engine import create_auto_fixer, auto_fix_issues
+from .auto_fix_engine import auto_fix_issues
 
 
 def setup_logging(verbose: bool = False):

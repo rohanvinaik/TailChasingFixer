@@ -9,7 +9,7 @@ This analyzer properly handles:
 """
 
 import ast
-from typing import Dict, List, Set, Tuple, Optional, Any
+from typing import Dict, List, Set, Optional
 from collections import defaultdict
 from dataclasses import dataclass
 

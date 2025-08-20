@@ -14,9 +14,9 @@ from collections import defaultdict
 
 from ..analyzers.base import Analyzer, AnalysisContext
 from ..core.issues import Issue
-from .hv_encoder import HypervectorEncoder, EncodingConfig
+from .hv_encoder import HypervectorEncoder
 from .catalytic_index import CatalyticIndex
-from .similarity_pipeline import SimilarityPipeline, QueryResult
+from .similarity_pipeline import SimilarityPipeline
 
 
 class SemanticDuplicateAnalyzer(Analyzer):

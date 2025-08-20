@@ -7,7 +7,7 @@ Provides syntax validation, risk assessment, and safety checks.
 import ast
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict, Any, List, Protocol
+from typing import Optional, Dict, List, Protocol
 import tempfile
 import logging
 

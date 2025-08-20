@@ -5,12 +5,10 @@ Generates human-readable explanations, identifies root causes,
 and provides specific remediation guidance.
 """
 
-import re
 import logging
-from typing import Dict, List, Optional, Any, Tuple, Set
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from collections import defaultdict
-from pathlib import Path
 
 from ..core.issues import Issue
 

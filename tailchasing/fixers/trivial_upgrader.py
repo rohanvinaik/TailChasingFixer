@@ -10,9 +10,8 @@ import ast
 import re
 import pathlib
 import logging
-from typing import Dict, List, Optional, Tuple, Any, Set
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
-from collections import defaultdict
 
 from ..utils.logging_setup import get_logger
 

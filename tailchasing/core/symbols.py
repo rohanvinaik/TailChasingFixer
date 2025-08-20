@@ -3,7 +3,6 @@
 import ast
 from typing import Dict, List, Set, Optional, Any, TypedDict, Union, cast
 from dataclasses import dataclass, field
-from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)

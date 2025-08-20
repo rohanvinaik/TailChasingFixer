@@ -6,8 +6,7 @@ suggest improvements for better module organization.
 """
 
 import ast
-import os
-from collections import defaultdict, deque
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 from dataclasses import dataclass

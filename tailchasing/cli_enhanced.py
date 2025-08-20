@@ -13,23 +13,21 @@ Features:
 
 import ast
 import typer
-import sys
 import json
 import yaml
 import time
-import asyncio
 import tempfile
 import webbrowser
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
 
 from rich.console import Console
 from rich.progress import (
     Progress, SpinnerColumn, TextColumn, BarColumn, 
-    TimeElapsedColumn, TaskID, MofNCompleteColumn
+    TimeElapsedColumn, MofNCompleteColumn
 )
 from rich.table import Table
 from rich.panel import Panel
@@ -37,22 +35,17 @@ from rich.tree import Tree
 from rich.live import Live
 from rich.layout import Layout
 from rich.text import Text
-from rich.syntax import Syntax
 from rich.markdown import Markdown
-from rich.columns import Columns
-from rich import print as rprint
 
 # Import TailChasingFixer components
 from .catalytic.hv_encoder import HypervectorEncoder, EncodingConfig
 from .catalytic.catalytic_index import CatalyticIndex
 from .catalytic.similarity_pipeline import SimilarityPipeline
 from .catalytic.catalytic_analyzer import CatalyticDuplicateAnalyzer
-from .fixers.auto_fix_engine import IntelligentAutoFixer, create_auto_fixer
+from .fixers.auto_fix_engine import create_auto_fixer
 from .analyzers.base import AnalysisContext
 from .core.symbols import SymbolTable
-from .core.issues import Issue, IssueSeverity
-from .visualization.report_generator import ReportGenerator
-from .config import Config
+from .core.issues import Issue
 from .utils.logging_setup import get_logger
 
 

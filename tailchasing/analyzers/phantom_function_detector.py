@@ -3,9 +3,8 @@
 import ast
 import re
 from enum import Enum
-from typing import Dict, List, Optional, Set, Tuple, Any
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-from pathlib import Path
 
 from .base import Analyzer, AnalysisContext
 from ..core.issues import Issue

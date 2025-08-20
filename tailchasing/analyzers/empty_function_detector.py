@@ -7,7 +7,7 @@ were created as placeholders but never completed.
 """
 
 import ast
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
 from ..core.issues import Issue

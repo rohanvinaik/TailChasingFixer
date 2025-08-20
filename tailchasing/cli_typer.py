@@ -23,12 +23,8 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 from rich.syntax import Syntax
-from rich.tree import Tree
-from rich.layout import Layout
-from rich.live import Live
-from rich import print as rprint
 
-from .utils.logging_setup import get_logger, log_operation
+from .utils.logging_setup import get_logger
 from .core.loader import collect_files, parse_files
 from .core.symbols import SymbolTable
 from .core.issues import Issue
