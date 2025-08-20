@@ -28,6 +28,7 @@ except ImportError:
 
 from .hv_space import HVSpace
 from .encoder import encode_function, encode_function_with_context
+from .lsh_index import FeatureConfig, LSHParams, FunctionRecord
 
 
 @dataclass
