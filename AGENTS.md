@@ -10,4 +10,3 @@
 ## Repository Notes
 - The `semantic` package relies on `lsh_index.FeatureConfig` and `LSHParams` for incremental analysis.
 - Pre-commit configuration may need maintenance; report configuration errors if the hooks fail to run.
-

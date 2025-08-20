@@ -11,7 +11,7 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
         name: Ruff linter (with fixes)
         description: Run Ruff linter and apply automatic fixes
-        
+
       # Formatter (replaces Black for speed)
       - id: ruff-format
         name: Ruff formatter
@@ -24,7 +24,7 @@ repos:
       - id: mypy
         name: Type checking with MyPy
         description: Static type checking to catch type errors
-        additional_dependencies: 
+        additional_dependencies:
           - types-PyYAML
           - types-requests
           - types-setuptools
@@ -67,41 +67,41 @@ repos:
       - id: trailing-whitespace
         name: Remove trailing whitespace
         description: Remove trailing whitespace from files
-        
+
       - id: end-of-file-fixer
         name: Fix end-of-file
         description: Ensure files end with newline
-        
+
       - id: check-yaml
         name: Validate YAML files
         description: Check YAML files for syntax errors
-        
+
       - id: check-json
         name: Validate JSON files
         description: Check JSON files for syntax errors
-        
+
       - id: check-toml
         name: Validate TOML files
         description: Check TOML files for syntax errors
-        
+
       # Python-specific checks
       - id: check-ast
         name: Validate Python AST
         description: Check Python files can be parsed
-        
+
       - id: debug-statements
         name: Check for debug statements
         description: Detect Python debug statements (pdb, etc.)
-        
+
       - id: check-merge-conflict
         name: Check for merge conflicts
         description: Detect merge conflict markers
-        
+
       # File security
       - id: check-executables-have-shebangs
         name: Check executable shebangs
         description: Ensure executables have proper shebangs
-        
+
       - id: check-shebang-scripts-are-executable
         name: Check script executability
         description: Ensure scripts with shebangs are executable
@@ -138,8 +138,7 @@ repos:
         files: '\.py$'
         pass_filenames: false
         args: ["--critical-paths", "tailchasing", "--max-critical", "0", "--max-high", "5"]
-        stages: [pre-commit]
-      
+        stages: [commit]
       # Block new TODO comments (encourage proper issue tracking)
       - id: no-todos
         name: Block new TODO comments
@@ -155,7 +154,7 @@ repos:
         language: system
         pass_filenames: false
         stages: [manual]  # Changed to manual since stub-guard handles this better
-        
+
       # Block new print statements (use logging instead)
       - id: no-print-statements
         name: Block new print statements
@@ -170,7 +169,7 @@ repos:
           '
         language: system
         pass_filenames: false
-        stages: [pre-commit]
+        stages: [commit]
         
       # Block bare except clauses
       - id: no-bare-excepts
@@ -186,8 +185,7 @@ repos:
           '
         language: system
         pass_filenames: false
-        stages: [pre-commit]
-        
+        stages: [commit]
       # Type coverage check
       - id: type-coverage
         name: Type coverage check
@@ -197,7 +195,6 @@ repos:
         files: '\.py$'
         pass_filenames: false
         stages: [pre-push]
-        
       # Run tests before push
       - id: run-tests
         name: Run test suite
@@ -206,7 +203,6 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-        
       # Check for missing __init__.py files
       - id: check-init-files
         name: Check __init__.py files
@@ -214,7 +210,7 @@ repos:
         entry: python scripts/check_init_files.py
         language: system
         pass_filenames: false
-        
+
       # Validate configuration files
       - id: validate-config
         name: Validate configuration
@@ -223,7 +219,7 @@ repos:
         args: ["-c", "import yaml, pathlib; [yaml.safe_load(open(f)) for f in ['example.tailchasing.yml'] if pathlib.Path(f).exists()]"]
         language: system
         files: '\.tailchasing\.ya?ml$'
-        
+
       # Check for circular imports
       - id: check-circular-imports
         name: Check circular imports
@@ -241,9 +237,9 @@ minimum_pre_commit_version: "3.0.0"
 ci:
   # Don't run on CI by default (use GitHub Actions instead)
   skip: [type-coverage, run-tests]
-  
+
   # Auto-update frequency
   autoupdate_schedule: weekly
-  
+
   # Commit message for auto-updates
   autoupdate_commit_msg: "chore: pre-commit autoupdate"
