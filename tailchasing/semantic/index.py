@@ -32,84 +32,84 @@ from .lsh_index import FeatureConfig
 @dataclass
 class FunctionEntry:
     """Entry for a function in the semantic index."""
-    
+
     function_id: str
     file_path: str
     name: str
     line_number: int
     hypervector: np.ndarray
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Statistical properties
     self_similarity: float = 1.0
     mean_similarity: Optional[float] = None
     std_similarity: Optional[float] = None
-    
+
     def get_z_score(self, similarity: float) -> float:
         """Calculate z-score for a similarity value.
-        
+
         Args:
             similarity: Similarity value to compute z-score for
-            
+
         Returns:
             Z-score value
-            
+
         Raises:
             ValueError: If similarity is out of valid range
         """
         if not isinstance(similarity, (int, float)):
             raise TypeError(f"similarity must be numeric, got: {type(similarity)}")
-        
+
         if similarity < 0.0 or similarity > 1.0:
             raise ValueError(f"similarity must be in [0,1], got: {similarity}")
-        
+
         if self.mean_similarity is None or self.std_similarity is None:
             return 0.0
-        
+
         if self.std_similarity == 0:
             return 0.0
-        
+
         return (similarity - self.mean_similarity) / self.std_similarity
 
 
 @dataclass
 class SimilarityPair:
     """A pair of similar functions with statistical significance."""
-    
+
     function1_id: str
     function2_id: str
     similarity: float
     z_score: float
     p_value: float
     q_value: Optional[float] = None  # FDR-adjusted p-value
-    
+
     # Channel contributions
     channel_contributions: Dict[str, float] = field(default_factory=dict)
-    
+
     # Additional metrics
     line_distance: Optional[int] = None
     file_distance: Optional[int] = None
     temporal_distance: Optional[float] = None
-    
+
     def is_significant(self, alpha: float = 0.05, use_fdr: bool = True) -> bool:
         """Check if similarity is statistically significant.
-        
+
         Args:
             alpha: Significance level threshold
             use_fdr: Whether to use FDR-corrected p-value
-            
+
         Returns:
             True if significant, False otherwise
-            
+
         Raises:
             ValueError: If alpha is not in valid range
         """
         if not isinstance(alpha, (int, float)):
             raise TypeError(f"alpha must be numeric, got: {type(alpha)}")
-        
+
         if alpha <= 0.0 or alpha >= 1.0:
             raise ValueError(f"alpha must be in (0,1), got: {alpha}")
-        
+
         if not isinstance(use_fdr, bool):
             raise TypeError(f"use_fdr must be bool, got: {type(use_fdr)}")
         if use_fdr and self.q_value is not None:
@@ -120,11 +120,11 @@ class SimilarityPair:
 @dataclass
 class SimilarityAnalysis:
     """Analysis of what contributes to similarity between functions."""
-    
+
     files_same: bool
     names_similar: bool
     channel_contributions: Dict[str, float] = field(default_factory=dict)
-    
+
     def __post_init__(self) -> None:
         """Validate similarity analysis data."""
         if not isinstance(self.files_same, bool):
@@ -133,7 +133,7 @@ class SimilarityAnalysis:
             raise TypeError(f"names_similar must be bool, got: {type(self.names_similar)}")
         if not isinstance(self.channel_contributions, dict):
             raise TypeError(f"channel_contributions must be dict, got: {type(self.channel_contributions)}")
-        
+
         # Validate channel contribution values
         for channel, contrib in self.channel_contributions.items():
             if not isinstance(channel, str):
@@ -147,7 +147,7 @@ class SimilarityAnalysis:
 @dataclass
 class IndexStats:
     """Statistics about the semantic index."""
-    
+
     num_functions: int
     num_files: int
     mean_similarity: float
@@ -161,11 +161,11 @@ class IndexStats:
 class SemanticIndex:
     """
     Semantic index for storing and querying function hypervectors.
-    
+
     Provides efficient similarity search with statistical significance testing,
     background distribution modeling, and FDR correction for multiple testing.
     """
-    
+
     def __init__(
         self,
         space: HVSpace,
@@ -174,7 +174,7 @@ class SemanticIndex:
     ):
         """
         Initialize semantic index.
-        
+
         Args:
             space: Hypervector space for encoding
             cache_dir: Directory for persistent caching
@@ -183,7 +183,7 @@ class SemanticIndex:
         self.space = space
         self.cache_dir = Path(cache_dir) if cache_dir else None
         self.config = config or {}
-        
+
         # Storage
         self.entries: Dict[str, FunctionEntry] = {}
         self.hypervector_matrix: Optional[np.ndarray] = None
@@ -192,7 +192,7 @@ class SemanticIndex:
         self._incremental_updates: List = []  # Incremental updates queue
         self._vector_matrix: Optional[np.ndarray] = None  # Vectorized matrix for efficient search
         self._matrix_valid: bool = False  # Whether the vector matrix is up to date
-        
+
         # Background statistics
         self.background_mean: Optional[float] = None
         self.background_std: Optional[float] = None
@@ -200,13 +200,13 @@ class SemanticIndex:
         self._background_stats: Optional[Tuple[float, float]] = None
         self._stats_sample_size: int = 0
         self._search_stats: Dict[str, int] = {
-            'cache_hits': 0, 
+            'cache_hits': 0,
             'cache_misses': 0,
             'matrix_rebuilds': 0,
             'incremental_updates': 0
         }
         self._similarity_cache: Dict[str, Any] = {}
-        
+
         # Configuration
         # Validate and set configuration parameters
         self.min_similarity_threshold = self._validate_config_float(
@@ -225,10 +225,10 @@ class SemanticIndex:
             'max_duplicate_pairs', 1000, 1, 100000
         )
         self.use_approximate_search = self.config.get('use_approximate_search', False)
-        
+
         if not isinstance(self.use_approximate_search, bool):
             raise ValueError(f"use_approximate_search must be bool, got: {type(self.use_approximate_search)}")
-        
+
         # Statistical parameters with validation
         self.bootstrap_samples = self._validate_config_int(
             'bootstrap_samples', 1000, 100, 10000
@@ -236,39 +236,39 @@ class SemanticIndex:
         self.permutation_tests = self._validate_config_int(
             'permutation_tests', 100, 10, 1000
         )
-        
+
         # Initialize cache if directory provided
         if self.cache_dir:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
             self._load_cache()
-        
+
         logger = logging.getLogger(__name__)
         logger.debug(f"SemanticIndex initialized: dim={self.space.dim}, "
                     f"z_threshold={self.z_score_threshold}")
-    
+
     def _validate_config_float(self, key: str, default: float, min_val: float, max_val: float) -> float:
         """Validate and return a float configuration value."""
         value = self.config.get(key, default)
         if not isinstance(value, (int, float)):
             raise TypeError(f"Config {key} must be numeric, got: {type(value)}")
-        
+
         value = float(value)
         if value < min_val or value > max_val:
             raise ValueError(f"Config {key} must be in [{min_val}, {max_val}], got: {value}")
-        
+
         return value
-    
+
     def _validate_config_int(self, key: str, default: int, min_val: int, max_val: int) -> int:
         """Validate and return an integer configuration value."""
         value = self.config.get(key, default)
         if not isinstance(value, int):
             raise TypeError(f"Config {key} must be int, got: {type(value)}")
-        
+
         if value < min_val or value > max_val:
             raise ValueError(f"Config {key} must be in [{min_val}, {max_val}], got: {value}")
-        
+
         return value
-    
+
     def add_function(
         self,
         function_id: str,
@@ -280,7 +280,7 @@ class SemanticIndex:
     ) -> None:
         """
         Add a function to the semantic index.
-        
+
         Args:
             function_id: Unique identifier for the function
             ast_node: AST node of the function
@@ -288,7 +288,7 @@ class SemanticIndex:
             line_number: Line number where function starts
             metadata: Additional metadata
             context: Context information for encoding
-            
+
         Raises:
             ValueError: If inputs are invalid
             TypeError: If ast_node is None or invalid
@@ -296,26 +296,27 @@ class SemanticIndex:
         # Input validation
         if not isinstance(function_id, str) or not function_id.strip():
             raise ValueError(f"function_id must be a non-empty string, got: {function_id!r}")
-        
+
         if ast_node is None:
             raise TypeError("ast_node cannot be None")
-        
+
         if not isinstance(file_path, str) or not file_path.strip():
             raise ValueError(f"file_path must be a non-empty string, got: {file_path!r}")
-        
+
         if not isinstance(line_number, int) or line_number < 1:
             raise ValueError(f"line_number must be a positive integer, got: {line_number}")
-        
+
         if metadata is not None and not isinstance(metadata, dict):
             raise TypeError(f"metadata must be a dict or None, got: {type(metadata)}")
-        
+
         if context is not None and not isinstance(context, dict):
             raise TypeError(f"context must be a dict or None, got: {type(context)}")
+
         try:
             # Encode function to hypervector
             if context:
                 hypervector = encode_function_with_context(
-                    ast_node, file_path, self.space, 
+                    ast_node, file_path, self.space,
                     self.config.get('encoding_config', {}),
                     context.get('class_context'),
                     context.get('module_imports')
@@ -325,7 +326,7 @@ class SemanticIndex:
                     ast_node, file_path, self.space,
                     self.config.get('encoding_config', {})
                 )
-            
+
             # Create entry
             entry = FunctionEntry(
                 function_id=function_id,
@@ -335,63 +336,63 @@ class SemanticIndex:
                 hypervector=hypervector,
                 metadata=metadata or {}
             )
-            
+
             # Store entry
             self.entries[function_id] = entry
-            
+
             # Invalidate matrix cache
             self.hypervector_matrix = None
-            
+
             logger = logging.getLogger(__name__)
             logger.debug(f"Added function {function_id} to semantic index")
-        
+
         except Exception as e:
             logger = logging.getLogger(__name__)
             logger.error(f"Error adding function {function_id}: {e}")
-    
+
     def remove(self, func_id: str, file: str, line: int) -> bool:
         """Remove a function from the index with incremental updates."""
         full_id = f"{func_id}@{file}:{line}"
-        
+
         if full_id not in self.id_to_index and not any(update[1] == full_id for update in self._incremental_updates):
             return False
-        
+
         # Store incremental update for batch processing
         removed_meta: FunctionEntry = {"removed": True}
         self._incremental_updates.append(("remove", full_id, np.zeros(self.space.dim, dtype=np.float32), removed_meta))
-        
+
         # Process incremental updates if batch is large enough
         if len(self._incremental_updates) >= self.config.get('batch_size', 100):
             self._process_incremental_updates()
-        
+
         # Invalidate caches
         self._invalidate_caches()
         return True
-    
+
     def _compute_background_stats(self) -> Tuple[float, float]:
         """
         Compute background distance distribution.
-        
+
         Returns (mean, std) of random pair distances.
         """
         valid_entries: List[Tuple[str, NDArray[np.float32], FunctionEntry]] = [
             (id, entry.hypervector, entry) for id, entry in self.entries.items()
             if entry.hypervector is not None
         ]
-        
+
         n = len(valid_entries)
         if n < 2:
             return (0.5, 0.05)  # Default for small samples
-        
+
         # Sample random pairs more efficiently
         max_pairs = min(
             self.config.get('max_pairs_sample', 1000),  # Reduced default
             n * (n - 1) // 2
         )
-        
+
         # For large sets, use random sampling instead of reservoir sampling
         distances: List[float] = []
-        
+
         if n * (n - 1) // 2 <= max_pairs:
             # Small enough to compute all pairs
             for i in range(n):
@@ -404,81 +405,81 @@ class SemanticIndex:
             attempts = 0
             max_attempts = max_pairs * 3  # Prevent infinite loops
             seen_pairs = set()
-            
+
             while sampled < max_pairs and attempts < max_attempts:
                 i = random.randint(0, n - 1)
                 j = random.randint(0, n - 1)
                 attempts += 1
-                
+
                 if i != j and (i, j) not in seen_pairs and (j, i) not in seen_pairs:
                     seen_pairs.add((i, j))
                     d = self.space.distance(valid_entries[i][1], valid_entries[j][1])
                     distances.append(d)
                     sampled += 1
-        
+
         if not distances:
             return (0.5, 0.05)
-        
+
         # Compute statistics
         mean = sum(distances) / len(distances)
         variance = sum((d - mean) ** 2 for d in distances) / len(distances)
         std = math.sqrt(variance + 1e-12)  # Add small epsilon
-        
+
         self._stats_sample_size = len(distances)
         return (mean, std)
-    
+
     def _ensure_background_stats(self) -> None:
         """Ensure background statistics are computed."""
         if self._background_stats is None:
             self._background_stats = self._compute_background_stats()
-    
+
     def get_background_stats(self) -> Tuple[float, float]:
         """Get background distance statistics."""
         self._ensure_background_stats()
         assert self._background_stats is not None
         return self._background_stats
-    
+
     def compute_z_score(self, distance: float) -> float:
         """
         Compute z-score for a distance.
-        
+
         Higher z-score indicates more significant similarity.
-        
+
         Args:
             distance: Distance value to compute z-score for
-            
+
         Returns:
             Z-score value
-            
+
         Raises:
             ValueError: If distance is invalid
         """
         if not isinstance(distance, (int, float)):
             raise TypeError(f"distance must be a number, got: {type(distance)}")
-        
+
         if distance < 0.0 or distance > 1.0:
             raise ValueError(f"distance must be between 0.0 and 1.0, got: {distance}")
         mean, std = self.get_background_stats()
         if std == 0:
             return 0.0
-        
+
         # Lower distance = higher similarity = higher z-score
         return (mean - distance) / std
-    
-    def find_similar(self, hv: NDArray[np.float32], 
+
+    def find_similar(self, hv: NDArray[np.float32],
                     z_threshold: Optional[float] = None,
                     limit: int = 10) -> List[Tuple[str, float, float, FunctionEntry]]:
         """
         Find functions similar to given hypervector using efficient search.
-        
+
         Args:
             hv: Query hypervector with proper dimensions
             z_threshold: Minimum z-score threshold (default from config)
             limit: Maximum number of results to return
-        
+
         Returns:
             List of (id, distance, z_score, metadata) tuples
-            
+
         Raises:
             ValueError: If inputs are invalid
             TypeError: If hv has wrong type or dimensions
@@ -486,44 +487,44 @@ class SemanticIndex:
         # Input validation
         if not isinstance(hv, np.ndarray):
             raise TypeError(f"hv must be a numpy array, got: {type(hv)}")
-        
+
         if hv.shape != (self.space.dim,):
             raise ValueError(f"hv must have shape ({self.space.dim},), got: {hv.shape}")
-        
+
         if z_threshold is not None:
             if not isinstance(z_threshold, (int, float)):
                 raise TypeError(f"z_threshold must be a number or None, got: {type(z_threshold)}")
             if z_threshold < -10.0 or z_threshold > 10.0:
                 raise ValueError(f"z_threshold should be reasonable (-10 to 10), got: {z_threshold}")
-        
+
         if not isinstance(limit, int) or limit < 1:
             raise ValueError(f"limit must be a positive integer, got: {limit}")
-        
+
         if limit > 10000:
             raise ValueError(f"limit too large (max 10000), got: {limit}")
         if z_threshold is None:
             z_threshold = self.config.get('z_threshold', 2.5)
-        
+
         # Process any pending incremental updates
         if self._incremental_updates:
             self._process_incremental_updates()
-        
+
         # Use efficient vectorized search
         return self._find_similar_vectorized(hv, z_threshold, limit)
-    
-    def find_all_similar_pairs(self, 
+
+    def find_all_similar_pairs(self,
                               z_threshold: Optional[float] = None,
                               limit: Optional[int] = None) -> List[Tuple[str, str, float, float, SimilarityAnalysis]]:
         """
         Find all pairs of similar functions using efficient vectorized computation.
-        
+
         Args:
             z_threshold: Minimum z-score threshold (default from config)
             limit: Maximum number of pairs to return
-            
+
         Returns:
             List of (id1, id2, distance, z_score, analysis) tuples
-            
+
         Raises:
             ValueError: If inputs are invalid
         """
@@ -533,7 +534,7 @@ class SemanticIndex:
                 raise TypeError(f"z_threshold must be a number or None, got: {type(z_threshold)}")
             if z_threshold < -10.0 or z_threshold > 10.0:
                 raise ValueError(f"z_threshold should be reasonable (-10 to 10), got: {z_threshold}")
-        
+
         if limit is not None:
             if not isinstance(limit, int) or limit < 1:
                 raise ValueError(f"limit must be a positive integer or None, got: {limit}")
@@ -541,84 +542,84 @@ class SemanticIndex:
                 raise ValueError(f"limit too large (max 100000), got: {limit}")
         if z_threshold is None:
             z_threshold = self.config.get('z_threshold', 2.5)
-        
+
         # Process any pending incremental updates
         if self._incremental_updates:
             self._process_incremental_updates()
-        
+
         # Use efficient vectorized search
         return self._find_all_similar_pairs_vectorized(z_threshold, limit)
-    
+
     def _analyze_similarity(self, hv1: NDArray[np.float32], hv2: NDArray[np.float32],
                            id1: str, id2: str) -> SimilarityAnalysis:
         """
         Analyze what contributes to similarity between two functions.
-        
+
         This is approximate since we can't perfectly decompose bound vectors.
         """
         # Build channel contribution analysis
         channel_contributions = {}
-        
+
         # Define channel prototypes based on common patterns
         channels = [
-            'DATA_FLOW', 'CONTROL_FLOW', 'RETURN_PATTERNS', 
+            'DATA_FLOW', 'CONTROL_FLOW', 'RETURN_PATTERNS',
             'ERROR_HANDLING', 'LOOP_STRUCTURES', 'TYPE_PATTERNS', 'NAME_TOKENS'
         ]
-        
+
         for channel in channels:
             try:
                 # Get or create prototype for this channel
                 prototype = self.space.role(f"CHANNEL_{channel}")
-                
+
                 # Measure similarity to prototype for both vectors
                 sim1 = self.space.similarity(hv1, prototype)
                 sim2 = self.space.similarity(hv2, prototype)
-                
+
                 # Channel contribution is the product of similarities
                 channel_contributions[channel.lower()] = float(sim1 * sim2)
             except Exception:
                 # Skip if prototype generation fails
                 channel_contributions[channel.lower()] = 0.0
-        
+
         # Create and return analysis object
         analysis = SimilarityAnalysis(
             files_same=id1.split('@')[1].split(':')[0] == id2.split('@')[1].split(':')[0],
             names_similar=self._name_similarity(id1, id2) > 0.5,
             channel_contributions=channel_contributions
         )
-        
+
         return analysis
-    
+
     def _name_similarity(self, id1: str, id2: str) -> float:
         """Compute name similarity between two function IDs."""
         name1 = id1.split('@')[0]
         name2 = id2.split('@')[0]
-        
+
         if name1 == name2:
             return 1.0
-        
+
         # Simple Jaccard similarity on name tokens
         from ..semantic.encoder import split_identifier
         tokens1 = set(split_identifier(name1))
         tokens2 = set(split_identifier(name2))
-        
+
         if not tokens1 or not tokens2:
             return 0.0
-        
+
         intersection = tokens1 & tokens2
         union = tokens1 | tokens2
-        
+
         return len(intersection) / len(union)
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get index statistics.
-        
+
         Returns:
             Dictionary containing index statistics
         """
         valid_count = sum(1 for _, entry in self.entries.items()
                          if entry.hypervector is not None)
-        
+
         stats: Dict[str, Any] = {
             "total_functions": valid_count,
             "space_stats": self.space.get_stats(),
@@ -628,21 +629,21 @@ class SemanticIndex:
                 "sample_size": float(self._stats_sample_size)
             }
         }
-        
+
         return stats
-    
+
     def save_cache(self) -> None:
         """Save enhanced index to cache directory."""
         if not self.cache_dir:
             return
-        
+
         cache_file = self.cache_dir / "semantic_index_enhanced.pkl"
         cache_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Process any pending updates before saving
         if hasattr(self, '_incremental_updates') and self._incremental_updates:
             self._process_incremental_updates()
-        
+
         cache_data = {
             "entries": self.entries,
             "id_to_index": self.id_to_index,
@@ -654,15 +655,15 @@ class SemanticIndex:
             "search_stats": getattr(self, '_search_stats', {}),
             "last_rebuild_time": getattr(self, '_last_rebuild_time', 0.0),
         }
-        
+
         with open(cache_file, 'wb') as f:
             pickle.dump(cache_data, f)
-    
+
     def _load_cache(self) -> bool:
         """Load index from cache directory."""
         if not self.cache_dir:
             return False
-        
+
         cache_file = self.cache_dir / "semantic_index_enhanced.pkl"
         if not cache_file.exists():
             # Try legacy cache file
@@ -670,36 +671,36 @@ class SemanticIndex:
             if legacy_file.exists():
                 return self._load_legacy_cache(legacy_file)
             return False
-        
+
         try:
             with open(cache_file, 'rb') as f:
                 cache_data = pickle.load(f)
-            
+
             self.entries = cache_data.get("entries", [])
             self.id_to_index = cache_data.get("id_to_index", {})
             self._background_stats = cache_data.get("background_stats")
             self._stats_sample_size = cache_data.get("stats_sample_size", 0)
-            
+
             # Restore hypervector caches
             if "space_token_cache" in cache_data:
                 self.space._token_cache = cache_data["space_token_cache"]
             if "space_role_cache" in cache_data:
                 self.space._role_cache = cache_data["space_role_cache"]
-            
+
             return True
-            
+
         except Exception:
             # Cache corrupted or incompatible
             return False
-    
+
     def _process_incremental_updates(self) -> None:
         """Process batched incremental updates efficiently."""
         if not self._incremental_updates:
             return
-        
+
         start_time = time.time()
         updates_processed = 0
-        
+
         for action, full_id, hv, entry_meta in self._incremental_updates:
             if action == "add":
                 # Since entries is a dict, we don't need id_to_index anymore
@@ -722,7 +723,7 @@ class SemanticIndex:
                         metadata=entry_meta
                     )
                 updates_processed += 1
-                
+
             elif action == "remove":
                 if full_id in self.entries:
                     # Remove the entry
@@ -730,125 +731,125 @@ class SemanticIndex:
                     if full_id in self.id_to_index:
                         del self.id_to_index[full_id]
                     updates_processed += 1
-        
+
         # Clear processed updates
         self._incremental_updates.clear()
-        
+
         # Update statistics
         self._search_stats['incremental_updates'] += updates_processed
-        
+
         # Rebuild vector matrix if significant changes
         if updates_processed > self.config.get('rebuild_threshold', 50):
             self._rebuild_vector_matrix()
-        
+
         process_time = time.time() - start_time
         logger = logging.getLogger(__name__)
         logger.debug(f"Processed {updates_processed} incremental updates in {process_time:.3f}s")
-    
+
     def _invalidate_caches(self) -> None:
         """Invalidate caches after modifications."""
         self._background_stats = None
         self._matrix_valid = False
         # Keep similarity cache but mark it as potentially stale
         # Full invalidation would be too expensive
-    
+
     def _rebuild_vector_matrix(self) -> None:
         """Rebuild vector matrix for efficient vectorized operations."""
         valid_entries = [(id, entry.hypervector, entry) for id, entry in self.entries.items()
                         if entry.hypervector is not None]
-        
+
         if not valid_entries:
             self._vector_matrix = None
             self._matrix_valid = False
             return
-        
+
         # Stack vectors into matrix and convert to float32 for efficient computation
         vectors = [hv for _, hv, _ in valid_entries]
         self._vector_matrix = np.stack(vectors).astype(np.float32)
         self._matrix_valid = True
         self._last_rebuild_time = time.time()
         self._search_stats['matrix_rebuilds'] += 1
-        
+
         logger = logging.getLogger(__name__)
         logger.debug(f"Rebuilt vector matrix with {len(valid_entries)} entries")
-    
-    def _find_similar_vectorized(self, query_hv: NDArray[np.float32], 
+
+    def _find_similar_vectorized(self, query_hv: NDArray[np.float32],
                                z_threshold: float, limit: int) -> List[Tuple[str, float, float, FunctionEntry]]:
         """Efficient vectorized similarity search."""
         if not self._matrix_valid or self._vector_matrix is None:
             self._rebuild_vector_matrix()
-            
+
         if self._vector_matrix is None:
             return []
-        
+
         # Get valid entries for metadata lookup
         valid_entries = [(id, entry.hypervector, entry) for id, entry in self.entries.items()
                         if entry.hypervector is not None]
-        
+
         # Compute distances using vectorized operations
         distances = self._compute_distances_vectorized(query_hv, self._vector_matrix)
-        
+
         # Compute z-scores
         mean, std = self.get_background_stats()
         if std == 0:
             z_scores = np.zeros_like(distances)
         else:
             z_scores = (mean - distances) / std
-        
+
         # Filter by threshold and get top results
         valid_indices = np.where(z_scores >= z_threshold)[0]
-        
+
         if len(valid_indices) == 0:
             return []
-        
+
         # Sort by z-score (descending)
         sorted_indices = valid_indices[np.argsort(-z_scores[valid_indices])]
-        
+
         # Build results
         results = []
         for idx in sorted_indices[:limit]:
             entry_id, _, entry_meta = valid_entries[idx]
             results.append((entry_id, distances[idx], z_scores[idx], entry_meta))
-        
+
         return results
-    
-    def _find_all_similar_pairs_vectorized(self, z_threshold: float, 
+
+    def _find_all_similar_pairs_vectorized(self, z_threshold: float,
                                          limit: Optional[int]) -> List[Tuple[str, str, float, float, SimilarityAnalysis]]:
         """Efficient vectorized computation of all similar pairs."""
         if not self._matrix_valid or self._vector_matrix is None:
             self._rebuild_vector_matrix()
-            
+
         if self._vector_matrix is None:
             return []
-        
+
         # Get valid entries for metadata lookup
         valid_entries = [(id, entry.hypervector, entry) for id, entry in self.entries.items()
                         if entry.hypervector is not None]
-        
+
         n = len(valid_entries)
         if n < 2:
             return []
-        
+
         # Compute all pairwise distances efficiently
         distances = self._compute_pairwise_distances_vectorized(self._vector_matrix)
-        
+
         # Compute z-scores
         mean, std = self.get_background_stats()
         if std == 0:
             z_scores = np.zeros_like(distances)
         else:
             z_scores = (mean - distances) / std
-        
+
         # Find pairs above threshold
         pairs = []
         pair_count = 0
         # Use the provided limit or fall back to config max_duplicate_pairs
         max_pairs = limit if limit is not None else self.max_duplicate_pairs
-        
+
         # Log warning if we have many potential pairs
         total_pairs = n * (n - 1) // 2
         max_comparisons = self.config.get('max_pairwise_comparisons', 10000)
-        
+
         # Limit total comparisons to prevent timeout
         if total_pairs > max_comparisons:
             logger = logging.getLogger(__name__)
@@ -856,18 +857,18 @@ class SemanticIndex:
                 f"Large number of potential pairs ({total_pairs}), limiting comparisons to {max_comparisons}. "
                 f"Consider using stricter thresholds or sampling."
             )
-        
+
         if total_pairs > max_pairs * 2:
             logger = logging.getLogger(__name__)
             logger.warning(
                 f"Large number of potential pairs ({total_pairs}), limiting to {max_pairs} pairs. "
                 f"Consider increasing max_duplicate_pairs or using stricter thresholds."
             )
-        
+
         # For very large datasets, use sampling to limit comparisons
         comparisons_made = 0
         max_comparisons = self.config.get('max_pairwise_comparisons', 10000)
-        
+
         # Use sampling if needed
         if total_pairs > max_comparisons:
             # Random sampling approach
@@ -880,13 +881,13 @@ class SemanticIndex:
             sampled_indices = indices[:sample_size]
         else:
             sampled_indices = list(range(n))
-        
+
         for idx_i, i in enumerate(sampled_indices):
             for j in sampled_indices[idx_i + 1:]:
                 if comparisons_made >= max_comparisons:
                     break
                 comparisons_made += 1
-                
+
                 if z_scores[i, j] >= z_threshold:
                     # Check if we've reached the limit
                     if pair_count >= max_pairs:
@@ -896,10 +897,10 @@ class SemanticIndex:
                             f"Found {pair_count} pairs so far."
                         )
                         break
-                    
+
                     id_i, hv_i, _ = valid_entries[i]
                     id_j, hv_j, _ = valid_entries[j]
-                    
+
                     # Use cached analysis if available
                     cache_key = (id_i, id_j) if id_i < id_j else (id_j, id_i)
                     if cache_key in self._similarity_cache:
@@ -909,33 +910,33 @@ class SemanticIndex:
                         analysis = self._analyze_similarity(hv_i, hv_j, id_i, id_j)
                         self._similarity_cache[cache_key] = analysis
                         self._search_stats['cache_misses'] += 1
-                    
+
                     pairs.append((id_i, id_j, distances[i, j], z_scores[i, j], analysis))
                     pair_count += 1
-            
+
             # Break outer loop if limit reached
             if pair_count >= max_pairs or comparisons_made >= max_comparisons:
                 break
-        
+
         # Sort by z-score (descending)
         pairs.sort(key=lambda x: -x[3])
-        
+
         if limit:
             pairs = pairs[:limit]
-        
+
         return pairs
-    
-    def _compute_distances_vectorized(self, query_hv: NDArray[np.float32], 
+
+    def _compute_distances_vectorized(self, query_hv: NDArray[np.float32],
                                     matrix: NDArray[np.float32]) -> NDArray[np.float32]:
         """Compute distances between query vector and matrix rows.
-        
+
         Args:
             query_hv: Query hypervector
             matrix: Matrix of hypervectors to compare against
-            
+
         Returns:
             Array of distances
-            
+
         Raises:
             ValueError: If vector dimensions don't match
         """
@@ -949,24 +950,24 @@ class SemanticIndex:
         else:
             # For binary vectors: direct Hamming distance
             distances = np.mean(matrix != query_hv, axis=1)
-        
+
         return distances.astype(np.float32)
-    
+
     def _compute_pairwise_distances_vectorized(self, matrix: NDArray[np.float32]) -> NDArray[np.float32]:
         """Compute all pairwise distances efficiently."""
         n = matrix.shape[0]
-        
+
         # For large matrices, warn about memory usage
         if n > 1000:
             logger = logging.getLogger(__name__)
             logger.warning(f"Computing pairwise distances for {n} vectors - this may take time")
-        
+
         if self.space.bipolar:
             # For bipolar vectors - ensure float32 computation
             # Normalize to [-1, 1] if needed
             if matrix.dtype != np.float32:
                 matrix = matrix.astype(np.float32)
-            
+
             # Compute dot products in chunks for very large matrices
             if n > 500:
                 # Process in chunks to avoid memory issues
@@ -988,9 +989,9 @@ class SemanticIndex:
                 for j in range(i + 1, n):
                     dist = np.mean(matrix[i] != matrix[j])
                     distances[i, j] = distances[j, i] = dist
-        
+
         return distances
-    
+
     def _get_cached_similarity_analysis(self, cache_key: Tuple[str, str]) -> SimilarityAnalysis:
         """Get cached similarity analysis."""
         cached = self._similarity_cache.get(cache_key)
@@ -1003,12 +1004,12 @@ class SemanticIndex:
                 "files_same": id1.split('@')[1].split(':')[0] == id2.split('@')[1].split(':')[0],
                 "names_similar": self._name_similarity(id1, id2) > 0.5,
             }
-    
+
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics for the enhanced index."""
         valid_count = sum(1 for _, entry in self.entries.items()
                          if entry.hypervector is not None)
-        
+
         stats = {
             "index_stats": {
                 "total_entries": len(self.entries),
@@ -1020,7 +1021,7 @@ class SemanticIndex:
             "cache_stats": {
                 "similarity_cache_size": len(getattr(self, '_similarity_cache', {})),
                 "cache_hit_rate": (
-                    self._search_stats['cache_hits'] / 
+                    self._search_stats['cache_hits'] /
                     max(1, self._search_stats['cache_hits'] + self._search_stats['cache_misses'])
                 ) if hasattr(self, '_search_stats') else 0.0,
                 "matrix_rebuilds": getattr(self, '_search_stats', {}).get('matrix_rebuilds', 0),
@@ -1033,14 +1034,14 @@ class SemanticIndex:
                 "sample_size": self._stats_sample_size
             }
         }
-        
+
         return stats
-    
+
     def optimize_cache(self, max_cache_size: int = 10000) -> None:
         """Optimize cache sizes to prevent memory bloat."""
         if not hasattr(self, '_similarity_cache'):
             return
-            
+
         # Trim similarity cache if too large
         if len(self._similarity_cache) > max_cache_size:
             # Keep most recently accessed items (simple LRU approximation)
@@ -1048,30 +1049,30 @@ class SemanticIndex:
             # Keep the last half
             keep_size = max_cache_size // 2
             self._similarity_cache = dict(cache_items[-keep_size:])
-            
+
             logger = logging.getLogger(__name__)
             logger.info(f"Trimmed similarity cache from {len(cache_items)} to {len(self._similarity_cache)} items")
-    
+
     def force_rebuild(self) -> None:
         """Force rebuild of all internal structures."""
         logger = logging.getLogger(__name__)
         logger.info("Forcing rebuild of semantic index structures")
-        
+
         # Process pending updates
         if hasattr(self, '_incremental_updates') and self._incremental_updates:
             self._process_incremental_updates()
-        
+
         # Rebuild vector matrix
         self._rebuild_vector_matrix()
-        
+
         # Recompute background statistics
         self._background_stats = None
         self._ensure_background_stats()
-        
+
         # Clear and rebuild similarity cache
         if hasattr(self, '_similarity_cache'):
             self._similarity_cache.clear()
-        
+
         logger = logging.getLogger(__name__)
         logger.info("Semantic index rebuild complete")
 
@@ -1094,13 +1095,13 @@ except ImportError:
             self.seed = seed
         def signature(self, shingles: Set[str]) -> List[int]:
             return [0] * self.num_hashes
-    
+
     class LSHIndex:
         def __init__(self, params: Any):
             self.buckets: Dict[Tuple[int, str], List[str]] = {}
         def add(self, func_id: str, signature: List[int]) -> None:
             pass
-    
+
     def extract_shingles(func_record: Any, cfg: Any) -> Set[str]:
         return set()
 
