@@ -6,6 +6,7 @@ from .duplicates import DuplicateFunctionAnalyzer
 from .placeholders import PlaceholderAnalyzer
 from .missing_symbols import MissingSymbolAnalyzer
 from .git_chains import GitChainAnalyzer
+from .repository_detritus import RepositoryDetritusAnalyzer
 
 # Improved analyzers with better accuracy
 from .scope_aware_duplicates import ScopeAwareDuplicateAnalyzer
@@ -22,6 +23,7 @@ __all__ = [
     "PlaceholderAnalyzer",
     "MissingSymbolAnalyzer",
     "GitChainAnalyzer",
+    "RepositoryDetritusAnalyzer",
     # Improved analyzers
     "ScopeAwareDuplicateAnalyzer",
     "ImprovedLLMDetector",
