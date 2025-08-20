@@ -7,7 +7,7 @@ functions for missing symbols based on their usage patterns.
 
 import ast
 import re
-from typing import Set, Dict, List, Any, Optional, Iterable, Tuple, Union
+from typing import Set, Dict, List, Any, Optional, Iterable, Union
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path

@@ -7,16 +7,11 @@ module extraction and function-scope import codemods.
 """
 
 import ast
-import hashlib
-import re
-from dataclasses import dataclass, field
-from typing import Dict, List, Set, Optional, Tuple, Any, Union
+from dataclasses import dataclass
+from typing import Dict, List, Set, Optional, Tuple, Any
 from pathlib import Path
-from collections import defaultdict, deque
+from collections import defaultdict
 import networkx as nx
-import textwrap
-from datetime import datetime
-import json
 
 from ..core.issues import Issue
 

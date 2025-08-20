@@ -1,7 +1,6 @@
 """Playbook generator for different types of code issues and clusters."""
 
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
+from typing import Dict, List, Any
 import re
 
 from .fix_playbooks import (

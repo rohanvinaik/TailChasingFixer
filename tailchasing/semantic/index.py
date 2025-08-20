@@ -12,12 +12,9 @@ import time
 import math
 import random
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Set, Any, Union, cast
+from typing import Dict, List, Tuple, Optional, Set, Any, cast, Union, Protocol, runtime_checkable
 from dataclasses import dataclass, field
-import hashlib
-import statistics
-from collections import defaultdict
-import json
+import os
 
 # For numpy typing compatibility
 try:
@@ -28,7 +25,8 @@ except ImportError:
 
 from .hv_space import HVSpace
 from .encoder import encode_function, encode_function_with_context
-from .lsh_index import FeatureConfig, LSHParams, FunctionRecord
+from ..core.types import FunctionRecord, LSHParams
+from .lsh_index import FeatureConfig
 
 
 @dataclass
@@ -48,7 +46,23 @@ class FunctionEntry:
     std_similarity: Optional[float] = None
     
     def get_z_score(self, similarity: float) -> float:
-        """Calculate z-score for a similarity value."""
+        """Calculate z-score for a similarity value.
+        
+        Args:
+            similarity: Similarity value to compute z-score for
+            
+        Returns:
+            Z-score value
+            
+        Raises:
+            ValueError: If similarity is out of valid range
+        """
+        if not isinstance(similarity, (int, float)):
+            raise TypeError(f"similarity must be numeric, got: {type(similarity)}")
+        
+        if similarity < 0.0 or similarity > 1.0:
+            raise ValueError(f"similarity must be in [0,1], got: {similarity}")
+        
         if self.mean_similarity is None or self.std_similarity is None:
             return 0.0
         
@@ -78,7 +92,26 @@ class SimilarityPair:
     temporal_distance: Optional[float] = None
     
     def is_significant(self, alpha: float = 0.05, use_fdr: bool = True) -> bool:
-        """Check if similarity is statistically significant."""
+        """Check if similarity is statistically significant.
+        
+        Args:
+            alpha: Significance level threshold
+            use_fdr: Whether to use FDR-corrected p-value
+            
+        Returns:
+            True if significant, False otherwise
+            
+        Raises:
+            ValueError: If alpha is not in valid range
+        """
+        if not isinstance(alpha, (int, float)):
+            raise TypeError(f"alpha must be numeric, got: {type(alpha)}")
+        
+        if alpha <= 0.0 or alpha >= 1.0:
+            raise ValueError(f"alpha must be in (0,1), got: {alpha}")
+        
+        if not isinstance(use_fdr, bool):
+            raise TypeError(f"use_fdr must be bool, got: {type(use_fdr)}")
         if use_fdr and self.q_value is not None:
             return self.q_value < alpha
         return self.p_value < alpha
@@ -91,6 +124,24 @@ class SimilarityAnalysis:
     files_same: bool
     names_similar: bool
     channel_contributions: Dict[str, float] = field(default_factory=dict)
+    
+    def __post_init__(self) -> None:
+        """Validate similarity analysis data."""
+        if not isinstance(self.files_same, bool):
+            raise TypeError(f"files_same must be bool, got: {type(self.files_same)}")
+        if not isinstance(self.names_similar, bool):
+            raise TypeError(f"names_similar must be bool, got: {type(self.names_similar)}")
+        if not isinstance(self.channel_contributions, dict):
+            raise TypeError(f"channel_contributions must be dict, got: {type(self.channel_contributions)}")
+        
+        # Validate channel contribution values
+        for channel, contrib in self.channel_contributions.items():
+            if not isinstance(channel, str):
+                raise TypeError(f"Channel name must be string, got: {type(channel)}")
+            if not isinstance(contrib, (int, float)):
+                raise TypeError(f"Channel contribution must be numeric, got: {type(contrib)}")
+            if contrib < 0.0 or contrib > 1.0:
+                raise ValueError(f"Channel contribution must be in [0,1], got: {contrib}")
 
 
 @dataclass
@@ -157,16 +208,34 @@ class SemanticIndex:
         self._similarity_cache: Dict[str, Any] = {}
         
         # Configuration
-        self.min_similarity_threshold = self.config.get('min_similarity_threshold', 0.5)
-        self.z_score_threshold = self.config.get('z_score_threshold', 2.5)
-        self.fdr_alpha = self.config.get('fdr_alpha', 0.05)
-        self.max_pairs_to_return = self.config.get('max_pairs_to_return', 100)
-        self.max_duplicate_pairs = self.config.get('max_duplicate_pairs', 1000)
+        # Validate and set configuration parameters
+        self.min_similarity_threshold = self._validate_config_float(
+            'min_similarity_threshold', 0.5, 0.0, 1.0
+        )
+        self.z_score_threshold = self._validate_config_float(
+            'z_score_threshold', 2.5, -10.0, 10.0
+        )
+        self.fdr_alpha = self._validate_config_float(
+            'fdr_alpha', 0.05, 0.0, 1.0
+        )
+        self.max_pairs_to_return = self._validate_config_int(
+            'max_pairs_to_return', 100, 1, 10000
+        )
+        self.max_duplicate_pairs = self._validate_config_int(
+            'max_duplicate_pairs', 1000, 1, 100000
+        )
         self.use_approximate_search = self.config.get('use_approximate_search', False)
         
-        # Statistical parameters
-        self.bootstrap_samples = self.config.get('bootstrap_samples', 1000)
-        self.permutation_tests = self.config.get('permutation_tests', 100)
+        if not isinstance(self.use_approximate_search, bool):
+            raise ValueError(f"use_approximate_search must be bool, got: {type(self.use_approximate_search)}")
+        
+        # Statistical parameters with validation
+        self.bootstrap_samples = self._validate_config_int(
+            'bootstrap_samples', 1000, 100, 10000
+        )
+        self.permutation_tests = self._validate_config_int(
+            'permutation_tests', 100, 10, 1000
+        )
         
         # Initialize cache if directory provided
         if self.cache_dir:
@@ -176,6 +245,29 @@ class SemanticIndex:
         logger = logging.getLogger(__name__)
         logger.debug(f"SemanticIndex initialized: dim={self.space.dim}, "
                     f"z_threshold={self.z_score_threshold}")
+    
+    def _validate_config_float(self, key: str, default: float, min_val: float, max_val: float) -> float:
+        """Validate and return a float configuration value."""
+        value = self.config.get(key, default)
+        if not isinstance(value, (int, float)):
+            raise TypeError(f"Config {key} must be numeric, got: {type(value)}")
+        
+        value = float(value)
+        if value < min_val or value > max_val:
+            raise ValueError(f"Config {key} must be in [{min_val}, {max_val}], got: {value}")
+        
+        return value
+    
+    def _validate_config_int(self, key: str, default: int, min_val: int, max_val: int) -> int:
+        """Validate and return an integer configuration value."""
+        value = self.config.get(key, default)
+        if not isinstance(value, int):
+            raise TypeError(f"Config {key} must be int, got: {type(value)}")
+        
+        if value < min_val or value > max_val:
+            raise ValueError(f"Config {key} must be in [{min_val}, {max_val}], got: {value}")
+        
+        return value
     
     def add_function(
         self,
@@ -196,7 +288,29 @@ class SemanticIndex:
             line_number: Line number where function starts
             metadata: Additional metadata
             context: Context information for encoding
+            
+        Raises:
+            ValueError: If inputs are invalid
+            TypeError: If ast_node is None or invalid
         """
+        # Input validation
+        if not isinstance(function_id, str) or not function_id.strip():
+            raise ValueError(f"function_id must be a non-empty string, got: {function_id!r}")
+        
+        if ast_node is None:
+            raise TypeError("ast_node cannot be None")
+        
+        if not isinstance(file_path, str) or not file_path.strip():
+            raise ValueError(f"file_path must be a non-empty string, got: {file_path!r}")
+        
+        if not isinstance(line_number, int) or line_number < 1:
+            raise ValueError(f"line_number must be a positive integer, got: {line_number}")
+        
+        if metadata is not None and not isinstance(metadata, dict):
+            raise TypeError(f"metadata must be a dict or None, got: {type(metadata)}")
+        
+        if context is not None and not isinstance(context, dict):
+            raise TypeError(f"context must be a dict or None, got: {type(context)}")
         try:
             # Encode function to hypervector
             if context:
@@ -329,7 +443,21 @@ class SemanticIndex:
         Compute z-score for a distance.
         
         Higher z-score indicates more significant similarity.
+        
+        Args:
+            distance: Distance value to compute z-score for
+            
+        Returns:
+            Z-score value
+            
+        Raises:
+            ValueError: If distance is invalid
         """
+        if not isinstance(distance, (int, float)):
+            raise TypeError(f"distance must be a number, got: {type(distance)}")
+        
+        if distance < 0.0 or distance > 1.0:
+            raise ValueError(f"distance must be between 0.0 and 1.0, got: {distance}")
         mean, std = self.get_background_stats()
         if std == 0:
             return 0.0
@@ -343,8 +471,36 @@ class SemanticIndex:
         """
         Find functions similar to given hypervector using efficient search.
         
-        Returns list of (id, distance, z_score, metadata) tuples.
+        Args:
+            hv: Query hypervector with proper dimensions
+            z_threshold: Minimum z-score threshold (default from config)
+            limit: Maximum number of results to return
+        
+        Returns:
+            List of (id, distance, z_score, metadata) tuples
+            
+        Raises:
+            ValueError: If inputs are invalid
+            TypeError: If hv has wrong type or dimensions
         """
+        # Input validation
+        if not isinstance(hv, np.ndarray):
+            raise TypeError(f"hv must be a numpy array, got: {type(hv)}")
+        
+        if hv.shape != (self.space.dim,):
+            raise ValueError(f"hv must have shape ({self.space.dim},), got: {hv.shape}")
+        
+        if z_threshold is not None:
+            if not isinstance(z_threshold, (int, float)):
+                raise TypeError(f"z_threshold must be a number or None, got: {type(z_threshold)}")
+            if z_threshold < -10.0 or z_threshold > 10.0:
+                raise ValueError(f"z_threshold should be reasonable (-10 to 10), got: {z_threshold}")
+        
+        if not isinstance(limit, int) or limit < 1:
+            raise ValueError(f"limit must be a positive integer, got: {limit}")
+        
+        if limit > 10000:
+            raise ValueError(f"limit too large (max 10000), got: {limit}")
         if z_threshold is None:
             z_threshold = self.config.get('z_threshold', 2.5)
         
@@ -361,8 +517,28 @@ class SemanticIndex:
         """
         Find all pairs of similar functions using efficient vectorized computation.
         
-        Returns list of (id1, id2, distance, z_score, analysis) tuples.
+        Args:
+            z_threshold: Minimum z-score threshold (default from config)
+            limit: Maximum number of pairs to return
+            
+        Returns:
+            List of (id1, id2, distance, z_score, analysis) tuples
+            
+        Raises:
+            ValueError: If inputs are invalid
         """
+        # Input validation
+        if z_threshold is not None:
+            if not isinstance(z_threshold, (int, float)):
+                raise TypeError(f"z_threshold must be a number or None, got: {type(z_threshold)}")
+            if z_threshold < -10.0 or z_threshold > 10.0:
+                raise ValueError(f"z_threshold should be reasonable (-10 to 10), got: {z_threshold}")
+        
+        if limit is not None:
+            if not isinstance(limit, int) or limit < 1:
+                raise ValueError(f"limit must be a positive integer or None, got: {limit}")
+            if limit > 100000:
+                raise ValueError(f"limit too large (max 100000), got: {limit}")
         if z_threshold is None:
             z_threshold = self.config.get('z_threshold', 2.5)
         
@@ -434,12 +610,16 @@ class SemanticIndex:
         
         return len(intersection) / len(union)
     
-    def get_stats(self) -> IndexStats:
-        """Get index statistics."""
+    def get_stats(self) -> Dict[str, Any]:
+        """Get index statistics.
+        
+        Returns:
+            Dictionary containing index statistics
+        """
         valid_count = sum(1 for _, entry in self.entries.items()
                          if entry.hypervector is not None)
         
-        stats: IndexStats = {
+        stats: Dict[str, Any] = {
             "total_functions": valid_count,
             "space_stats": self.space.get_stats(),
             "background_stats": {
@@ -747,7 +927,20 @@ class SemanticIndex:
     
     def _compute_distances_vectorized(self, query_hv: NDArray[np.float32], 
                                     matrix: NDArray[np.float32]) -> NDArray[np.float32]:
-        """Compute distances between query vector and matrix rows."""
+        """Compute distances between query vector and matrix rows.
+        
+        Args:
+            query_hv: Query hypervector
+            matrix: Matrix of hypervectors to compare against
+            
+        Returns:
+            Array of distances
+            
+        Raises:
+            ValueError: If vector dimensions don't match
+        """
+        if query_hv.shape[0] != matrix.shape[1]:
+            raise ValueError(f"Dimension mismatch: query {query_hv.shape[0]} vs matrix {matrix.shape[1]}")
         # Use Hamming distance for bipolar vectors
         if self.space.bipolar:
             # For bipolar vectors: Hamming distance = (dim - dot_product) / (2 * dim)
@@ -889,6 +1082,27 @@ class SemanticIndex:
 
 # Additional imports for incremental analysis
 from typing import Callable, Iterator, Sequence
+
+# Import required classes for LSH functionality
+try:
+    from .lsh_index import MinHasher, LSHIndex, extract_shingles
+except ImportError:
+    # Provide stub implementations if LSH module is not available
+    class MinHasher:
+        def __init__(self, num_hashes: int, seed: int = 42):
+            self.num_hashes = num_hashes
+            self.seed = seed
+        def signature(self, shingles: Set[str]) -> List[int]:
+            return [0] * self.num_hashes
+    
+    class LSHIndex:
+        def __init__(self, params: Any):
+            self.buckets: Dict[Tuple[int, str], List[str]] = {}
+        def add(self, func_id: str, signature: List[int]) -> None:
+            pass
+    
+    def extract_shingles(func_record: Any, cfg: Any) -> Set[str]:
+        return set()
 
 def _pair_key(a_id: str, b_id: str) -> str:
     """Order-invariant, stable key for a pair of IDs."""

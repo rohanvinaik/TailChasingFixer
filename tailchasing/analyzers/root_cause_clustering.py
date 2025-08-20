@@ -7,8 +7,7 @@ identification of systemic patterns and root causes across the codebase.
 
 import ast
 import hashlib
-import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Dict, Set, Optional, Tuple, Any
 from collections import defaultdict
 from pathlib import Path
@@ -16,7 +15,6 @@ import numpy as np
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy.spatial.distance')
-    from scipy.spatial.distance import jaccard
     from scipy.cluster.hierarchy import fclusterdata
 
 from ..core.issues import Issue

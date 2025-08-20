@@ -1,8 +1,8 @@
 """Import graph analyzer for detecting circular imports."""
 
 import ast
-from collections import defaultdict, deque
-from typing import Dict, Set, List, Tuple, Optional, Iterable
+from collections import defaultdict
+from typing import Dict, Set, List, Optional, Iterable
 from pathlib import Path
 
 from .base import BaseAnalyzer, AnalysisContext

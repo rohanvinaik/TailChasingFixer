@@ -2,18 +2,13 @@
 Fix planner that generates actionable, executable fix plans for issues.
 """
 
-import ast
-import os
-import shutil
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple, Set
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
-import textwrap
 import difflib
-import hashlib
 
-from ..core.issues import Issue, IssueCollection
+from ..core.issues import Issue
 
 
 @dataclass

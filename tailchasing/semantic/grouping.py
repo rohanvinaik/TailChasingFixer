@@ -4,25 +4,11 @@ from __future__ import annotations
 import ast
 import re
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Any, DefaultDict, Dict, List, Sequence, Set, Tuple
 
 # --- Optional: align with your existing FunctionRecord; fall back if absent ---
-try:
-    from tailchasing.semantic.lsh_index import FunctionRecord  # type: ignore
-except Exception:  # pragma: no cover
-    @dataclass(frozen=True)
-    class FunctionRecord:
-        id: str
-        source: str
-        node: ast.AST
-        file: Optional[str] = None
-        # Optional convenience fields your pipeline might already set
-        module: Optional[str] = None
-        name: Optional[str] = None
-        params: Optional[Tuple[str, ...]] = None
-        returns: Optional[str] = None
-        imports: Optional[Sequence[str]] = None
+# Import FunctionRecord from consolidated types
+from ..core.types import FunctionRecord
 
 
 # ----------------------------

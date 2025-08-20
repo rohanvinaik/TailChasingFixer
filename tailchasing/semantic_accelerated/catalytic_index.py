@@ -7,15 +7,10 @@ and efficient large-scale indexing using LSH bucketing.
 
 import json
 import mmap
-import os
-import struct
-import hashlib
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Set, Any, Iterator
 from dataclasses import dataclass, asdict
 import numpy as np
-import tempfile
-import shutil
 from datetime import datetime
 
 

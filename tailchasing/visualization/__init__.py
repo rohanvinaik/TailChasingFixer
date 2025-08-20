@@ -6,7 +6,6 @@ Generates interactive visualizations of code issues and dependencies.
 import json
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
-import networkx as nx
 
 from ..core.issues import Issue
 
@@ -545,3 +544,9 @@ class TailChasingVisualizer:
             """)
         
         return "".join(html_parts)
+
+
+# Public API exports
+__all__ = [
+    'TailChasingVisualizer'
+]

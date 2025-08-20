@@ -5,7 +5,7 @@ Provides context-aware prompts with error history, AST-safe transformations,
 and few-shot examples for optimal LLM performance.
 """
 
-from typing import Dict, List, Optional, Any, Set
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 import json
 

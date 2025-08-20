@@ -2,8 +2,8 @@
 
 import ast
 import hashlib
-from typing import Dict, List, Set, Tuple, Optional, Iterable, Any
-from collections import defaultdict, OrderedDict
+from typing import Dict, List, Tuple, Iterable
+from collections import defaultdict
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue

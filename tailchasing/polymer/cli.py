@@ -9,7 +9,7 @@ import click
 from pathlib import Path
 from rich.console import Console
 
-from .calibrate import CalibrationTool, run_calibration_demo
+from .calibrate import CalibrationTool
 from .config import (
     ConfigManager,
     PolymerConfig,

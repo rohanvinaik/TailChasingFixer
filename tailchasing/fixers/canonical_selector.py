@@ -8,7 +8,7 @@ polymer distance metrics inspired by chromatin dynamics.
 
 import ast
 import numpy as np
-from typing import Dict, List, Tuple, Optional, Set, Any
+from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 from pathlib import Path
 import logging

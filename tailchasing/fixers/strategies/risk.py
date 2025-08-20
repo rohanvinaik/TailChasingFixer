@@ -5,11 +5,8 @@ Handles risk evaluation, impact analysis, and confidence scoring for fixes.
 Extracted from fix_strategies.py to reduce context window thrashing.
 """
 
-import ast
-import re
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
-from enum import Enum
 
 from .base import BaseFixStrategy, Action, Patch, RiskLevel
 from ...core.issues import Issue

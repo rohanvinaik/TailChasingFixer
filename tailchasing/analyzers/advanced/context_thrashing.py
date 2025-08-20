@@ -11,16 +11,13 @@ import ast
 import difflib
 import logging
 import re
-from collections import defaultdict, Counter
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple, Any, Union
+from typing import Dict, List, Optional, Tuple, Any
 import hashlib
 import statistics
-from pathlib import Path
 
 from ..base import BaseAnalyzer, AnalysisContext
 from ...core.issues import Issue
-from .pattern_types import TailChasingPattern, PatternEvidence, PatternSeverity
 
 logger = logging.getLogger(__name__)
 
@@ -110,12 +107,12 @@ class SimilarityResult:
     
     def __post_init__(self):
         """Calculate overall similarity and classification."""
-        # Weighted combination of similarity metrics
+        # Weighted combination of similarity metrics (structure weighted higher)
         weights = {
-            'name': 0.25,
-            'parameter': 0.20,
-            'structure': 0.35,
-            'content': 0.20
+            'name': 0.20,
+            'parameter': 0.25, 
+            'structure': 0.45,
+            'content': 0.10
         }
         
         self.overall_similarity = (
@@ -186,21 +183,27 @@ class ContextThrashingCluster:
         evidence_score = 0.0
         indicators = []
         
-        # High line distance suggests context window issues
-        if self.max_line_distance > 500:
-            evidence_score += 0.3
+        # High line distance suggests context window issues (stricter thresholds)
+        if self.max_line_distance > 1000:
+            evidence_score += 0.4
+            indicators.append(f"Functions separated by {self.max_line_distance} lines (likely context window issue)")
+        elif self.max_line_distance > 500:
+            evidence_score += 0.2
             indicators.append(f"Functions separated by {self.max_line_distance} lines")
         
         # Multiple files with similar functions
         files = set(f.file_path for f in self.functions)
         if len(files) > 1:
-            evidence_score += 0.2
+            evidence_score += 0.15  # Reduced weight
             indicators.append(f"Similar functions across {len(files)} files")
         
-        # High similarity but far apart
-        if self.avg_similarity > 0.7 and self.max_line_distance > 300:
-            evidence_score += 0.25
+        # High similarity but far apart (stricter threshold)
+        if self.avg_similarity > 0.8 and self.max_line_distance > 500:
+            evidence_score += 0.3
             indicators.append(f"High similarity ({self.avg_similarity:.1%}) with large separation")
+        elif self.avg_similarity > 0.75 and self.max_line_distance > 800:
+            evidence_score += 0.2
+            indicators.append(f"Moderate similarity ({self.avg_similarity:.1%}) with very large separation")
         
         # Similar parameter patterns
         param_patterns = set()
@@ -221,11 +224,12 @@ class ContextThrashingCluster:
         self.context_window_evidence = min(1.0, evidence_score)
         self.evidence_indicators = indicators
         
-        # Determine if this is likely context thrashing
+        # Determine if this is likely context thrashing (stricter criteria)
         self.is_context_thrashing = (
-            self.context_window_evidence > 0.6 and
-            self.avg_similarity > 0.6 and
-            self.max_line_distance > 200
+            self.context_window_evidence > 0.7 and
+            self.avg_similarity > 0.75 and
+            self.max_line_distance > 500 and
+            len(self.functions) >= 2  # Ensure we have multiple functions
         )
         
         # Calculate confidence
@@ -248,27 +252,34 @@ class ContextWindowThrashingDetector(BaseAnalyzer):
     name = "context_window_thrashing"
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        super().__init__()
+        super().__init__(self.name)
         self.config = config or {}
         
-        # Similarity thresholds
-        self.similarity_threshold = self.config.get('similarity_threshold', 0.6)
-        self.high_similarity_threshold = self.config.get('high_similarity_threshold', 0.8)
+        # Similarity thresholds (made more strict to reduce false positives)
+        self.similarity_threshold = self.config.get('similarity_threshold', 0.75)  # Raised from 0.6
+        self.high_similarity_threshold = self.config.get('high_similarity_threshold', 0.85)  # Raised from 0.8
         
-        # Line distance thresholds
-        self.min_line_distance = self.config.get('min_line_distance', 200)
-        self.context_window_distance = self.config.get('context_window_distance', 500)
+        # Line distance thresholds (added configurable minimum)
+        self.min_line_distance = self.config.get('min_line_distance', 500)  # Raised from 200
+        self.context_window_distance = self.config.get('context_window_distance', 1000)  # Raised from 500
+        self.max_line_distance_threshold = self.config.get('max_line_distance_threshold', 2000)  # New limit
         
         # Function filtering
         self.min_function_lines = self.config.get('min_function_lines', 3)
         self.max_function_lines = self.config.get('max_function_lines', 500)
         
-        # Analysis parameters
+        # Analysis parameters (weighted more toward structural similarity)
         self.include_cross_file = self.config.get('include_cross_file', True)
-        self.name_similarity_weight = self.config.get('name_similarity_weight', 0.25)
-        self.parameter_similarity_weight = self.config.get('parameter_similarity_weight', 0.20)
-        self.structure_similarity_weight = self.config.get('structure_similarity_weight', 0.35)
-        self.content_similarity_weight = self.config.get('content_similarity_weight', 0.20)
+        self.name_similarity_weight = self.config.get('name_similarity_weight', 0.20)  # Reduced
+        self.parameter_similarity_weight = self.config.get('parameter_similarity_weight', 0.25)  # Increased
+        self.structure_similarity_weight = self.config.get('structure_similarity_weight', 0.45)  # Increased 
+        self.content_similarity_weight = self.config.get('content_similarity_weight', 0.10)  # Reduced
+        
+        # Semantic similarity configuration
+        self.require_semantic_similarity = self.config.get('require_semantic_similarity', True)
+        self.semantic_similarity_threshold = self.config.get('semantic_similarity_threshold', 0.7)
+        self.exclude_simple_functions = self.config.get('exclude_simple_functions', True)
+        self.min_complexity_score = self.config.get('min_complexity_score', 3)
         
         # State
         self.functions: Dict[str, FunctionInfo] = {}
@@ -355,6 +366,16 @@ class ContextWindowThrashingDetector(BaseAnalyzer):
                         # Skip private methods and special methods
                         if node.name.startswith('_'):
                             continue
+                        
+                        # Skip simple functions if configured to do so
+                        if self.exclude_simple_functions:
+                            # Calculate basic complexity
+                            num_branches = sum(1 for n in ast.walk(node) if isinstance(n, ast.If))
+                            num_loops = sum(1 for n in ast.walk(node) if isinstance(n, (ast.For, ast.While)))
+                            complexity = num_branches + num_loops + 1
+                            
+                            if complexity < self.min_complexity_score:
+                                continue
                         
                         function_info = self._create_function_info(node, file_path)
                         self.functions[function_info.function_id] = function_info
@@ -468,8 +489,12 @@ class ContextWindowThrashingDetector(BaseAnalyzer):
                     line_distance = float('inf')  # Different files
                     same_file = False
                 
-                # Skip if too close (likely related functions)
+                # Skip if too close (likely related functions) or too far (likely unrelated)
                 if same_file and line_distance < self.min_line_distance:
+                    continue
+                
+                # Skip if extremely far apart (likely not context thrashing)
+                if same_file and line_distance > self.max_line_distance_threshold:
                     continue
                 
                 # Calculate similarity
@@ -505,8 +530,16 @@ class ContextWindowThrashingDetector(BaseAnalyzer):
             # Parameter similarity
             similarity.parameter_similarity = self._calculate_parameter_similarity(func1, func2)
             
-            # Structure similarity (AST-based)
+            # Structure similarity (AST-based) - weighted higher
             similarity.structure_similarity = self._calculate_structure_similarity(func1, func2)
+            
+            # Apply semantic similarity check if required
+            if self.require_semantic_similarity:
+                semantic_sim = self._calculate_semantic_similarity(func1, func2)
+                if semantic_sim < self.semantic_similarity_threshold:
+                    # Significantly reduce overall similarity if semantic check fails
+                    similarity.structure_similarity *= 0.5
+                    similarity.content_similarity *= 0.5
             
             # Content similarity (body hash and complexity)
             similarity.content_similarity = self._calculate_content_similarity(func1, func2)
@@ -624,7 +657,8 @@ class ContextWindowThrashingDetector(BaseAnalyzer):
             if func1.ast_node and func2.ast_node:
                 ast_similarity = self._compare_ast_structure(func1.ast_node, func2.ast_node)
             
-            return metrics_similarity * 0.6 + ast_similarity * 0.4
+            # Weight structural similarity more heavily
+            return metrics_similarity * 0.7 + ast_similarity * 0.3
         
         except Exception as e:
             logger.debug(f"Error calculating structure similarity: {e}")
@@ -667,6 +701,188 @@ class ContextWindowThrashingDetector(BaseAnalyzer):
         except Exception as e:
             logger.debug(f"Error calculating content similarity: {e}")
             return 0.0
+    
+    def _calculate_semantic_similarity(self, func1: FunctionInfo, func2: FunctionInfo) -> float:
+        """Calculate semantic similarity between functions using more sophisticated analysis."""
+        try:
+            # Check for similar variable usage patterns
+            var_similarity = self._compare_variable_patterns(func1, func2)
+            
+            # Check for similar call patterns
+            call_similarity = self._compare_function_call_patterns(func1, func2)
+            
+            # Check for similar control flow patterns
+            control_similarity = self._compare_control_flow_patterns(func1, func2)
+            
+            # Check for similar literal usage
+            literal_similarity = self._compare_literal_patterns(func1, func2)
+            
+            # Weighted combination emphasizing behavioral similarity
+            return (
+                var_similarity * 0.3 +
+                call_similarity * 0.35 + 
+                control_similarity * 0.25 +
+                literal_similarity * 0.1
+            )
+            
+        except Exception as e:
+            logger.debug(f"Error calculating semantic similarity: {e}")
+            return 0.5  # Default neutral value
+    
+    def _compare_variable_patterns(self, func1: FunctionInfo, func2: FunctionInfo) -> float:
+        """Compare variable usage patterns between functions."""
+        if not func1.ast_node or not func2.ast_node:
+            return 0.5
+        
+        try:
+            # Extract variable names from both functions
+            vars1 = set()
+            vars2 = set()
+            
+            for node in ast.walk(func1.ast_node):
+                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+                    vars1.add(node.id)
+                elif isinstance(node, ast.arg):
+                    vars1.add(node.arg)
+            
+            for node in ast.walk(func2.ast_node):
+                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+                    vars2.add(node.id)
+                elif isinstance(node, ast.arg):
+                    vars2.add(node.arg)
+            
+            if not vars1 and not vars2:
+                return 1.0
+            if not vars1 or not vars2:
+                return 0.0
+            
+            # Calculate Jaccard similarity
+            intersection = len(vars1.intersection(vars2))
+            union = len(vars1.union(vars2))
+            
+            return intersection / union if union > 0 else 0.0
+            
+        except Exception as e:
+            logger.debug(f"Error comparing variable patterns: {e}")
+            return 0.5
+    
+    def _compare_function_call_patterns(self, func1: FunctionInfo, func2: FunctionInfo) -> float:
+        """Compare function call patterns between functions."""
+        if not func1.ast_node or not func2.ast_node:
+            return 0.5
+        
+        try:
+            # Extract function call names
+            calls1 = []
+            calls2 = []
+            
+            for node in ast.walk(func1.ast_node):
+                if isinstance(node, ast.Call):
+                    if isinstance(node.func, ast.Name):
+                        calls1.append(node.func.id)
+                    elif isinstance(node.func, ast.Attribute):
+                        calls1.append(node.func.attr)
+            
+            for node in ast.walk(func2.ast_node):
+                if isinstance(node, ast.Call):
+                    if isinstance(node.func, ast.Name):
+                        calls2.append(node.func.id)
+                    elif isinstance(node.func, ast.Attribute):
+                        calls2.append(node.func.attr)
+            
+            if not calls1 and not calls2:
+                return 1.0
+            if not calls1 or not calls2:
+                return 0.0
+            
+            # Use sequence similarity for call patterns
+            matcher = difflib.SequenceMatcher(None, calls1, calls2)
+            return matcher.ratio()
+            
+        except Exception as e:
+            logger.debug(f"Error comparing function call patterns: {e}")
+            return 0.5
+    
+    def _compare_control_flow_patterns(self, func1: FunctionInfo, func2: FunctionInfo) -> float:
+        """Compare control flow structures between functions."""
+        if not func1.ast_node or not func2.ast_node:
+            return 0.5
+        
+        try:
+            # Extract control flow patterns
+            pattern1 = []
+            pattern2 = []
+            
+            for node in ast.walk(func1.ast_node):
+                if isinstance(node, (ast.If, ast.For, ast.While, ast.Try, ast.With)):
+                    pattern1.append(type(node).__name__)
+                elif isinstance(node, ast.Return):
+                    pattern1.append('Return')
+                elif isinstance(node, ast.Break):
+                    pattern1.append('Break')
+                elif isinstance(node, ast.Continue):
+                    pattern1.append('Continue')
+            
+            for node in ast.walk(func2.ast_node):
+                if isinstance(node, (ast.If, ast.For, ast.While, ast.Try, ast.With)):
+                    pattern2.append(type(node).__name__)
+                elif isinstance(node, ast.Return):
+                    pattern2.append('Return')
+                elif isinstance(node, ast.Break):
+                    pattern2.append('Break')
+                elif isinstance(node, ast.Continue):
+                    pattern2.append('Continue')
+            
+            if not pattern1 and not pattern2:
+                return 1.0
+            if not pattern1 or not pattern2:
+                return 0.0
+            
+            # Compare patterns
+            matcher = difflib.SequenceMatcher(None, pattern1, pattern2)
+            return matcher.ratio()
+            
+        except Exception as e:
+            logger.debug(f"Error comparing control flow patterns: {e}")
+            return 0.5
+    
+    def _compare_literal_patterns(self, func1: FunctionInfo, func2: FunctionInfo) -> float:
+        """Compare literal usage patterns between functions."""
+        if not func1.ast_node or not func2.ast_node:
+            return 0.5
+        
+        try:
+            # Extract literals (excluding strings which might be very specific)
+            literals1 = []
+            literals2 = []
+            
+            for node in ast.walk(func1.ast_node):
+                if isinstance(node, ast.Constant):
+                    if isinstance(node.value, (int, float, bool)) and not isinstance(node.value, str):
+                        literals1.append(repr(node.value))
+            
+            for node in ast.walk(func2.ast_node):
+                if isinstance(node, ast.Constant):
+                    if isinstance(node.value, (int, float, bool)) and not isinstance(node.value, str):
+                        literals2.append(repr(node.value))
+            
+            if not literals1 and not literals2:
+                return 1.0
+            if not literals1 or not literals2:
+                return 0.0
+            
+            # Compare literal usage
+            set1 = set(literals1)
+            set2 = set(literals2)
+            
+            intersection = len(set1.intersection(set2))
+            union = len(set1.union(set2))
+            
+            return intersection / union if union > 0 else 0.0
+            
+        except Exception as e:
+            logger.debug(f"Error comparing literal patterns: {e}")
+            return 0.5
     
     def _compare_ast_structure(self, node1: ast.FunctionDef, node2: ast.FunctionDef) -> float:
         """Compare AST structure of two function nodes."""
@@ -863,3 +1079,16 @@ class ContextWindowThrashingDetector(BaseAnalyzer):
 
 # Alias for backward compatibility
 ContextThrashingAnalyzer = ContextWindowThrashingDetector
+
+
+# Public API exports
+__all__ = [
+    # Main analyzer class
+    'ContextWindowThrashingDetector',
+    'ContextThrashingAnalyzer',  # Backward compatibility alias
+    
+    # Data structures 
+    'FunctionInfo',
+    'SimilarityResult',
+    'ContextThrashingCluster',
+]

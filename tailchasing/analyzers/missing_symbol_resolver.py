@@ -6,7 +6,6 @@ appropriate location to implement them based on usage patterns and module struct
 """
 
 import ast
-import os
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple

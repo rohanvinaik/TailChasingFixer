@@ -8,8 +8,13 @@ the Strategy pattern for different analysis approaches.
 
 import ast
 import logging
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Protocol, Set, Tuple, Union
+from abc import abstractmethod
+from ..core.types import (
+    AnalysisStrategy,
+    AnalysisContext, 
+    AnalysisConfig
+)
+from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass, field
 from enum import Enum
 import difflib
@@ -225,16 +230,8 @@ class UtilityMixin:
         return min(total_score / max(total_weight, 0.1), 1.0)
 
 
-class AnalysisStrategyProtocol(Protocol):
-    """Protocol for analysis strategy implementations."""
-    
-    def analyze(self, context: AnalysisContext, config: AnalysisConfig) -> List[Issue]:
-        """Perform analysis and return issues."""
-        ...
-    
-    def get_strategy_name(self) -> str:
-        """Get the name of this strategy."""
-        ...
+# Using AnalysisStrategy protocol from consolidated types
+# (AnalysisStrategyProtocol is now AnalysisStrategy)
 
 
 class ConfigurableAnalyzer(Analyzer, UtilityMixin):

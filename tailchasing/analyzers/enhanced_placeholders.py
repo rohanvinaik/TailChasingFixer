@@ -6,7 +6,7 @@ This analyzer detects various placeholder patterns and provides actionable fixes
 
 import ast
 import re
-from typing import List, Optional, Iterable, Dict, Any, Set, Tuple
+from typing import List, Optional, Iterable, Dict, Set
 from dataclasses import dataclass
 from enum import Enum
 

@@ -5,9 +5,7 @@ Handles merging of semantic duplicates and similar function consolidation.
 Extracted from fix_strategies.py to address context window thrashing.
 """
 
-import ast
 from typing import List, Dict, Any, Optional, Tuple
-import warnings
 
 from .base import BaseFixStrategy, Action, Patch, RiskLevel
 from ...core.issues import Issue

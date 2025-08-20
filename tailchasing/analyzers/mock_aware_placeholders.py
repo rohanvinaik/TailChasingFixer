@@ -10,7 +10,7 @@ This analyzer properly handles:
 
 import ast
 import re
-from typing import List, Optional, Set
+from typing import List, Optional
 from pathlib import Path
 
 from .base import BaseAnalyzer, AnalysisContext

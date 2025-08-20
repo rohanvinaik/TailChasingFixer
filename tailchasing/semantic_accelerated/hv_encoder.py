@@ -7,7 +7,7 @@ high-dimensional ternary vectors for efficient similarity computation.
 
 import ast
 import hashlib
-from typing import Dict, List, Optional, Set, Tuple, Union, Any
+from typing import Dict, List, Optional, Any
 import numpy as np
 from dataclasses import dataclass
 

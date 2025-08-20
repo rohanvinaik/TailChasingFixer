@@ -9,14 +9,13 @@ import json
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any, Set
+from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-import hashlib
 import base64
 import logging
 
-from .tail_chase_visualizer import TailChaseVisualizer, VisualizationNode, VisualizationEdge
+from .tail_chase_visualizer import TailChaseVisualizer
 from ..core.issues import Issue
 
 logger = logging.getLogger(__name__)

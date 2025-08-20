@@ -16,7 +16,6 @@ import numpy as np
 
 from ..semantic.encoder import encode_function
 from ..semantic.index import SemanticIndex
-from ..analyzers.base import AnalysisContext
 from ..core.issues import Issue
 from ..utils.logging_setup import get_logger
 

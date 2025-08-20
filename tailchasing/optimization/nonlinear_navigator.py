@@ -16,15 +16,14 @@ import ast
 import heapq
 import time
 import networkx as nx
-from typing import Dict, List, Set, Tuple, Optional, Any, Union
-from collections import defaultdict, deque
+from typing import Dict, List, Set, Optional, Any
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-import numpy as np
 
 from ..core.issues import Issue
 from ..utils.logging_setup import get_logger
-from .influence_detector import InfluenceDetector, InfluentialNode
+from .influence_detector import InfluenceDetector
 
 
 class NavigationStrategy(Enum):

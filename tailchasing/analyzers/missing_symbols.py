@@ -1,7 +1,7 @@
 """Missing symbol analyzer - detects references to non-existent functions/classes."""
 
 import ast
-from typing import Set, Dict, List, Any, Optional, Iterable
+from typing import Set, Dict, List, Any, Iterable
 from collections import defaultdict
 from pathlib import Path
 import difflib

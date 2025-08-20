@@ -4,13 +4,11 @@ Batch processing system for efficient analysis of large codebases.
 
 import json
 import time
-import pickle
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any, Set, Callable
+from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, field, asdict
 from collections import defaultdict
-from datetime import datetime, timedelta
-import threading
+from datetime import datetime
 import logging
 
 from rich.console import Console
@@ -24,9 +22,6 @@ from rich.progress import (
     TimeElapsedColumn
 )
 from rich.table import Table
-from rich.panel import Panel
-from rich.live import Live
-from rich.layout import Layout
 
 from ..core.issues import Issue, IssueCollection
 from ..analyzers.base import AnalysisContext

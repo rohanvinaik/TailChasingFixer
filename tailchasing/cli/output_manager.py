@@ -7,11 +7,10 @@ import yaml
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Literal, TextIO
+from typing import Dict, List, Any, Optional
 from enum import Enum
 from datetime import datetime
 from contextlib import contextmanager
-import threading
 
 from rich.console import Console
 from rich.progress import (
@@ -20,21 +19,17 @@ from rich.progress import (
     TextColumn,
     BarColumn,
     TaskProgressColumn,
-    TimeRemainingColumn,
-    TimeElapsedColumn,
-    MofNCompleteColumn
+    TimeElapsedColumn
 )
 from rich.table import Table
 from rich.panel import Panel
-from rich.syntax import Syntax
 from rich.tree import Tree
 from rich.live import Live
 from rich.layout import Layout
 from rich.text import Text
-from rich.rule import Rule
 from rich import box
 
-from ..core.issues import Issue, IssueCollection
+from ..core.issues import Issue
 from ..core.reporting import PathSanitizer
 
 

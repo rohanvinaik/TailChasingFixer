@@ -6,15 +6,11 @@ Hi-C style contact matrices, TAD boundary detection, and polymer physics
 concepts from chromatin organization.
 """
 
-import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
 
 
 @dataclass

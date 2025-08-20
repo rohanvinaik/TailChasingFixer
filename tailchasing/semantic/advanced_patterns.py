@@ -8,13 +8,12 @@ Detects complex patterns like:
 - Cross-module duplication patterns
 """
 
-from typing import List, Dict, Set, Tuple, Optional
+from typing import List, Dict, Tuple
 import numpy as np
 from collections import defaultdict
 from datetime import datetime, timedelta
 
 from .hv_space import HVSpace
-from .drift import SemanticDriftAnalyzer
 
 
 class EvolutionaryAnalyzer:

@@ -11,7 +11,6 @@ from ..core.issues import Issue
 from ..core.utils import safe_get_lineno
 from .base import AnalysisContext
 from ..semantic.encoder import encode_function
-from ..semantic.similarity import compute_similarity
 
 
 class CrossFileDuplicationAnalyzer:

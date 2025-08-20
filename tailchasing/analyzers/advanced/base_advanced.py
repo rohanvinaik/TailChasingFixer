@@ -4,7 +4,7 @@ This module provides a base class that eliminates duplicate initialization
 code across advanced analyzer classes.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from abc import ABC, abstractmethod
 import logging
 

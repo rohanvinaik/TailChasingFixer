@@ -8,12 +8,10 @@ to achieve O(n log n) complexity instead of O(n²).
 import ast
 import hashlib
 import logging
-import os
-import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Optional, Any
+from typing import Dict, List, Set, Optional, Any
 import yaml
 
 try:

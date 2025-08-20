@@ -8,8 +8,7 @@ This module implements:
 """
 
 import numpy as np
-from typing import Dict, List, Tuple, Optional
-from sklearn.manifold import TSNE
+from typing import Dict, List, Tuple
 from sklearn.cluster import DBSCAN
 from sklearn.ensemble import RandomForestClassifier
 

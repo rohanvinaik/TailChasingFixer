@@ -333,7 +333,6 @@ RATIONALE: Moved import inside method to break circular dependency while preserv
                            issues: List[Dict[str, Any]], 
                            max_concurrent: int = 3) -> List[LLMResponse]:
         """Generate fixes for multiple issues with rate limiting."""
-        import asyncio
         from concurrent.futures import ThreadPoolExecutor
         
         def generate_single_fix(issue_data):

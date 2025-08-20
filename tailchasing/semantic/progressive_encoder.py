@@ -16,18 +16,14 @@ import hashlib
 import math
 import re
 from dataclasses import dataclass
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
+from typing import Dict, Iterable, List, Sequence, Set, Tuple
 
 # ---------------------------------------------------------------------
 # Public data model (mirrors tailchasing.semantic.lsh_index.FunctionRecord)
 # ---------------------------------------------------------------------
 
-@dataclass(frozen=True)
-class FunctionRecord:
-    id: str            # stable identifier (e.g., file:lineno / FQN)
-    source: str        # full module source
-    node: ast.AST      # ast.FunctionDef / AsyncFunctionDef
-    file: Optional[str] = None
+# Import FunctionRecord from consolidated types
+from ..core.types import FunctionRecord
 
 
 # ---------------------------------------------------------------------

@@ -7,7 +7,7 @@ for various LLM API formats including OpenAI, Anthropic, and local models.
 
 import json
 import logging
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path

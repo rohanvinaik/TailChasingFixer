@@ -9,13 +9,18 @@ This analyzer properly handles:
 """
 
 import ast
-import os
-from typing import Set, Dict, List, Any, Optional
+from typing import Set, Dict, List, Any
 from pathlib import Path
 
 from .base import BaseAnalyzer, AnalysisContext
 from ..core.issues import Issue
 from ..core.utils import safe_get_lineno
+
+# Export public API
+__all__ = [
+    'RuntimeAwareSymbolAnalyzer',
+    'RuntimeAwareSymbolVisitor'
+]
 
 
 class RuntimeAwareSymbolAnalyzer(BaseAnalyzer):

@@ -5,12 +5,11 @@ This module provides sophisticated metrics for estimating fix impact,
 measuring module coupling, and tracking pattern evolution over time.
 """
 
-import math
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np

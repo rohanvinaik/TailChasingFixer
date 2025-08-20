@@ -3,7 +3,7 @@ Detect LLM-generated test anti-patterns that indicate superficial understanding.
 """
 
 import ast
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Optional
 from dataclasses import dataclass
 from ..core.issues import Issue
 from ..core.utils import safe_get_lineno

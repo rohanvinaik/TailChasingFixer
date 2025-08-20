@@ -9,12 +9,10 @@ used by all fix strategies. Consolidates duplicate patterns from fix_strategies.
 - Common time estimation and risk assessment utilities
 """
 
-import ast
-import re
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Protocol, Tuple, Set, Union
+from typing import List, Dict, Any, Optional, Protocol, Tuple, Union
 from enum import Enum
 import logging
 

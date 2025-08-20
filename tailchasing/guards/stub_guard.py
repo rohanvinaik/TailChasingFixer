@@ -13,7 +13,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
-from ..core.issues import Issue
 from ..utils.logging_setup import get_logger
 
 logger = get_logger(__name__)

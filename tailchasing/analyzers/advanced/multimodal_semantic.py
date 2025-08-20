@@ -9,22 +9,19 @@ aspects of function behavior and semantics.
 
 from __future__ import annotations
 import ast
-import hashlib
 import logging
-from collections import defaultdict, Counter
-from typing import Dict, List, Tuple, Set, Optional, Any, Union
+from collections import defaultdict
+from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, field
 import numpy as np
 import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy.spatial.distance')
-    from scipy.spatial.distance import cosine, euclidean
-from scipy import stats
+    from scipy.spatial.distance import cosine
 
 from ..base import BaseAnalyzer, AnalysisContext  
 from ...core.issues import Issue
 from ...core.utils import safe_get_lineno
-from .pattern_types import TailChasingPattern, PatternEvidence, PatternSeverity
 
 logger = logging.getLogger(__name__)
 

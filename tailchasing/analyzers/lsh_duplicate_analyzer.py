@@ -10,17 +10,15 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import List, Dict, Optional, Any, Set, Tuple
+from typing import List, Dict, Optional, Any, Tuple
 from collections import defaultdict
 
 from .base import Analyzer, AnalysisContext
 from ..core.issues import Issue
+from ..core.types import FunctionRecord, LSHParams
 from ..semantic.lsh_index import (
-    FunctionRecord,
-    LSHParams,
     FeatureConfig,
-    precluster_for_comparison,
-    create_function_records
+    precluster_for_comparison
 )
 try:
     from ..semantic.progressive_encoder import (

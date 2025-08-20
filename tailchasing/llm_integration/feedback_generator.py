@@ -5,16 +5,14 @@ Generates system prompts, context warnings, and negative examples
 to help LLMs avoid creating tail-chasing anti-patterns.
 """
 
-import json
 import logging
-from typing import Dict, List, Optional, Any, Tuple, Set
+from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, field
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path
 
 from ..core.issues import Issue
-from ..analyzers.explainer import TailChasingExplainer, Explanation
+from ..analyzers.explainer import TailChasingExplainer
 
 logger = logging.getLogger(__name__)
 

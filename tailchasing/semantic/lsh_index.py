@@ -9,8 +9,6 @@ from __future__ import annotations
 
 import ast
 import hashlib
-import itertools
-import math
 import random
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
@@ -19,26 +17,8 @@ from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tupl
 # Public API
 # ----------------------------
 
-@dataclass(frozen=True)
-class FunctionRecord:
-    """
-    Minimal carrier for a function unit to index.
-
-    Attributes
-    ----------
-    id: str
-        Stable identifier (e.g., fully-qualified name or file:lineno).
-    source: str
-        Full source text for the file/module containing the function.
-    node: ast.AST
-        The ast.FunctionDef/AsyncFunctionDef node (or module-level callable wrapper).
-    file: Optional[str]
-        Path to the file (for debugging/observability).
-    """
-    id: str
-    source: str
-    node: ast.AST
-    file: Optional[str] = None
+# Import FunctionRecord from consolidated types
+from ..core.types import FunctionRecord
 
 
 @dataclass

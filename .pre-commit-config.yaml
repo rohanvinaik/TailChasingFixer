@@ -46,7 +46,7 @@ repos:
       - id: black
         name: Black formatter (backup)
         description: Python code formatter (if Ruff formatting differs)
-        language_version: python3.11
+        language_version: python3.10
         # Only run if explicitly requested
         stages: [manual]
 
@@ -137,14 +137,21 @@ repos:
         language: system
         files: '\.py$'
         pass_filenames: false
-        args: [--critical-paths, tailchasing, --max-critical, 0, --max-high, 5]
-        stages: [commit]
+        args: ["--critical-paths", "tailchasing", "--max-critical", "0", "--max-high", "5"]
+        stages: [pre-commit]
       
       # Block new TODO comments (encourage proper issue tracking)
       - id: no-todos
         name: Block new TODO comments
         description: Prevent new TODO comments (use GitHub issues instead)
-        entry: bash -c 'if git diff --cached --name-only | grep -E "\\.py$" | xargs grep -l "TODO\|FIXME\|XXX" > /dev/null; then echo "❌ Found TODO/FIXME/XXX comments. Use GitHub issues instead!"; exit 1; fi'
+        entry: |
+          bash -c '
+          files=$(git diff --cached --name-only | grep -E "\\.py$" || true)
+          if [ -n "$files" ] && echo "$files" | xargs grep -l "TODO\|FIXME\|XXX" > /dev/null 2>&1; then
+            echo "❌ Found TODO/FIXME/XXX comments. Use GitHub issues instead!"
+            exit 1
+          fi
+          '
         language: system
         pass_filenames: false
         stages: [manual]  # Changed to manual since stub-guard handles this better
@@ -153,19 +160,33 @@ repos:
       - id: no-print-statements
         name: Block new print statements
         description: Prevent new print() calls (use logging instead)
-        entry: bash -c 'if git diff --cached --name-only | grep -E "\\.py$" | xargs git diff --cached | grep "^+" | grep -E "print\\(" > /dev/null; then echo "❌ Found new print() statements. Use logging instead!"; exit 1; fi'
+        entry: |
+          bash -c '
+          files=$(git diff --cached --name-only | grep -E "\\.py$" || true)
+          if [ -n "$files" ] && echo "$files" | xargs git diff --cached | grep "^+" | grep -E "print\\(" > /dev/null 2>&1; then
+            echo "❌ Found new print() statements. Use logging instead!"
+            exit 1
+          fi
+          '
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         
       # Block bare except clauses
       - id: no-bare-excepts
         name: Block bare except clauses
-        description: Prevent bare except: clauses (specify exception types)
-        entry: bash -c 'if git diff --cached --name-only | grep -E "\\.py$" | xargs git diff --cached | grep "^+" | grep -E "except:\\s*$" > /dev/null; then echo "❌ Found bare except: clauses. Specify exception types!"; exit 1; fi'
+        description: Prevent bare except clauses (specify exception types)
+        entry: |
+          bash -c '
+          files=$(git diff --cached --name-only | grep -E "\\.py$" || true)
+          if [ -n "$files" ] && echo "$files" | xargs git diff --cached | grep "^+" | grep -E "except:\\s*$" > /dev/null 2>&1; then
+            echo "❌ Found bare except: clauses. Specify exception types!"
+            exit 1
+          fi
+          '
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         
       # Type coverage check
       - id: type-coverage
@@ -175,7 +196,7 @@ repos:
         language: system
         files: '\.py$'
         pass_filenames: false
-        stages: [push]
+        stages: [pre-push]
         
       # Run tests before push
       - id: run-tests
@@ -184,7 +205,7 @@ repos:
         entry: python -m pytest tests/ -x --tb=short
         language: system
         pass_filenames: false
-        stages: [push]
+        stages: [pre-push]
         
       # Check for missing __init__.py files
       - id: check-init-files
@@ -198,7 +219,8 @@ repos:
       - id: validate-config
         name: Validate configuration
         description: Validate .tailchasing.yml configuration files
-        entry: python -c "import yaml; [yaml.safe_load(open(f)) for f in ['example.tailchasing.yml'] if __import__('pathlib').Path(f).exists()]"
+        entry: python
+        args: ["-c", "import yaml, pathlib; [yaml.safe_load(open(f)) for f in ['example.tailchasing.yml'] if pathlib.Path(f).exists()]"]
         language: system
         files: '\.tailchasing\.ya?ml$'
         
@@ -212,7 +234,7 @@ repos:
         pass_filenames: false
 
 # Global configuration
-default_stages: [commit]
+default_stages: [pre-commit]
 minimum_pre_commit_version: "3.0.0"
 
 # CI configuration

@@ -1,18 +1,14 @@
 """Playbook system for orchestrated code fixes with safety checks and rollbacks."""
 
 import difflib
-import json
 import subprocess
-import tempfile
 import time
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Callable, Tuple
 import ast
 import shutil
-import hashlib
 
 
 class PlaybookStage(Enum):

@@ -9,8 +9,8 @@ import ast
 import re
 import json
 import math
-from typing import List, Dict, Any, Set, Optional, Tuple
-from collections import Counter, defaultdict
+from typing import List, Dict, Any, Optional
+from collections import Counter
 from pathlib import Path
 
 from .base import Analyzer, AnalysisContext

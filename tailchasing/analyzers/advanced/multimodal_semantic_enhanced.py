@@ -11,10 +11,8 @@ This module provides advanced semantic analysis capabilities including:
 """
 
 import ast
-import re
 import numpy as np
-from typing import Dict, List, Tuple, Set, Optional, Any, Union
-import hashlib
+from typing import Dict, List, Tuple, Optional, Any
 from collections import defaultdict
 from functools import lru_cache
 import logging

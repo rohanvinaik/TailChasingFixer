@@ -5,9 +5,9 @@ Tracks how function semantics evolve over time/commits to detect
 tail-chasing patterns like rename cascades and semantic stagnation.
 """
 
-from typing import List, Dict, Optional, Tuple, Set
+from typing import List, Dict, Optional, Tuple
 from datetime import datetime
-from collections import defaultdict, deque
+from collections import defaultdict
 import numpy as np
 
 from .hv_space import HVSpace

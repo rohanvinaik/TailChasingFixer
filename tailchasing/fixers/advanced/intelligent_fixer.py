@@ -7,14 +7,12 @@ detected tail-chasing patterns.
 """
 
 from __future__ import annotations
-import ast
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Set, Tuple, Union
+from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, field
 from enum import Enum
 import hashlib
-import json
 import tempfile
 import shutil
 import os
@@ -23,9 +21,7 @@ from ...core.issues import Issue
 from ...core.ast_analyzer import ASTAnalyzer
 from ...analyzers.base import AnalysisContext
 from .fix_strategies import (
-    BaseFixStrategy, FixResult, FixPlan, FixAction,
-    ImportResolutionStrategy, DuplicateMergeStrategy, 
-    PlaceholderImplementationStrategy, CircularDependencyBreaker,
+    BaseFixStrategy, FixPlan, FixAction,
     StrategySelector
 )
 

@@ -13,8 +13,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Any, Union, Iterator
-import json
+from typing import Dict, List, Optional, Set, Tuple, Any, Union
 import subprocess
 import hashlib
 from collections import defaultdict, deque

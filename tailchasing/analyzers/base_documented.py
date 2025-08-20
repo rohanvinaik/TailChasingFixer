@@ -7,7 +7,11 @@ and the base protocol that all analyzers must implement.
 """
 
 from __future__ import annotations
-from typing import Iterable, Protocol, List, Dict, Any, Optional, TYPE_CHECKING, runtime_checkable
+from ..core.types import (
+    AnalysisContext,
+    BaseAnalyzer
+)
+from typing import Iterable, List, Dict, Any, TYPE_CHECKING
 from dataclasses import dataclass
 from pathlib import Path
 import ast
@@ -19,25 +23,8 @@ if TYPE_CHECKING:
     from ..core.symbols import SymbolTable
 
 
-@runtime_checkable
-class Analyzer(Protocol):
-    """Protocol defining the interface for all analyzers.
-    
-    All analyzers in the TailChasing Fixer system must implement this protocol
-    to be compatible with the analysis engine. This ensures consistent behavior
-    and allows for easy extension with new analyzer types.
-    
-    Attributes:
-        name: Unique identifier for the analyzer
-        
-    Examples:
-        >>> from tailchasing.analyzers import PhantomAnalyzer
-        >>> analyzer = PhantomAnalyzer()
-        >>> isinstance(analyzer, Analyzer)
-        True
-    """
-    
-    name: str
+# Using Analyzer protocol from consolidated types
+# All analyzer protocols are now unified in core.types
     
     def run(self, ctx: AnalysisContext) -> Iterable[Issue]:
         """Run the analyzer and yield detected issues.
